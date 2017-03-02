@@ -116,7 +116,7 @@ func (r *repository) fetch() {
 	r.Unlock()
 }
 
-func (r repository) GetToggle(key string) *api.Feature {
+func (r *repository) GetToggle(key string) *api.Feature {
 	r.RLock()
 	defer r.RUnlock()
 
@@ -128,7 +128,7 @@ func (r repository) GetToggle(key string) *api.Feature {
 	return nil
 }
 
-func (r repository) Close() error {
+func (r *repository) Close() error {
 	r.close <- true
 	return nil
 }

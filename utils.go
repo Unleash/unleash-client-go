@@ -19,7 +19,7 @@ func generateInstanceId() string {
 		prefix = user.Username
 	} else {
 		rand.Seed(time.Now().Unix())
-		prefix = fmt.Sprintf("generated-$d-$d", rand.Intn(1000000), os.Getpid())
+		prefix = fmt.Sprintf("generated-%d-%d", rand.Intn(1000000), os.Getpid())
 	}
 
 	if hostname, err := os.Hostname(); err == nil && hostname != "" {
