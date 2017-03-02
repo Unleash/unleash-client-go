@@ -1,4 +1,4 @@
-package unleash_client_go
+package unleash
 
 import (
 	"encoding/json"
@@ -48,7 +48,6 @@ func (ds *defaultStorage) Load() error {
 }
 
 func (ds *defaultStorage) Persist() error {
-	println(ds.path)
 	if file, err := os.Create(ds.path); err != nil {
 		return err
 	} else {
