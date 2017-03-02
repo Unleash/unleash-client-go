@@ -1,4 +1,4 @@
-package unleash_client_go
+package unleash
 
 import "io"
 
