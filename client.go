@@ -2,7 +2,6 @@ package unleash
 
 import (
 	"fmt"
-	"github.com/unleash/unleash-client-go/context"
 	s "github.com/unleash/unleash-client-go/internal/strategies"
 	"github.com/unleash/unleash-client-go/strategy"
 	"net/url"
@@ -20,25 +19,6 @@ var defaultStrategies = []strategy.Strategy{
 	*s.NewGradualRolloutUserId(),
 	*s.NewRemoteAddressStrategy(),
 	*s.NewUserWithIdStrategy(),
-}
-
-type featureOption struct {
-	fallback *bool
-	ctx      *context.Context
-}
-
-type FeatureOption func(*featureOption)
-
-func WithFallback(fallback bool) FeatureOption {
-	return func(opts *featureOption) {
-		opts.fallback = &fallback
-	}
-}
-
-func WithContext(ctx context.Context) FeatureOption {
-	return func(opts *featureOption) {
-		opts.ctx = &ctx
-	}
 }
 
 type Client struct {

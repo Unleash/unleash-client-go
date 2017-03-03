@@ -5,20 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"time"
 )
-
-type MetricsOptions struct {
-	AppName         string
-	InstanceID      string
-	Strategies      []string
-	MetricsInterval time.Duration
-	DisableMetrics  bool
-	BucketInterval  time.Duration
-	Url             url.URL
-	HttpClient      *http.Client
-}
 
 type ToggleCount struct {
 	Yes int32 `json:"yes"`

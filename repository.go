@@ -3,22 +3,11 @@ package unleash
 import (
 	"encoding/json"
 	"net/http"
-	"net/url"
+	"sync"
 	"time"
 
 	"github.com/unleash/unleash-client-go/internal/api"
-	"sync"
 )
-
-type RepositoryOptions struct {
-	BackupPath      string
-	Url             url.URL
-	AppName         string
-	InstanceId      string
-	RefreshInterval time.Duration
-	Storage         Storage
-	HttpClient      *http.Client
-}
 
 type repository struct {
 	errorEmitterImpl
