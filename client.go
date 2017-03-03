@@ -45,6 +45,7 @@ type Client struct {
 	errorEmitterImpl
 	options    configOption
 	repository *repository
+	metrics    *metrics
 	strategies []strategy.Strategy
 	ready      chan bool
 }
@@ -103,11 +104,31 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 
 	uc.strategies = append(defaultStrategies, uc.options.strategies...)
 
+	strategyNames := make([]string, len(uc.strategies))
+	for i, strategy := range uc.strategies {
+		strategyNames[i] = strategy.Name()
+	}
+
+	uc.metrics = NewMetrics(MetricsOptions{
+		AppName:         uc.options.appName,
+		InstanceID:      uc.options.instanceId,
+		Strategies:      strategyNames,
+		MetricsInterval: uc.options.metricsInterval,
+		BucketInterval:  uc.options.metricsInterval,
+		Url:             *parsedUrl,
+	})
+
+	uc.metrics.Forward(uc)
+
 	return uc, nil
 
 }
 
-func (uc Client) IsEnabled(feature string, options ...FeatureOption) bool {
+func (uc Client) IsEnabled(feature string, options ...FeatureOption) (enabled bool) {
+	defer func() {
+		uc.metrics.count(feature, enabled)
+	}()
+
 	f := uc.repository.GetToggle(feature)
 
 	var opts featureOption
@@ -139,6 +160,7 @@ func (uc Client) IsEnabled(feature string, options ...FeatureOption) bool {
 
 func (uc *Client) Close() error {
 	uc.repository.Close()
+	uc.metrics.Close()
 	return nil
 }
 
