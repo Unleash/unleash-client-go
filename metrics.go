@@ -4,29 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/unleash/unleash-client-go/internal/api"
 	"net/http"
 	"time"
 )
 
-type ToggleCount struct {
-	Yes int32 `json:"yes"`
-	No  int32 `json:"no"`
-}
-
-type Bucket struct {
-	Start   time.Time              `json:"start"`
-	Stop    time.Time              `json:"stop"`
-	Toggles map[string]ToggleCount `json:"toggles"`
-}
-
-func (b Bucket) isEmpty() bool {
-	return len(b.Toggles) == 0
-}
-
 type MetricsData struct {
-	AppName    string `json:"appName"`
-	InstanceID string `json:"instanceId"`
-	Bucket     Bucket `json:"bucket"`
+	AppName    string     `json:"appName"`
+	InstanceID string     `json:"instanceId"`
+	Bucket     api.Bucket `json:"bucket"`
 }
 
 type ClientData struct {
@@ -46,7 +32,7 @@ type metrics struct {
 	metricsChannels
 	options      MetricsOptions
 	started      time.Time
-	bucket       Bucket
+	bucket       api.Bucket
 	countChannel chan metric
 	stopped      chan bool
 	timer        *time.Timer
@@ -102,7 +88,7 @@ func (m *metrics) sync() {
 		case mc := <-m.countChannel:
 			t, exists := m.bucket.Toggles[mc.Name]
 			if !exists {
-				t = ToggleCount{}
+				t = api.ToggleCount{}
 			}
 			if mc.Enabled {
 				t.Yes++
@@ -160,7 +146,7 @@ func (m *metrics) sendMetrics() {
 		return
 	}
 
-	if m.bucket.isEmpty() {
+	if m.bucket.IsEmpty() {
 		m.resetBucket()
 		m.startTimer()
 		return
@@ -211,9 +197,9 @@ func (m metrics) count(name string, enabled bool) {
 }
 
 func (m *metrics) resetBucket() {
-	m.bucket = Bucket{
+	m.bucket = api.Bucket{
 		Start:   time.Now(),
-		Toggles: map[string]ToggleCount{},
+		Toggles: map[string]api.ToggleCount{},
 	}
 }
 
