@@ -17,7 +17,7 @@ type repository struct {
 	close   chan bool
 }
 
-func NewRepository(options RepositoryOptions, channels repositoryChannels) *repository {
+func newRepository(options RepositoryOptions, channels repositoryChannels) *repository {
 	repo := &repository{
 		options:            options,
 		repositoryChannels: channels,

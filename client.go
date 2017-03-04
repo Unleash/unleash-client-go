@@ -128,7 +128,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		uc.options.instanceId = generateInstanceId()
 	}
 
-	uc.repository = NewRepository(
+	uc.repository = newRepository(
 		RepositoryOptions{
 			BackupPath:      uc.options.backupPath,
 			Url:             *parsedUrl,
@@ -149,7 +149,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		strategyNames[i] = strategy.Name()
 	}
 
-	uc.metrics = NewMetrics(
+	uc.metrics = newMetrics(
 		MetricsOptions{
 			AppName:         uc.options.appName,
 			InstanceID:      uc.options.instanceId,

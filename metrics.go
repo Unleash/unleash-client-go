@@ -52,7 +52,7 @@ type metrics struct {
 	timer        *time.Timer
 }
 
-func NewMetrics(options MetricsOptions, channels metricsChannels) *metrics {
+func newMetrics(options MetricsOptions, channels metricsChannels) *metrics {
 	m := &metrics{
 		metricsChannels: channels,
 		options:         options,
