@@ -19,6 +19,8 @@ type configOption struct {
 	backupPath      string
 	strategies      []strategy.Strategy
 	listener        interface{}
+	storage         Storage
+	httpClient      *http.Client
 }
 
 // ConfigOption represents a option for configuring the client.
@@ -92,6 +94,21 @@ func WithBackupPath(backupPath string) ConfigOption {
 func WithStrategies(strategies ...strategy.Strategy) ConfigOption {
 	return func(o *configOption) {
 		o.strategies = strategies
+	}
+}
+
+// WithStorage specifies which storage implementation the repository should use for storing feature
+// toggles.
+func WithStorage(storage Storage) ConfigOption {
+	return func(o *configOption) {
+		o.storage = storage
+	}
+}
+
+// WithHttpClient specifies which HttpClient the client should use for making requests to the server.
+func WithHttpClient(client *http.Client) ConfigOption {
+	return func(o *configOption) {
+		o.httpClient = client
 	}
 }
 
