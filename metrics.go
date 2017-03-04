@@ -43,7 +43,7 @@ type metric struct {
 }
 
 type metrics struct {
-	errorEmitterImpl
+	metricsChannels
 	options      MetricsOptions
 	started      time.Time
 	bucket       Bucket
@@ -52,12 +52,13 @@ type metrics struct {
 	timer        *time.Timer
 }
 
-func NewMetrics(options MetricsOptions) *metrics {
+func NewMetrics(options MetricsOptions, channels metricsChannels) *metrics {
 	m := &metrics{
-		options:      options,
-		started:      time.Now(),
-		countChannel: make(chan metric),
-		stopped:      make(chan bool),
+		metricsChannels: channels,
+		options:         options,
+		started:         time.Now(),
+		countChannel:    make(chan metric),
+		stopped:         make(chan bool),
 	}
 
 	if m.options.HttpClient == nil {
@@ -150,6 +151,8 @@ func (m *metrics) registerInstance() {
 	if resp.StatusCode < http.StatusOK || resp.StatusCode > http.StatusMultipleChoices {
 		m.warn(fmt.Errorf("%s return %d", u.String(), resp.StatusCode))
 	}
+
+	m.registered <- payload
 }
 
 func (m *metrics) sendMetrics() {
@@ -196,6 +199,8 @@ func (m *metrics) sendMetrics() {
 	if resp.StatusCode < http.StatusOK || resp.StatusCode > http.StatusMultipleChoices {
 		m.warn(fmt.Errorf("%s return %d", u.String(), resp.StatusCode))
 	}
+
+	m.sent <- payload
 }
 
 func (m metrics) count(name string, enabled bool) {

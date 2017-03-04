@@ -18,9 +18,16 @@ type configOption struct {
 	disableMetrics  bool
 	backupPath      string
 	strategies      []strategy.Strategy
+	listener        interface{}
 }
 
 type ConfigOption func(*configOption)
+
+func WithListener(listener interface{}) ConfigOption {
+	return func(o *configOption) {
+		o.listener = listener
+	}
+}
 
 func WithAppName(appName string) ConfigOption {
 	return func(o *configOption) {

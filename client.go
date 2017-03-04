@@ -22,17 +22,53 @@ var defaultStrategies = []strategy.Strategy{
 }
 
 type Client struct {
-	errorEmitterImpl
-	options    configOption
-	repository *repository
-	metrics    *metrics
-	strategies []strategy.Strategy
-	ready      chan bool
+	errorChannels
+	options            configOption
+	repository         *repository
+	metrics            *metrics
+	strategies         []strategy.Strategy
+	errorListener      ErrorListener
+	metricsListener    MetricListener
+	repositoryListener RepositoryListener
+	ready              chan bool
+	count              chan metric
+	sent               chan MetricsData
+	registered         chan ClientData
+}
+
+type errorChannels struct {
+	errors   chan error
+	warnings chan error
+}
+
+func (ec errorChannels) warn(err error) {
+	ec.warnings <- err
+}
+
+func (ec errorChannels) err(err error) {
+	ec.errors <- err
+}
+
+type repositoryChannels struct {
+	errorChannels
+	ready chan bool
+}
+
+type metricsChannels struct {
+	errorChannels
+	count      chan metric
+	sent       chan MetricsData
+	registered chan ClientData
 }
 
 func NewClient(options ...ConfigOption) (*Client, error) {
+
+	errChannels := errorChannels{
+		errors:   make(chan error, 3),
+		warnings: make(chan error, 3),
+	}
+
 	uc := &Client{
-		errorEmitterImpl: *newErrorEmitter(),
 		options: configOption{
 			refreshInterval: 15 * time.Second,
 			metricsInterval: 60 * time.Second,
@@ -40,10 +76,30 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 			backupPath:      getTmpDirPath(),
 			strategies:      []strategy.Strategy{},
 		},
+		errorChannels: errChannels,
+		ready:         make(chan bool, 1),
+		count:         make(chan metric),
+		sent:          make(chan MetricsData),
+		registered:    make(chan ClientData, 1),
 	}
 
 	for _, opt := range options {
 		opt(&uc.options)
+	}
+
+	if uc.options.listener != nil {
+		if eListener, ok := uc.options.listener.(ErrorListener); ok {
+			uc.errorListener = eListener
+		}
+		if rListener, ok := uc.options.listener.(RepositoryListener); ok {
+			uc.repositoryListener = rListener
+		}
+		if mListener, ok := uc.options.listener.(MetricListener); ok {
+			uc.metricsListener = mListener
+		}
+		defer func() {
+			go uc.sync()
+		}()
 	}
 
 	if uc.options.url == "" {
@@ -72,15 +128,19 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		uc.options.instanceId = generateInstanceId()
 	}
 
-	uc.repository = NewRepository(RepositoryOptions{
-		BackupPath:      uc.options.backupPath,
-		Url:             *parsedUrl,
-		AppName:         uc.options.appName,
-		InstanceId:      uc.options.instanceId,
-		RefreshInterval: uc.options.refreshInterval,
-	})
-
-	uc.repository.Forward(uc)
+	uc.repository = NewRepository(
+		RepositoryOptions{
+			BackupPath:      uc.options.backupPath,
+			Url:             *parsedUrl,
+			AppName:         uc.options.appName,
+			InstanceId:      uc.options.instanceId,
+			RefreshInterval: uc.options.refreshInterval,
+		},
+		repositoryChannels{
+			errorChannels: errChannels,
+			ready:         uc.ready,
+		},
+	)
 
 	uc.strategies = append(defaultStrategies, uc.options.strategies...)
 
@@ -89,19 +149,55 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		strategyNames[i] = strategy.Name()
 	}
 
-	uc.metrics = NewMetrics(MetricsOptions{
-		AppName:         uc.options.appName,
-		InstanceID:      uc.options.instanceId,
-		Strategies:      strategyNames,
-		MetricsInterval: uc.options.metricsInterval,
-		BucketInterval:  uc.options.metricsInterval,
-		Url:             *parsedUrl,
-	})
-
-	uc.metrics.Forward(uc)
+	uc.metrics = NewMetrics(
+		MetricsOptions{
+			AppName:         uc.options.appName,
+			InstanceID:      uc.options.instanceId,
+			Strategies:      strategyNames,
+			MetricsInterval: uc.options.metricsInterval,
+			BucketInterval:  uc.options.metricsInterval,
+			Url:             *parsedUrl,
+		},
+		metricsChannels{
+			errorChannels: errChannels,
+			count:         uc.count,
+			sent:          uc.sent,
+			registered:    uc.registered,
+		},
+	)
 
 	return uc, nil
+}
 
+func (uc *Client) sync() {
+	for {
+		select {
+		case e := <-uc.errors:
+			if uc.errorListener != nil {
+				uc.errorListener.OnError(e)
+			}
+		case w := <-uc.warnings:
+			if uc.errorListener != nil {
+				uc.errorListener.OnWarning(w)
+			}
+		case <-uc.ready:
+			if uc.repositoryListener != nil {
+				uc.repositoryListener.OnReady()
+			}
+		case m := <-uc.count:
+			if uc.metricsListener != nil {
+				uc.metricsListener.OnCount(m.name, m.enabled)
+			}
+		case md := <-uc.sent:
+			if uc.metricsListener != nil {
+				uc.metricsListener.OnSent(md)
+			}
+		case cd := <-uc.registered:
+			if uc.metricsListener != nil {
+				uc.metricsListener.OnRegistered(cd)
+			}
+		}
+	}
 }
 
 func (uc Client) IsEnabled(feature string, options ...FeatureOption) (enabled bool) {
@@ -142,10 +238,6 @@ func (uc *Client) Close() error {
 	uc.repository.Close()
 	uc.metrics.Close()
 	return nil
-}
-
-func (uc Client) Ready() <-chan bool {
-	return uc.ready
 }
 
 func (uc Client) getStrategy(name string) strategy.Strategy {

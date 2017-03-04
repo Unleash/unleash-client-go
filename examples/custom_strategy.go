@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	unleash "github.com/unleash/unleash-client-go"
+	"github.com/unleash/unleash-client-go"
 	"github.com/unleash/unleash-client-go/context"
 	"strings"
 	"time"
@@ -10,6 +10,7 @@ import (
 
 func init() {
 	unleash.Initialize(
+		unleash.WithListener(&unleash.DebugListener{}),
 		unleash.WithAppName("my-application"),
 		unleash.WithUrl("https://unleash.herokuapp.com/api/"),
 		unleash.WithRefreshInterval(5*time.Second),
@@ -59,16 +60,10 @@ func main() {
 	timer := time.NewTimer(1 * time.Second)
 
 	for {
-		select {
-		case warning := <-unleash.Warnings():
-			fmt.Printf("WARNING: %s", warning.Error())
-		case err := <-unleash.Errors():
-			fmt.Printf("ERROR: %s", err.Error())
-		case <-timer.C:
-			enabled := unleash.IsEnabled("unleash.me", unleash.WithContext(ctx))
-			fmt.Printf("feature is enabled? %v\n", enabled)
-			timer.Reset(1 * time.Second)
-		}
+		<-timer.C
+		enabled := unleash.IsEnabled("unleash.me", unleash.WithContext(ctx))
+		fmt.Printf("feature is enabled? %v\n", enabled)
+		timer.Reset(1 * time.Second)
 	}
 
 }

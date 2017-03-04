@@ -10,19 +10,17 @@ import (
 )
 
 type repository struct {
-	errorEmitterImpl
+	repositoryChannels
 	sync.RWMutex
 	options RepositoryOptions
 	etag    string
-	ready   chan bool
 	close   chan bool
 }
 
-func NewRepository(options RepositoryOptions) *repository {
+func NewRepository(options RepositoryOptions, channels repositoryChannels) *repository {
 	repo := &repository{
-		errorEmitterImpl: *newErrorEmitter(),
-		options:          options,
-		ready:            make(chan bool, 1),
+		options:            options,
+		repositoryChannels: channels,
 	}
 
 	if options.HttpClient == nil {
