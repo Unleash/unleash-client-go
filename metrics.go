@@ -38,8 +38,8 @@ type ClientData struct {
 }
 
 type metric struct {
-	name    string
-	enabled bool
+	Name    string
+	Enabled bool
 }
 
 type metrics struct {
@@ -100,16 +100,16 @@ func (m *metrics) sync() {
 	for {
 		select {
 		case mc := <-m.countChannel:
-			t, exists := m.bucket.Toggles[mc.name]
+			t, exists := m.bucket.Toggles[mc.Name]
 			if !exists {
 				t = ToggleCount{}
 			}
-			if mc.enabled {
+			if mc.Enabled {
 				t.Yes++
 			} else {
 				t.No++
 			}
-			m.bucket.Toggles[mc.name] = t
+			m.bucket.Toggles[mc.Name] = t
 		case <-m.timer.C:
 			m.sendMetrics()
 		case <-m.stopped:

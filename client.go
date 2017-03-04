@@ -186,7 +186,7 @@ func (uc *Client) sync() {
 			}
 		case m := <-uc.count:
 			if uc.metricsListener != nil {
-				uc.metricsListener.OnCount(m.name, m.enabled)
+				uc.metricsListener.OnCount(m.Name, m.Enabled)
 			}
 		case md := <-uc.sent:
 			if uc.metricsListener != nil {
@@ -238,6 +238,30 @@ func (uc *Client) Close() error {
 	uc.repository.Close()
 	uc.metrics.Close()
 	return nil
+}
+
+func (uc Client) Errors() <-chan error {
+	return uc.errors
+}
+
+func (uc Client) Warnings() <-chan error {
+	return uc.warnings
+}
+
+func (uc Client) Ready() <-chan bool {
+	return uc.ready
+}
+
+func (uc Client) Count() <-chan metric {
+	return uc.count
+}
+
+func (uc Client) Registered() <-chan ClientData {
+	return uc.registered
+}
+
+func (uc Client) Sent() <-chan MetricsData {
+	return uc.sent
 }
 
 func (uc Client) getStrategy(name string) strategy.Strategy {
