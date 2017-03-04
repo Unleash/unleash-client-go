@@ -96,23 +96,22 @@ func WithContext(ctx context.Context) FeatureOption {
 	}
 }
 
-type RepositoryOptions struct {
-	AppName         string
-	InstanceId      string
-	Url             url.URL
-	BackupPath      string
-	RefreshInterval time.Duration
-	Storage         Storage
-	HttpClient      *http.Client
+type repositoryOptions struct {
+	appName         string
+	instanceId      string
+	url             url.URL
+	backupPath      string
+	refreshInterval time.Duration
+	storage         Storage
+	httpClient      *http.Client
 }
 
-type MetricsOptions struct {
-	AppName         string
-	InstanceID      string
-	Url             url.URL
-	Strategies      []string
-	MetricsInterval time.Duration
-	DisableMetrics  bool
-	BucketInterval  time.Duration
-	HttpClient      *http.Client
+type metricsOptions struct {
+	appName         string
+	instanceID      string
+	url             url.URL
+	strategies      []string
+	metricsInterval time.Duration
+	disableMetrics  bool
+	httpClient      *http.Client
 }

@@ -129,12 +129,12 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 	}
 
 	uc.repository = newRepository(
-		RepositoryOptions{
-			BackupPath:      uc.options.backupPath,
-			Url:             *parsedUrl,
-			AppName:         uc.options.appName,
-			InstanceId:      uc.options.instanceId,
-			RefreshInterval: uc.options.refreshInterval,
+		repositoryOptions{
+			backupPath:      uc.options.backupPath,
+			url:             *parsedUrl,
+			appName:         uc.options.appName,
+			instanceId:      uc.options.instanceId,
+			refreshInterval: uc.options.refreshInterval,
 		},
 		repositoryChannels{
 			errorChannels: errChannels,
@@ -150,13 +150,12 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 	}
 
 	uc.metrics = newMetrics(
-		MetricsOptions{
-			AppName:         uc.options.appName,
-			InstanceID:      uc.options.instanceId,
-			Strategies:      strategyNames,
-			MetricsInterval: uc.options.metricsInterval,
-			BucketInterval:  uc.options.metricsInterval,
-			Url:             *parsedUrl,
+		metricsOptions{
+			appName:         uc.options.appName,
+			instanceID:      uc.options.instanceId,
+			strategies:      strategyNames,
+			metricsInterval: uc.options.metricsInterval,
+			url:             *parsedUrl,
 		},
 		metricsChannels{
 			errorChannels: errChannels,

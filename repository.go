@@ -12,26 +12,26 @@ import (
 type repository struct {
 	repositoryChannels
 	sync.RWMutex
-	options RepositoryOptions
+	options repositoryOptions
 	etag    string
 	close   chan bool
 }
 
-func newRepository(options RepositoryOptions, channels repositoryChannels) *repository {
+func newRepository(options repositoryOptions, channels repositoryChannels) *repository {
 	repo := &repository{
 		options:            options,
 		repositoryChannels: channels,
 	}
 
-	if options.HttpClient == nil {
-		repo.options.HttpClient = http.DefaultClient
+	if options.httpClient == nil {
+		repo.options.httpClient = http.DefaultClient
 	}
 
-	if options.Storage == nil {
-		repo.options.Storage = &defaultStorage{}
+	if options.storage == nil {
+		repo.options.storage = &defaultStorage{}
 	}
 
-	repo.options.Storage.Init(options.BackupPath, options.AppName)
+	repo.options.storage.Init(options.backupPath, options.appName)
 
 	go repo.sync()
 
@@ -45,7 +45,7 @@ func (r *repository) sync() {
 	r.ready <- true
 
 	for {
-		refreshTimer := time.NewTimer(r.options.RefreshInterval)
+		refreshTimer := time.NewTimer(r.options.refreshInterval)
 
 		select {
 		case <-r.close:
@@ -57,13 +57,13 @@ func (r *repository) sync() {
 }
 
 func (r *repository) cleanup() {
-	if err := r.options.Storage.Persist(); err != nil {
+	if err := r.options.storage.Persist(); err != nil {
 		r.err(err)
 	}
 }
 
 func (r *repository) fetch() {
-	u, _ := r.options.Url.Parse("./features")
+	u, _ := r.options.url.Parse("./features")
 
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
@@ -71,14 +71,14 @@ func (r *repository) fetch() {
 		return
 	}
 
-	req.Header.Add("UNLEASH-APPNAME", r.options.AppName)
-	req.Header.Add("UNLEASH-INSTANCEID", r.options.InstanceId)
+	req.Header.Add("UNLEASH-APPNAME", r.options.appName)
+	req.Header.Add("UNLEASH-INSTANCEID", r.options.instanceId)
 
 	if r.etag != "" {
 		req.Header.Add("If-None-Match", r.etag)
 	}
 
-	resp, err := r.options.HttpClient.Do(req)
+	resp, err := r.options.httpClient.Do(req)
 	if err != nil {
 		r.err(err)
 		return
@@ -99,7 +99,7 @@ func (r *repository) fetch() {
 
 	r.Lock()
 	r.etag = resp.Header.Get("Etag")
-	r.options.Storage.Reset(featureResp.FeatureMap(), true)
+	r.options.storage.Reset(featureResp.FeatureMap(), true)
 	r.Unlock()
 }
 
@@ -107,7 +107,7 @@ func (r *repository) GetToggle(key string) *api.Feature {
 	r.RLock()
 	defer r.RUnlock()
 
-	if toggle, found := r.options.Storage.Get(key); found {
+	if toggle, found := r.options.storage.Get(key); found {
 		if feature, ok := toggle.(api.Feature); ok {
 			return &feature
 		}

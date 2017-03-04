@@ -30,7 +30,7 @@ type metric struct {
 
 type metrics struct {
 	metricsChannels
-	options      MetricsOptions
+	options      metricsOptions
 	started      time.Time
 	bucket       api.Bucket
 	countChannel chan metric
@@ -38,7 +38,7 @@ type metrics struct {
 	timer        *time.Timer
 }
 
-func newMetrics(options MetricsOptions, channels metricsChannels) *metrics {
+func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
 	m := &metrics{
 		metricsChannels: channels,
 		options:         options,
@@ -47,13 +47,13 @@ func newMetrics(options MetricsOptions, channels metricsChannels) *metrics {
 		stopped:         make(chan bool),
 	}
 
-	if m.options.HttpClient == nil {
-		m.options.HttpClient = http.DefaultClient
+	if m.options.httpClient == nil {
+		m.options.httpClient = http.DefaultClient
 	}
 
 	m.resetBucket()
 
-	if m.options.MetricsInterval > 0 {
+	if m.options.metricsInterval > 0 {
 		m.startTimer()
 		m.registerInstance()
 		go m.sync()
@@ -68,11 +68,11 @@ func (m *metrics) Close() error {
 }
 
 func (m *metrics) startTimer() {
-	if m.options.DisableMetrics {
+	if m.options.disableMetrics {
 		return
 	}
 
-	m.timer = time.NewTimer(m.options.MetricsInterval)
+	m.timer = time.NewTimer(m.options.metricsInterval)
 }
 
 func (m *metrics) stop() {
@@ -99,7 +99,7 @@ func (m *metrics) sync() {
 		case <-m.timer.C:
 			m.sendMetrics()
 		case <-m.stopped:
-			m.options.DisableMetrics = true
+			m.options.disableMetrics = true
 			return
 		}
 	}
@@ -107,11 +107,11 @@ func (m *metrics) sync() {
 }
 
 func (m *metrics) registerInstance() {
-	if m.options.DisableMetrics {
+	if m.options.disableMetrics {
 		return
 	}
 
-	u, _ := m.options.Url.Parse("./client/register")
+	u, _ := m.options.url.Parse("./client/register")
 
 	var body bytes.Buffer
 	payload := m.getClientData()
@@ -128,7 +128,7 @@ func (m *metrics) registerInstance() {
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := m.options.HttpClient.Do(req)
+	resp, err := m.options.httpClient.Do(req)
 	if err != nil {
 		m.err(err)
 		return
@@ -142,7 +142,7 @@ func (m *metrics) registerInstance() {
 }
 
 func (m *metrics) sendMetrics() {
-	if m.options.DisableMetrics {
+	if m.options.disableMetrics {
 		return
 	}
 
@@ -152,7 +152,7 @@ func (m *metrics) sendMetrics() {
 		return
 	}
 
-	u, _ := m.options.Url.Parse("./client/metrics")
+	u, _ := m.options.url.Parse("./client/metrics")
 
 	var body bytes.Buffer
 	payload := m.getPayload()
@@ -170,7 +170,7 @@ func (m *metrics) sendMetrics() {
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := m.options.HttpClient.Do(req)
+	resp, err := m.options.httpClient.Do(req)
 	if err != nil {
 		m.err(err)
 		return
@@ -190,7 +190,7 @@ func (m *metrics) sendMetrics() {
 }
 
 func (m metrics) count(name string, enabled bool) {
-	if m.options.DisableMetrics {
+	if m.options.disableMetrics {
 		return
 	}
 	m.countChannel <- metric{name, enabled}
@@ -216,18 +216,18 @@ func (m *metrics) getPayload() MetricsData {
 
 func (m metrics) getClientData() ClientData {
 	return ClientData{
-		m.options.AppName,
-		m.options.InstanceID,
-		m.options.Strategies,
+		m.options.appName,
+		m.options.instanceID,
+		m.options.strategies,
 		m.started,
-		int64(m.options.MetricsInterval.Seconds()),
+		int64(m.options.metricsInterval.Seconds()),
 	}
 }
 
 func (m metrics) getMetricsData() MetricsData {
 	return MetricsData{
-		m.options.AppName,
-		m.options.InstanceID,
+		m.options.appName,
+		m.options.instanceID,
 		m.bucket,
 	}
 }
