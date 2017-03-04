@@ -1,4 +1,4 @@
-package main
+package unleash_test
 
 import (
 	"fmt"
@@ -49,7 +49,8 @@ func (s ActiveForUserWithEmailStrategy) IsEnabled(params map[string]interface{},
 	return false
 }
 
-func main() {
+// ExampleCustomStrategy demonstrates using a custom strategy.
+func Example_customStrategy() {
 
 	ctx := context.Context{
 		Properties: map[string]string{

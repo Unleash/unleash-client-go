@@ -1,9 +1,9 @@
-package main
+package unleash_test
 
 import (
 	"fmt"
-	"github.com/unleash/unleash-client-go"
 	"time"
+	"github.com/unleash/unleash-client-go"
 )
 
 func init() {
@@ -16,7 +16,8 @@ func init() {
 
 const PropertyName = "eid.enabled"
 
-func main() {
+// ExampleSimpleUsage demonstrates the simplest way to use the unleash client.
+func Example_simpleUsage() {
 	timer := time.NewTimer(1 * time.Second)
 
 	for {

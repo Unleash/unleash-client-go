@@ -1,4 +1,4 @@
-package main
+package unleash_test
 
 import (
 	"fmt"
@@ -6,17 +6,9 @@ import (
 	"time"
 )
 
-func main() {
-	client, err := unleash.NewClient(
-		unleash.WithAppName("my-application"),
-		unleash.WithUrl("http://unleash.herokuapp.com/api/"),
-	)
-
-	if err != nil {
-		fmt.Printf("ERROR: Starting client: %v", err)
-		return
-	}
-
+// Sync runs the client event loop. All of the channels must be read to avoid blocking the
+// client.
+func Sync(client *unleash.Client) {
 	timer := time.NewTimer(1 * time.Second)
 	for {
 		select {
@@ -37,5 +29,22 @@ func main() {
 			timer.Reset(1 * time.Second)
 		}
 	}
+}
 
+// ExampleWithInstance demonstrates how to create the client manually instead of using the default client.
+// It also shows how to run the event loop manually.
+func Example_withInstance() {
+
+	// Create the client with the desired options
+	client, err := unleash.NewClient(
+		unleash.WithAppName("my-application"),
+		unleash.WithUrl("http://unleash.herokuapp.com/api/"),
+	)
+
+	if err != nil {
+		fmt.Printf("ERROR: Starting client: %v", err)
+		return
+	}
+
+	Sync(client)
 }
