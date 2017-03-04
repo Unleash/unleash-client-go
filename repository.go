@@ -103,7 +103,7 @@ func (r *repository) fetch() {
 	r.Unlock()
 }
 
-func (r *repository) GetToggle(key string) *api.Feature {
+func (r *repository) getToggle(key string) *api.Feature {
 	r.RLock()
 	defer r.RUnlock()
 

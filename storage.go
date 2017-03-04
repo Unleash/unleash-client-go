@@ -6,11 +6,27 @@ import (
 	"os"
 )
 
+// Storage is an interface that can be implemented in order to have control over how
+// the repository of feature toggles is persisted.
 type Storage interface {
-	Init(string, string)
-	Reset(map[string]interface{}, bool) error
+	// Init is called to initialize the storage implementation. The backupPath
+	// is used to specify the location the data should be stored and the appName
+	// can be used in naming.
+	Init(backupPath string, appName string)
+
+	// Reset is called after the repository has fetched the feature toggles from the server.
+	// If persist is true the implementation of this function should call Persist(). The data
+	// passed in here should be owned by the implementer of this interface.
+	Reset(data map[string]interface{}, persist bool) error
+
+	// Load is called to load the data from persistent storage and hold it in memory for fast
+	// querying.
 	Load() error
+
+	// Persist is called when the data in the storage implementation should be persisted to disk.
 	Persist() error
+
+	// Get returns the data for the specified feature toggle.
 	Get(string) (interface{}, bool)
 }
 

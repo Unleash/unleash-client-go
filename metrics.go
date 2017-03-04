@@ -9,22 +9,42 @@ import (
 	"time"
 )
 
+// MetricsData represents the data sent to the unleash server.
 type MetricsData struct {
-	AppName    string     `json:"appName"`
-	InstanceID string     `json:"instanceId"`
-	Bucket     api.Bucket `json:"bucket"`
+	// AppName is the name of the application.
+	AppName string `json:"appName"`
+
+	// InstanceID is the instance identifier.
+	InstanceID string `json:"instanceId"`
+
+	// Bucket is the payload data sent to the server.
+	Bucket api.Bucket `json:"bucket"`
 }
 
+// ClientData represents the data sent to the unleash during registration.
 type ClientData struct {
-	AppName    string    `json:"appName"`
-	InstanceID string    `json:"instanceId"`
-	Strategies []string  `json:"strategies"`
-	Started    time.Time `json:"started"`
-	Interval   int64     `json:"interval"`
+	// AppName is the name of the application.
+	AppName string `json:"appName"`
+
+	// InstanceID is the instance identifier.
+	InstanceID string `json:"instanceId"`
+
+	// Strategies is a list of names of the strategies supported by the client.
+	Strategies []string `json:"strategies"`
+
+	// Started indicates the time at which the client was created.
+	Started time.Time `json:"started"`
+
+	// Interval specifies the time interval (in ms) that the client is using for refreshing
+	// feature toggles.
+	Interval int64 `json:"interval"`
 }
 
 type metric struct {
-	Name    string
+	// Name is the name of the feature toggle.
+	Name string
+
+	// Enabled indicates whether the feature was enabled or not.
 	Enabled bool
 }
 

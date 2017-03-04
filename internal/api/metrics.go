@@ -16,5 +16,3 @@ type Bucket struct {
 func (b Bucket) IsEmpty() bool {
 	return len(b.Toggles) == 0
 }
-
-

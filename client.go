@@ -21,6 +21,7 @@ var defaultStrategies = []strategy.Strategy{
 	*s.NewUserWithIdStrategy(),
 }
 
+// Client is a structure representing an API client of an Unleash server.
 type Client struct {
 	errorChannels
 	options            configOption
@@ -61,6 +62,7 @@ type metricsChannels struct {
 	registered chan ClientData
 }
 
+// NewClient creates a new client instance with the given options.
 func NewClient(options ...ConfigOption) (*Client, error) {
 
 	errChannels := errorChannels{
@@ -199,12 +201,13 @@ func (uc *Client) sync() {
 	}
 }
 
+// IsEnabled queries whether or not the specified feature is enabled or not.
 func (uc Client) IsEnabled(feature string, options ...FeatureOption) (enabled bool) {
 	defer func() {
 		uc.metrics.count(feature, enabled)
 	}()
 
-	f := uc.repository.GetToggle(feature)
+	f := uc.repository.getToggle(feature)
 
 	var opts featureOption
 	for _, o := range options {
@@ -233,32 +236,42 @@ func (uc Client) IsEnabled(feature string, options ...FeatureOption) (enabled bo
 	return false
 }
 
+// Close stops the client from syncing data from the server.
 func (uc *Client) Close() error {
 	uc.repository.Close()
 	uc.metrics.Close()
 	return nil
 }
 
+// Errors returns the error channel for the client.
 func (uc Client) Errors() <-chan error {
 	return uc.errors
 }
 
+// Warnings returns the warnings channel for the client.
 func (uc Client) Warnings() <-chan error {
 	return uc.warnings
 }
 
+// Ready returns the ready signal for the client and is fired after the repository of locally stored
+// toggles has been loaded.
 func (uc Client) Ready() <-chan bool {
 	return uc.ready
 }
 
+// Count returns the count channel which gives an update when a toggle has been queried.
 func (uc Client) Count() <-chan metric {
 	return uc.count
 }
 
+// Registered returns the registered signal indicating that the client has successfully connected to the
+// metrics service.
 func (uc Client) Registered() <-chan ClientData {
 	return uc.registered
 }
 
+// Sent returns the sent channel which receives data whenever the client has successfully sent metrics to
+// the metrics service.
 func (uc Client) Sent() <-chan MetricsData {
 	return uc.sent
 }
