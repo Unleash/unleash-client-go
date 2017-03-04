@@ -32,6 +32,7 @@ type Client struct {
 	metricsListener    MetricListener
 	repositoryListener RepositoryListener
 	ready              chan bool
+	closed             chan bool
 	count              chan metric
 	sent               chan MetricsData
 	registered         chan ClientData
@@ -200,6 +201,8 @@ func (uc *Client) sync() {
 			if uc.metricsListener != nil {
 				uc.metricsListener.OnRegistered(cd)
 			}
+		case <-uc.closed:
+			return
 		}
 	}
 }
@@ -243,6 +246,7 @@ func (uc Client) IsEnabled(feature string, options ...FeatureOption) (enabled bo
 func (uc *Client) Close() error {
 	uc.repository.Close()
 	uc.metrics.Close()
+	uc.closed <- true
 	return nil
 }
 
