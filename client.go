@@ -237,7 +237,9 @@ func (uc Client) IsEnabled(feature string, options ...FeatureOption) (enabled bo
 			// TODO: warnOnce missingStrategy
 			continue
 		}
-		return foundStrategy.IsEnabled(f.Parameters, opts.ctx)
+		if foundStrategy.IsEnabled(f.Parameters, opts.ctx) {
+			return true
+		}
 	}
 	return false
 }
