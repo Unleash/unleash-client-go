@@ -7,6 +7,16 @@ import (
 	"strconv"
 )
 
+func round(f float64) int {
+	if f < -0.5 {
+		return int(f - 0.5)
+	}
+	if f > 0.5 {
+		return int(f + 0.5)
+	}
+	return 0
+}
+
 func parameterAsFloat64(param interface{}) (result float64, ok bool) {
 	if f, isFloat := param.(float64); isFloat {
 		result, ok = f, true
