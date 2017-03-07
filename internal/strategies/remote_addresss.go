@@ -29,7 +29,7 @@ func (s remoteAddressStrategy) IsEnabled(params map[string]interface{}, ctx *con
 	}
 
 	for _, ip := range strings.Split(ips, ",") {
-		if ip == ctx.RemoteAddress {
+		if strings.TrimSpace(ip) == ctx.RemoteAddress {
 			return true
 		}
 	}
