@@ -1,3 +1,5 @@
+[![GoDoc](https://godoc.org/github.com/Unleash/unleash-client-go?status.svg)](https://godoc.org/github.com/Unleash/unleash-client-go)
+
 # unleash-client-go
 Unleash Client for Go.  Read more about the [Unleash project](https://github.com/finn-no/unleash) 
 
