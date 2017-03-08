@@ -78,7 +78,7 @@ func TestApplicationHostnameStrategy_IsEnabled(t *testing.T) {
 		}, nil)
 
 		if !isEnabled {
-			t.Errorf("strategy should handle wierd casing")
+			t.Errorf("strategy should handle weird casing")
 		}
 	})
 }
