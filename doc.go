@@ -39,5 +39,5 @@ Examples
 
 The following examples show how to use the client in different scenarios.
 
- */
+*/
 package unleash

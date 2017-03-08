@@ -2,8 +2,8 @@ package unleash_test
 
 import (
 	"fmt"
-	"time"
 	"github.com/unleash/unleash-client-go"
+	"time"
 )
 
 func init() {

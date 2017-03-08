@@ -1,9 +1,9 @@
 package strategies
 
 import (
-	"testing"
 	"github.com/unleash/unleash-client-go/context"
 	"github.com/unleash/unleash-client-go/strategy"
+	"testing"
 )
 
 func TestRemoteAddressStrategy_Name(t *testing.T) {

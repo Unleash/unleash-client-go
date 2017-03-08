@@ -1,10 +1,10 @@
 package strategies
 
 import (
-	"testing"
-	"strconv"
-	"github.com/unleash/unleash-client-go/strategy"
 	"github.com/unleash/unleash-client-go/context"
+	"github.com/unleash/unleash-client-go/strategy"
+	"strconv"
+	"testing"
 )
 
 func TestGradualRolloutRandomStrategy_Name(t *testing.T) {

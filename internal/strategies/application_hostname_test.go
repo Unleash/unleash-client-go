@@ -1,10 +1,10 @@
 package strategies
 
 import (
-	"testing"
 	"github.com/unleash/unleash-client-go/context"
-	"os"
 	"github.com/unleash/unleash-client-go/strategy"
+	"os"
+	"testing"
 )
 
 func TestApplicationHostnameStrategy_Name(t *testing.T) {
@@ -82,4 +82,3 @@ func TestApplicationHostnameStrategy_IsEnabled(t *testing.T) {
 		}
 	})
 }
-

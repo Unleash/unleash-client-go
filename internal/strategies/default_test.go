@@ -13,8 +13,8 @@ func TestDefaultStrategy_Name(t *testing.T) {
 func TestDefaultStrategy_IsEnabled(t *testing.T) {
 	s := NewDefaultStrategy()
 
-	if !s.IsEnabled(nil,nil) {
-	t.Errorf("default strategy should be enabled")
+	if !s.IsEnabled(nil, nil) {
+		t.Errorf("default strategy should be enabled")
 	}
 
 }
