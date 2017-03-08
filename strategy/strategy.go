@@ -1,6 +1,6 @@
 package strategy
 
-import "github.com/unleash/unleash-client-go/context"
+import "github.com/Unleash/unleash-client-go/context"
 
 const (
 	// ParamHostNames is a parameter indicating a comma separated list of hostnames.

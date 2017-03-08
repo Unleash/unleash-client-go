@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/unleash/unleash-client-go/internal/api"
+	"github.com/Unleash/unleash-client-go/internal/api"
 	"net/http"
 	"time"
 )

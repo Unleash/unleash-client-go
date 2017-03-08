@@ -1,8 +1,8 @@
 package strategies
 
 import (
-	"github.com/unleash/unleash-client-go/context"
-	"github.com/unleash/unleash-client-go/strategy"
+	"github.com/Unleash/unleash-client-go/context"
+	"github.com/Unleash/unleash-client-go/strategy"
 	"strings"
 )
 

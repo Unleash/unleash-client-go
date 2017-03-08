@@ -9,7 +9,7 @@ Unleash Client for Go.  Read more about the [Unleash project](https://github.com
 ### 1. Install unleash-client-go
 
 ```bash
-go get github.com/unleash/unleash-client-go
+go get github.com/Unleash/unleash-client-go
 ```
 
 ### 2. Initialize unleash
@@ -18,7 +18,7 @@ The easiest way to get started with Unleash is to initialize it early in your ap
 
 ```go
 import (
-	"github.com/unleash/unleash-client-go"
+	"github.com/Unleash/unleash-client-go"
 )
 
 func init() {

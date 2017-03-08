@@ -2,8 +2,8 @@ package unleash
 
 import (
 	"fmt"
-	s "github.com/unleash/unleash-client-go/internal/strategies"
-	"github.com/unleash/unleash-client-go/strategy"
+	s "github.com/Unleash/unleash-client-go/internal/strategies"
+	"github.com/Unleash/unleash-client-go/strategy"
 	"net/url"
 	"strings"
 	"time"
