@@ -36,10 +36,12 @@ type Client struct {
 	metricsListener    MetricListener
 	repositoryListener RepositoryListener
 	ready              chan bool
+	onReady            chan bool
 	closed             chan bool
 	count              chan metric
 	sent               chan MetricsData
 	registered         chan ClientData
+	isReady            bool
 }
 
 type errorChannels struct {
@@ -84,6 +86,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 			strategies:      []strategy.Strategy{},
 		},
 		errorChannels: errChannels,
+		onReady:       make(chan bool, 1),
 		ready:         make(chan bool, 1),
 		count:         make(chan metric),
 		sent:          make(chan MetricsData),
@@ -192,6 +195,7 @@ func (uc *Client) sync() {
 				uc.errorListener.OnWarning(w)
 			}
 		case <-uc.ready:
+			uc.onReady <- true
 			if uc.repositoryListener != nil {
 				uc.repositoryListener.OnReady()
 			}
@@ -298,4 +302,12 @@ func (uc Client) getStrategy(name string) strategy.Strategy {
 		}
 	}
 	return nil
+}
+
+// WaitForReady will block until the internal repository has loaded the feature toggles from the
+// storage engine. It will return immediately if the repository is already ready.
+func (uc *Client) WaitForReady() {
+	if !uc.isReady {
+		uc.isReady = <-uc.onReady
+	}
 }
