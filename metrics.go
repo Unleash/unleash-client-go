@@ -147,6 +147,9 @@ func (m *metrics) registerInstance() {
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Add("UNLEASH-APPNAME", m.options.appName)
+	req.Header.Add("UNLEASH-INSTANCEID", m.options.instanceId)
+	req.Header.Add("User-Agent", m.options.appName)
 
 	resp, err := m.options.httpClient.Do(req)
 	if err != nil {
@@ -237,7 +240,7 @@ func (m *metrics) getPayload() MetricsData {
 func (m metrics) getClientData() ClientData {
 	return ClientData{
 		m.options.appName,
-		m.options.instanceID,
+		m.options.instanceId,
 		m.options.strategies,
 		m.started,
 		int64(m.options.metricsInterval.Seconds()),
@@ -247,7 +250,7 @@ func (m metrics) getClientData() ClientData {
 func (m metrics) getMetricsData() MetricsData {
 	return MetricsData{
 		m.options.appName,
-		m.options.instanceID,
+		m.options.instanceId,
 		m.bucket,
 	}
 }

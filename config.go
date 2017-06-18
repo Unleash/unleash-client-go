@@ -148,7 +148,7 @@ type repositoryOptions struct {
 
 type metricsOptions struct {
 	appName         string
-	instanceID      string
+	instanceId      string
 	url             url.URL
 	strategies      []string
 	metricsInterval time.Duration

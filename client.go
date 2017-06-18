@@ -157,7 +157,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 	uc.metrics = newMetrics(
 		metricsOptions{
 			appName:         uc.options.appName,
-			instanceID:      uc.options.instanceId,
+			instanceId:      uc.options.instanceId,
 			strategies:      strategyNames,
 			metricsInterval: uc.options.metricsInterval,
 			url:             *parsedUrl,
