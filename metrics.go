@@ -7,6 +7,7 @@ import (
 	"github.com/Unleash/unleash-client-go/internal/api"
 	"net/http"
 	"time"
+	"net/url"
 )
 
 // MetricsData represents the data sent to the unleash server.
@@ -132,26 +133,9 @@ func (m *metrics) registerInstance() {
 	}
 
 	u, _ := m.options.url.Parse("./client/register")
-
-	var body bytes.Buffer
 	payload := m.getClientData()
-	enc := json.NewEncoder(&body)
-	if err := enc.Encode(payload); err != nil {
-		m.err(err)
-		return
-	}
+	resp, err := m.doPost(u, payload)
 
-	req, err := http.NewRequest("POST", u.String(), &body)
-	if err != nil {
-		m.err(err)
-		return
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Add("UNLEASH-APPNAME", m.options.appName)
-	req.Header.Add("UNLEASH-INSTANCEID", m.options.instanceId)
-	req.Header.Add("User-Agent", m.options.appName)
-
-	resp, err := m.options.httpClient.Do(req)
 	if err != nil {
 		m.err(err)
 		return
@@ -176,24 +160,10 @@ func (m *metrics) sendMetrics() {
 	}
 
 	u, _ := m.options.url.Parse("./client/metrics")
-
-	var body bytes.Buffer
 	payload := m.getPayload()
-	enc := json.NewEncoder(&body)
-	if err := enc.Encode(payload); err != nil {
-		m.err(err)
-		return
-	}
-
-	req, err := http.NewRequest("POST", u.String(), &body)
 	m.startTimer()
-	if err != nil {
-		m.err(err)
-		return
-	}
-	req.Header.Set("Content-Type", "application/json")
+	resp, err := m.doPost(u, payload)
 
-	resp, err := m.options.httpClient.Do(req)
 	if err != nil {
 		m.err(err)
 		return
@@ -210,6 +180,29 @@ func (m *metrics) sendMetrics() {
 	}
 
 	m.sent <- payload
+}
+
+func (m *metrics) doPost(url *url.URL, payload interface{}) (*http.Response, error) {
+	var body bytes.Buffer
+	enc := json.NewEncoder(&body)
+	if err := enc.Encode(payload); err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", url.String(), &body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Add("Unleash-Appname", m.options.appName)
+	req.Header.Add("Unleash-Instanceid", m.options.instanceId)
+	req.Header.Add("User-Agent", m.options.appName)
+
+	for k, v := range m.options.customHeaders {
+		req.Header[k] = v
+	}
+
+	return m.options.httpClient.Do(req)
 }
 
 func (m metrics) count(name string, enabled bool) {

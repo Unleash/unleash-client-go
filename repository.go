@@ -75,6 +75,10 @@ func (r *repository) fetch() {
 	req.Header.Add("UNLEASH-INSTANCEID", r.options.instanceId)
 	req.Header.Add("User-Agent", r.options.appName)
 
+	for k, v := range r.options.customHeaders {
+		req.Header[k] = v
+	}
+
 	if r.etag != "" {
 		req.Header.Add("If-None-Match", r.etag)
 	}
