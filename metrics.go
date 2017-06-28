@@ -194,8 +194,8 @@ func (m *metrics) doPost(url *url.URL, payload interface{}) (*http.Response, err
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Add("Unleash-Appname", m.options.appName)
-	req.Header.Add("Unleash-Instanceid", m.options.instanceId)
+	req.Header.Add("UNLEASH-APPNAME", m.options.appName)
+	req.Header.Add("UNLEASH-INSTANCEID", m.options.instanceId)
 	req.Header.Add("User-Agent", m.options.appName)
 
 	for k, v := range m.options.customHeaders {
