@@ -116,6 +116,7 @@ func (m *metrics) sync() {
 			} else {
 				t.No++
 			}
+			m.metricsChannels.count <- mc
 			m.bucket.Toggles[mc.Name] = t
 		case <-m.timer.C:
 			m.sendMetrics()
