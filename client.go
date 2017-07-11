@@ -140,6 +140,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 			refreshInterval: uc.options.refreshInterval,
 			storage:         uc.options.storage,
 			httpClient:      uc.options.httpClient,
+			customHeaders:   uc.options.customHeaders,
 		},
 		repositoryChannels{
 			errorChannels: errChannels,
@@ -157,11 +158,12 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 	uc.metrics = newMetrics(
 		metricsOptions{
 			appName:         uc.options.appName,
-			instanceID:      uc.options.instanceId,
+			instanceId:      uc.options.instanceId,
 			strategies:      strategyNames,
 			metricsInterval: uc.options.metricsInterval,
 			url:             *parsedUrl,
 			httpClient:      uc.options.httpClient,
+			customHeaders:   uc.options.customHeaders,
 		},
 		metricsChannels{
 			errorChannels: errChannels,

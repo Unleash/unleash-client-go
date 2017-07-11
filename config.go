@@ -21,6 +21,7 @@ type configOption struct {
 	listener        interface{}
 	storage         Storage
 	httpClient      *http.Client
+	customHeaders	http.Header
 }
 
 // ConfigOption represents a option for configuring the client.
@@ -112,6 +113,14 @@ func WithHttpClient(client *http.Client) ConfigOption {
 	}
 }
 
+// WithCustomHeaders specifies any custom headers that should be sent along with requests to the
+// server.
+func WithCustomHeaders(headers http.Header) ConfigOption {
+	return func(o *configOption) {
+		o.customHeaders = headers
+	}
+}
+
 type featureOption struct {
 	fallback *bool
 	ctx      *context.Context
@@ -144,14 +153,16 @@ type repositoryOptions struct {
 	refreshInterval time.Duration
 	storage         Storage
 	httpClient      *http.Client
+	customHeaders	http.Header
 }
 
 type metricsOptions struct {
 	appName         string
-	instanceID      string
+	instanceId      string
 	url             url.URL
 	strategies      []string
 	metricsInterval time.Duration
 	disableMetrics  bool
 	httpClient      *http.Client
+	customHeaders   http.Header
 }
