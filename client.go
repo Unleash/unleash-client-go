@@ -240,7 +240,7 @@ func (uc Client) IsEnabled(feature string, options ...FeatureOption) (enabled bo
 			continue
 		}
 
-		if foundStrategy.IsEnabled(s.Parameters, opts.ctx) {
+    if foundStrategy.IsEnabled(s.Parameters, opts.ctx) {
 			return true
 		}
 	}
