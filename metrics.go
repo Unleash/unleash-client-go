@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/Unleash/unleash-client-go/internal/api"
 	"net/http"
-	"time"
 	"net/url"
+	"time"
 )
 
 // MetricsData represents the data sent to the unleash server.
@@ -152,7 +152,6 @@ func (m *metrics) sendMetrics() {
 	if m.options.disableMetrics {
 		return
 	}
-
 	if m.bucket.IsEmpty() {
 		m.resetBucket()
 		m.startTimer()
@@ -163,7 +162,6 @@ func (m *metrics) sendMetrics() {
 	payload := m.getPayload()
 	m.startTimer()
 	resp, err := m.doPost(u, payload)
-
 	if err != nil {
 		m.err(err)
 		return
@@ -179,7 +177,7 @@ func (m *metrics) sendMetrics() {
 		m.warn(fmt.Errorf("%s return %d", u.String(), resp.StatusCode))
 	}
 
-	m.sent <- payload
+	//m.sent <- payload
 }
 
 func (m *metrics) doPost(url *url.URL, payload interface{}) (*http.Response, error) {

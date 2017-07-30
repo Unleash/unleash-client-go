@@ -90,13 +90,13 @@ func (r *repository) fetch() {
 	}
 
 	defer resp.Body.Close()
-
 	if resp.StatusCode == http.StatusNotModified {
 		return
 	}
 
 	var featureResp api.FeatureResponse
 	dec := json.NewDecoder(resp.Body)
+
 	if err := dec.Decode(&featureResp); err != nil {
 		r.err(err)
 		return
@@ -115,6 +115,7 @@ func (r *repository) getToggle(key string) *api.Feature {
 	if toggle, found := r.options.storage.Get(key); found {
 		if feature, ok := toggle.(api.Feature); ok {
 			return &feature
+
 		}
 	}
 	return nil
