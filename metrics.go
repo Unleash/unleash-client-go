@@ -30,6 +30,9 @@ type ClientData struct {
 	// InstanceID is the instance identifier.
 	InstanceID string `json:"instanceId"`
 
+	// Optional field that describes the sdk version (name:version)
+	SDKVersion string `json:"sdkVersion"`
+
 	// Strategies is a list of names of the strategies supported by the client.
 	Strategies []string `json:"strategies"`
 
@@ -234,6 +237,7 @@ func (m metrics) getClientData() ClientData {
 	return ClientData{
 		m.options.appName,
 		m.options.instanceId,
+		fmt.Sprintf("%s:%s", clientName, clientVersion),
 		m.options.strategies,
 		m.started,
 		int64(m.options.metricsInterval.Seconds()),
