@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/Unleash/unleash-client-go/internal/api"
 	"net/http"
-	"time"
 	"net/url"
+	"time"
 )
 
 // MetricsData represents the data sent to the unleash server.
