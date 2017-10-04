@@ -10,31 +10,36 @@ import (
 	"time"
 )
 
-const (
-	server     = "http://foo.com"
-	appName    = "unleash-client-go-tests"
-	instanceID = "1234"
-)
-
 func TestMetrics_RegisterInstance(t *testing.T) {
 	assert := assert.New(t)
 	defer gock.Off()
 
-	gock.New(server).
+	gock.New(mockerServer).
 		Post("/client/register").
-		MatchHeader("UNLEASH-APPNAME", appName).
-		MatchHeader("UNLEASH-INSTANCEID", instanceID).
+		MatchHeader("UNLEASH-APPNAME", mockAppName).
+		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
 		Reply(200)
 
-	client, err := NewClient(
-		WithUrl(server),
-		WithAppName(appName),
-		WithInstanceId(instanceID),
+	gock.New(mockerServer).
+		Get("/features").
+		Reply(200).
+		JSON(api.FeatureResponse{})
+
+	mockListener := &MockedListener{}
+	mockListener.On("OnReady").Return()
+	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+
+	_, err := NewClient(
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithListener(mockListener),
 	)
 
+	time.Sleep(1 * time.Second)
+
 	assert.Nil(err, "client should not return an error")
-	data := <-client.registered
-	assert.NotNil(data, "client data should not be nil")
+
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
 
@@ -42,27 +47,27 @@ func TestMetrics_DoPost(t *testing.T) {
 	assert := assert.New(t)
 	defer gock.Off()
 
-	gock.New(server).
+	gock.New(mockerServer).
 		Post("/client/register").
 		Reply(200)
 
-	gock.New(server).
+	gock.New(mockerServer).
 		Post("").
-		MatchHeader("UNLEASH-APPNAME", appName).
-		MatchHeader("UNLEASH-INSTANCEID", instanceID).
+		MatchHeader("UNLEASH-APPNAME", mockAppName).
+		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
 		Reply(200)
 
 	client, err := NewClient(
-		WithUrl(server),
-		WithAppName(appName),
-		WithInstanceId(instanceID),
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
 	)
 
 	assert.Nil(err, "client should not return an error")
 
 	m := client.metrics
 
-	serverUrl, _ := url.Parse(server)
+	serverUrl, _ := url.Parse(mockerServer)
 	res, err := m.doPost(serverUrl, &struct{}{})
 
 	assert.Nil(err, "doPost should not return an error")
@@ -74,11 +79,11 @@ func TestMetrics_SendMetrics(t *testing.T) {
 	assert := assert.New(t)
 	defer gock.Off()
 
-	gock.New(server).
+	gock.New(mockerServer).
 		Post("/client/register").
 		Reply(200)
 
-	gock.New(server).
+	gock.New(mockerServer).
 		Get("/features").
 		Reply(200).
 		JSON(api.FeatureResponse{
@@ -98,10 +103,10 @@ func TestMetrics_SendMetrics(t *testing.T) {
 			},
 		})
 
-	gock.New(server).
+	gock.New(mockerServer).
 		Post("/client/metrics").
-		MatchHeader("UNLEASH-APPNAME", appName).
-		MatchHeader("UNLEASH-INSTANCEID", instanceID).
+		MatchHeader("UNLEASH-APPNAME", mockAppName).
+		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
 		Times(5).
 		Reply(200)
 
@@ -113,9 +118,9 @@ func TestMetrics_SendMetrics(t *testing.T) {
 	mockListener.On("OnSent", mock.AnythingOfType("MetricsData"))
 
 	client, err := NewClient(
-		WithUrl(server),
-		WithAppName(appName),
-		WithInstanceId(instanceID),
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
 		WithMetricsInterval(200*time.Millisecond),
 		WithListener(mockListener),
 	)

@@ -4,6 +4,12 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+const (
+	mockerServer = "http://foo.com"
+	mockAppName = "unleash-client-go-tests"
+	mockInstanceId = "1234"
+)
+
 type MockedListener struct {
 	mock.Mock
 }
