@@ -1,11 +1,10 @@
 package strategies
 
 import (
-	"crypto/md5"
 	"fmt"
-	"io"
 	"os"
 	"strconv"
+	"github.com/spaolacci/murmur3"
 )
 
 func round(f float64) int {
@@ -46,11 +45,10 @@ func parameterAsFloat64(param interface{}) (result float64, ok bool) {
 	return
 }
 
-func normalizedValue(id string, groupId string) int64 {
+func normalizedValue(id string, groupId string) uint32 {
 	value := fmt.Sprintf("%s:%s", groupId, id)
-	hash := md5.New()
-	io.WriteString(hash, value)
-	hex := fmt.Sprintf("%x", hash.Sum(nil))
-	hashCode, _ := strconv.ParseInt(hex[len(hex)-4:], 16, 32)
-	return hashCode % 100
+	hash := murmur3.New32()
+	hash.Write([]byte(value))
+	hashCode := hash.Sum32()
+	return hashCode % uint32(100) + 1
 }
