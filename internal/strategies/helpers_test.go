@@ -2,8 +2,8 @@ package strategies
 
 import (
 	"github.com/stretchr/testify/assert"
-	"testing"
 	"os"
+	"testing"
 )
 
 func TestResolveHostname(t *testing.T) {

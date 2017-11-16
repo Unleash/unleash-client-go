@@ -21,7 +21,7 @@ type configOption struct {
 	listener        interface{}
 	storage         Storage
 	httpClient      *http.Client
-	customHeaders	http.Header
+	customHeaders   http.Header
 }
 
 // ConfigOption represents a option for configuring the client.
@@ -153,7 +153,7 @@ type repositoryOptions struct {
 	refreshInterval time.Duration
 	storage         Storage
 	httpClient      *http.Client
-	customHeaders	http.Header
+	customHeaders   http.Header
 }
 
 type metricsOptions struct {

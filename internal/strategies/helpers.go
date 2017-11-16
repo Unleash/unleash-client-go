@@ -4,8 +4,8 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
-	"strconv"
 	"os"
+	"strconv"
 )
 
 func round(f float64) int {

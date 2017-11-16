@@ -5,8 +5,8 @@ import (
 )
 
 const (
-	mockerServer = "http://foo.com"
-	mockAppName = "unleash-client-go-tests"
+	mockerServer   = "http://foo.com"
+	mockAppName    = "unleash-client-go-tests"
 	mockInstanceId = "1234"
 )
 
