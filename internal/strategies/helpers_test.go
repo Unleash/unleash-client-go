@@ -3,7 +3,25 @@ package strategies
 import (
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"os"
 )
+
+func TestResolveHostname(t *testing.T) {
+	envHostname := os.Getenv("HOSTNAME")
+	osHostname, err := os.Hostname()
+
+	assert.Nil(t, err, "os.Hostname should not return an error")
+
+	hostname, err := resolveHostname()
+
+	assert.Nil(t, err, "resolveHostname should not return an error")
+
+	if envHostname != "" {
+		assert.Equal(t, envHostname, hostname)
+	} else {
+		assert.Equal(t, osHostname, hostname)
+	}
+}
 
 func TestParameterAsFloat64(t *testing.T) {
 	goodData := map[interface{}]float64{

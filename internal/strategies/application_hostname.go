@@ -3,7 +3,6 @@ package strategies
 import (
 	"github.com/Unleash/unleash-client-go/context"
 	"github.com/Unleash/unleash-client-go/strategy"
-	"os"
 	"strings"
 )
 
@@ -12,14 +11,7 @@ type applicationHostnameStrategy struct {
 }
 
 func NewApplicationHostnameStrategy() *applicationHostnameStrategy {
-	hostname := os.Getenv("HOSTNAME")
-	if hostname == "" {
-		var err error
-		hostname, err = os.Hostname()
-		if err != nil {
-			hostname = "undefined"
-		}
-	}
+	hostname, _ := resolveHostname()
 	return &applicationHostnameStrategy{
 		strings.ToLower(hostname),
 	}

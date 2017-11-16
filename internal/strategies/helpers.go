@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"os"
 )
 
 func round(f float64) int {
@@ -15,6 +16,18 @@ func round(f float64) int {
 		return int(f + 0.5)
 	}
 	return 0
+}
+
+func resolveHostname() (string, error) {
+	var err error
+	hostname := os.Getenv("HOSTNAME")
+	if hostname == "" {
+		hostname, err = os.Hostname()
+		if err != nil {
+			hostname = "undefined"
+		}
+	}
+	return hostname, err
 }
 
 func parameterAsFloat64(param interface{}) (result float64, ok bool) {
