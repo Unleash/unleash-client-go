@@ -34,6 +34,8 @@ func parameterAsFloat64(param interface{}) (result float64, ok bool) {
 		result, ok = f, true
 	} else if i, isInt := param.(int); isInt {
 		result, ok = float64(i), true
+	} else if i, isInt := param.(uint32); isInt {
+		result, ok = float64(i), true
 	} else if i, isInt := param.(int64); isInt {
 		result, ok = float64(i), true
 	} else if s, isString := param.(string); isString {
