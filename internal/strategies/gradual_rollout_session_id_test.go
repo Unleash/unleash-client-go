@@ -3,21 +3,19 @@ package strategies
 import (
 	"github.com/Unleash/unleash-client-go/context"
 	"github.com/Unleash/unleash-client-go/strategy"
+	"github.com/stretchr/testify/assert"
 	"strconv"
 	"testing"
 )
 
 func TestGradualRolloutSessionId_Name(t *testing.T) {
 	strategy := NewGradualRolloutSessionId()
-
-	if strategy.Name() != "gradualRolloutSessionId" {
-		t.Errorf("gradual-rollout-user-id strategy should have correct name: %s", strategy.Name())
-	}
+	assert.Equal(t, "gradualRolloutSessionId", strategy.Name(), "strategy should have correct name")
 }
 
 func TestGradualRolloutSessionId_IsEnabled(t *testing.T) {
-
 	s := NewGradualRolloutSessionId()
+	assert := assert.New(t)
 
 	t.Run("p=100", func(t *testing.T) {
 		params := map[string]interface{}{
@@ -27,9 +25,7 @@ func TestGradualRolloutSessionId_IsEnabled(t *testing.T) {
 		isEnabled := s.IsEnabled(params, &context.Context{
 			SessionId: "123",
 		})
-		if !isEnabled {
-			t.Error("should be enabled when percentage is 100")
-		}
+		assert.True(isEnabled, "should be enabled when percentage is 100")
 	})
 
 	t.Run("p=0", func(t *testing.T) {
@@ -40,9 +36,7 @@ func TestGradualRolloutSessionId_IsEnabled(t *testing.T) {
 		isEnabled := s.IsEnabled(params, &context.Context{
 			SessionId: "123",
 		})
-		if isEnabled {
-			t.Error("should be disabled when percentage is 0")
-		}
+		assert.False(isEnabled, "should be disabled when percentage is 0")
 	})
 
 	t.Run("p1=p2", func(t *testing.T) {
@@ -57,9 +51,7 @@ func TestGradualRolloutSessionId_IsEnabled(t *testing.T) {
 		isEnabled := s.IsEnabled(params, &context.Context{
 			SessionId: sessionId,
 		})
-		if !isEnabled {
-			t.Error("should be enabled when percentage is exactly same")
-		}
+		assert.True(isEnabled, "should be enabled when percentage is exactly same")
 	})
 
 	t.Run("p1<p2", func(t *testing.T) {
@@ -74,9 +66,8 @@ func TestGradualRolloutSessionId_IsEnabled(t *testing.T) {
 		isEnabled := s.IsEnabled(params, &context.Context{
 			SessionId: sessionId,
 		})
-		if isEnabled {
-			t.Error("should be disabled when percentage is just below required value")
-		}
+
+		assert.False(isEnabled, "should be disabled when percentage is just below required value")
 	})
 
 	t.Run("p1-p1<1", func(t *testing.T) {
@@ -101,12 +92,8 @@ func TestGradualRolloutSessionId_IsEnabled(t *testing.T) {
 			}
 
 			actualPercentage := round(100.0 * float64(enabledCount) / float64(rounds))
-			highMark := expectedPercentage + 1
-			lowMark := expectedPercentage - 1
 
-			if actualPercentage < lowMark || actualPercentage > highMark {
-				t.Errorf("Expected percentage of %d, got %d", expectedPercentage, actualPercentage)
-			}
+			assert.InDelta(expectedPercentage, actualPercentage, 1.0)
 		}
 	})
 }

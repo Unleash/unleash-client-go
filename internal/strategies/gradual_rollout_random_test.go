@@ -3,16 +3,14 @@ package strategies
 import (
 	"github.com/Unleash/unleash-client-go/context"
 	"github.com/Unleash/unleash-client-go/strategy"
+	"github.com/stretchr/testify/assert"
 	"strconv"
 	"testing"
 )
 
 func TestGradualRolloutRandomStrategy_Name(t *testing.T) {
 	strategy := NewGradualRolloutRandomStrategy()
-
-	if strategy.Name() != "gradualRolloutRandom" {
-		t.Errorf("strategy should have correct name: %s", strategy.Name())
-	}
+	assert.Equal(t, "gradualRolloutRandom", strategy.Name(), "strategy should have correct name")
 }
 
 func TestGradualRolloutRandomStrategy_IsEnabled(t *testing.T) {
@@ -39,11 +37,7 @@ func TestGradualRolloutRandomStrategy_IsEnabled(t *testing.T) {
 		}
 
 		actualPercentage := round(100.0 * float64(enabledCount) / float64(rounds))
-		highMark := expectedPercentage + 1
-		lowMark := expectedPercentage - 1
 
-		if actualPercentage < lowMark || actualPercentage > highMark {
-			t.Errorf("Expected percentage of %d, got %d", expectedPercentage, actualPercentage)
-		}
+		assert.InDelta(t, expectedPercentage, actualPercentage, 1.0)
 	}
 }

@@ -1,6 +1,7 @@
 package strategies
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -17,9 +18,7 @@ func TestParameterAsFloat64(t *testing.T) {
 		if !ok {
 			t.Errorf("Not OK: %v", input)
 		}
-		if actual-expected > 0.0000001 {
-			t.Errorf("Expected: %v, got %v", expected, actual)
-		}
+		assert.InDelta(t, actual, expected, 0.0000001)
 	}
 
 	badData := map[interface{}]float64{
@@ -29,17 +28,11 @@ func TestParameterAsFloat64(t *testing.T) {
 
 	for input, _ := range badData {
 		_, ok := parameterAsFloat64(input)
-		if ok {
-			t.Errorf("Expected: %v to fail", input)
-		}
-
+		assert.False(t, ok)
 	}
 }
 
 func TestNormalizedValue(t *testing.T) {
 	norm := normalizedValue("123123", "group1")
-	if norm != 2 {
-		t.Errorf("Expected: 2, got %v", norm)
-	}
-
+	assert.Equal(t, int64(2), norm)
 }

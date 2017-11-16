@@ -3,19 +3,18 @@ package strategies
 import (
 	"github.com/Unleash/unleash-client-go/context"
 	"github.com/Unleash/unleash-client-go/strategy"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestUserWithIdStrategy_Name(t *testing.T) {
 	strategy := NewUserWithIdStrategy()
-
-	if strategy.Name() != "userWithId" {
-		t.Errorf("strategy should have correct name: %s", strategy.Name())
-	}
+	assert.Equal(t, "userWithId", strategy.Name(), "strategy should have correct name")
 }
 
 func TestUserWithIdStrategy_IsEnabled(t *testing.T) {
 	s := NewUserWithIdStrategy()
+	assert := assert.New(t)
 
 	t.Run("u=u", func(t *testing.T) {
 		params := map[string]interface{}{
@@ -24,10 +23,7 @@ func TestUserWithIdStrategy_IsEnabled(t *testing.T) {
 		ctx := &context.Context{
 			UserId: "123",
 		}
-
-		if !s.IsEnabled(params, ctx) {
-			t.Errorf("user-with-id-strategy should be enabled for userId")
-		}
+		assert.True(s.IsEnabled(params, ctx), "user-with-id-strategy should be enabled for userId")
 	})
 
 	t.Run("u=list(a, u)", func(t *testing.T) {
@@ -37,10 +33,7 @@ func TestUserWithIdStrategy_IsEnabled(t *testing.T) {
 		ctx := &context.Context{
 			UserId: "12312312",
 		}
-
-		if !s.IsEnabled(params, ctx) {
-			t.Errorf("user-with-id-strategy should be enabled for userId in list")
-		}
+		assert.True(s.IsEnabled(params, ctx), "user-with-id-strategy should be enabled for userId in list")
 	})
 
 	t.Run("u!=list(a, b)", func(t *testing.T) {
@@ -50,10 +43,7 @@ func TestUserWithIdStrategy_IsEnabled(t *testing.T) {
 		ctx := &context.Context{
 			UserId: "12",
 		}
-
-		if s.IsEnabled(params, ctx) {
-			t.Errorf("user-with-id-strategy should not be enabled for userId NOT in list")
-		}
+		assert.False(s.IsEnabled(params, ctx), "user-with-id-strategy should not be enabled for userId NOT in list")
 	})
 
 	t.Run("u=list(a,u)", func(t *testing.T) {
@@ -63,10 +53,6 @@ func TestUserWithIdStrategy_IsEnabled(t *testing.T) {
 		ctx := &context.Context{
 			UserId: "122",
 		}
-
-		if !s.IsEnabled(params, ctx) {
-			t.Errorf("user-with-id-strategy should be enabled for userId in list")
-		}
+		assert.True(s.IsEnabled(params, ctx), "user-with-id-strategy should be enabled for userId in list")
 	})
-
 }

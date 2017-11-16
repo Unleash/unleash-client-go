@@ -3,29 +3,25 @@ package strategies
 import (
 	"github.com/Unleash/unleash-client-go/context"
 	"github.com/Unleash/unleash-client-go/strategy"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestRemoteAddressStrategy_Name(t *testing.T) {
 	strategy := NewRemoteAddressStrategy()
-
-	if strategy.Name() != "remoteAddress" {
-		t.Errorf("strategy should have correct name: %s", strategy.Name())
-	}
+	assert.Equal(t, "remoteAddress", strategy.Name(), "strategy should have correct name")
 }
 
 func TestRemoteAddressStrategy_IsEnabled(t *testing.T) {
 	s := NewRemoteAddressStrategy()
+	assert := assert.New(t)
 
 	t.Run("r=", func(t *testing.T) {
 		var params map[string]interface{}
 		ctx := &context.Context{
 			RemoteAddress: "123",
 		}
-
-		if s.IsEnabled(params, ctx) {
-			t.Errorf("RemoteAddressStrategy should not crash for missing params")
-		}
+		assert.False(s.IsEnabled(params, ctx), "RemoteAddressStrategy should not crash for missing params")
 	})
 
 	t.Run("r=i", func(t *testing.T) {
@@ -35,10 +31,7 @@ func TestRemoteAddressStrategy_IsEnabled(t *testing.T) {
 		ctx := &context.Context{
 			RemoteAddress: "127.0.0.1",
 		}
-
-		if !s.IsEnabled(params, ctx) {
-			t.Errorf("RemoteAddressStrategy should be enabled for ip")
-		}
+		assert.True(s.IsEnabled(params, ctx), "RemoteAddressStrategy should be enabled for ip")
 	})
 
 	t.Run("r!=list(i)", func(t *testing.T) {
@@ -48,10 +41,7 @@ func TestRemoteAddressStrategy_IsEnabled(t *testing.T) {
 		ctx := &context.Context{
 			RemoteAddress: "127.0.0.1",
 		}
-
-		if s.IsEnabled(params, ctx) {
-			t.Errorf("RemoteAddressStrategy should not be enabled for ip NOT in list")
-		}
+		assert.False(s.IsEnabled(params, ctx), "RemoteAddressStrategy should not be enabled for ip NOT in list")
 	})
 
 	t.Run("r=list(i)", func(t *testing.T) {
@@ -61,9 +51,6 @@ func TestRemoteAddressStrategy_IsEnabled(t *testing.T) {
 		ctx := &context.Context{
 			RemoteAddress: "127.0.0.2",
 		}
-
-		if !s.IsEnabled(params, ctx) {
-			t.Errorf("RemoteAddressStrategy should be enabled for ip in list")
-		}
+		assert.True(s.IsEnabled(params, ctx), "RemoteAddressStrategy should be enabled for ip in list")
 	})
 }

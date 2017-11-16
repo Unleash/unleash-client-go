@@ -3,20 +3,19 @@ package strategies
 import (
 	"github.com/Unleash/unleash-client-go/context"
 	"github.com/Unleash/unleash-client-go/strategy"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
 )
 
 func TestApplicationHostnameStrategy_Name(t *testing.T) {
 	strategy := NewApplicationHostnameStrategy()
-
-	if strategy.Name() != "applicationHostname" {
-		t.Errorf("strategy should have correct name: %s", strategy.Name())
-	}
+	assert.Equal(t, "applicationHostname", strategy.Name(), "strategy should have correct name")
 }
 
 func TestApplicationHostnameStrategy_IsEnabled(t *testing.T) {
 	s := NewApplicationHostnameStrategy()
+	assert := assert.New(t)
 
 	t.Run("h=''", func(t *testing.T) {
 		isEnabled := s.IsEnabled(nil, &context.Context{
@@ -25,9 +24,7 @@ func TestApplicationHostnameStrategy_IsEnabled(t *testing.T) {
 			},
 		})
 
-		if isEnabled {
-			t.Errorf("strategy should be disabled when no hostname defined")
-		}
+		assert.False(isEnabled, "strategy should be disabled when no hostname defined")
 	})
 
 	t.Run("h=os.hostname", func(t *testing.T) {
@@ -36,9 +33,7 @@ func TestApplicationHostnameStrategy_IsEnabled(t *testing.T) {
 			strategy.ParamHostNames: hostname,
 		}, nil)
 
-		if !isEnabled {
-			t.Errorf("strategy should be enabled when hostname is defined")
-		}
+		assert.True(isEnabled, "strategy should be enabled when hostname is defined")
 	})
 
 	t.Run("h=list(os.hostname)", func(t *testing.T) {
@@ -47,9 +42,7 @@ func TestApplicationHostnameStrategy_IsEnabled(t *testing.T) {
 			strategy.ParamHostNames: "localhost," + hostname,
 		}, nil)
 
-		if !isEnabled {
-			t.Errorf("strategy should be enabled when hostname is defined in list")
-		}
+		assert.True(isEnabled, "strategy should be enabled when hostname is defined in list")
 	})
 
 	t.Run("h=list(a,env.hostname)", func(t *testing.T) {
@@ -62,9 +55,7 @@ func TestApplicationHostnameStrategy_IsEnabled(t *testing.T) {
 			strategy.ParamHostNames: "localhost,some-random-name",
 		}, nil)
 
-		if !isEnabled {
-			t.Errorf("strategy should be enabled when hostname is defined via env")
-		}
+		assert.True(isEnabled, "strategy should be enabled when hostname is defined via env")
 	})
 
 	t.Run("h=list(a,env.hostNAME)", func(t *testing.T) {
@@ -77,8 +68,6 @@ func TestApplicationHostnameStrategy_IsEnabled(t *testing.T) {
 			strategy.ParamHostNames: "localhost,some-random-name",
 		}, nil)
 
-		if !isEnabled {
-			t.Errorf("strategy should handle weird casing")
-		}
+		assert.True(isEnabled, "strategy should handle weird casing")
 	})
 }

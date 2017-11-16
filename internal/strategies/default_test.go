@@ -1,20 +1,16 @@
 package strategies
 
-import "testing"
+import (
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
 
 func TestDefaultStrategy_Name(t *testing.T) {
 	strategy := NewDefaultStrategy()
-
-	if strategy.Name() != "default" {
-		t.Errorf("strategy should have correct name: %s", strategy.Name())
-	}
+	assert.Equal(t, "default", strategy.Name(), "strategy should have correct name")
 }
 
 func TestDefaultStrategy_IsEnabled(t *testing.T) {
 	s := NewDefaultStrategy()
-
-	if !s.IsEnabled(nil, nil) {
-		t.Errorf("default strategy should be enabled")
-	}
-
+	assert.True(t, s.IsEnabled(nil, nil), "default strategy should be enabled")
 }
