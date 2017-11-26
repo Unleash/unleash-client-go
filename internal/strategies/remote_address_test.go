@@ -53,4 +53,14 @@ func TestRemoteAddressStrategy_IsEnabled(t *testing.T) {
 		}
 		assert.True(s.IsEnabled(params, ctx), "RemoteAddressStrategy should be enabled for ip in list")
 	})
+
+	t.Run("r=range(i)", func(t *testing.T) {
+		params := map[string]interface{}{
+			strategy.ParamIps: "127.0.1.1, 127.0.1.2,127.0.1.3, 160.33.0.0/16",
+		}
+		ctx := &context.Context{
+			RemoteAddress: "160.33.0.33",
+		}
+		assert.True(s.IsEnabled(params, ctx), "RemoteAddressStrategy should be enabled for ip inside range in a list")
+	})
 }
