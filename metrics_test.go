@@ -21,7 +21,7 @@ func TestMetrics_RegisterInstance(t *testing.T) {
 		Reply(200)
 
 	gock.New(mockerServer).
-		Get("/features").
+		Get("/client/features").
 		Reply(200).
 		JSON(api.FeatureResponse{})
 
@@ -84,7 +84,7 @@ func TestMetrics_SendMetrics(t *testing.T) {
 		Reply(200)
 
 	gock.New(mockerServer).
-		Get("/features").
+		Get("/client/features").
 		Reply(200).
 		JSON(api.FeatureResponse{
 			Response: api.Response{

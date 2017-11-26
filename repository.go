@@ -63,7 +63,7 @@ func (r *repository) cleanup() {
 }
 
 func (r *repository) fetch() {
-	u, _ := r.options.url.Parse("./features")
+	u, _ := r.options.url.Parse("./client/features")
 
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {

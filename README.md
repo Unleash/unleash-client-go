@@ -1,8 +1,9 @@
 [![Build Status](https://travis-ci.org/Unleash/unleash-client-go.svg?branch=master)](https://travis-ci.org/Unleash/unleash-client-go) [![GoDoc](https://godoc.org/github.com/Unleash/unleash-client-go?status.svg)](https://godoc.org/github.com/Unleash/unleash-client-go) [![Go Report Card](https://goreportcard.com/badge/github.com/Unleash/unleash-client-go)](https://goreportcard.com/report/github.com/Unleash/unleash-client-go)
 
 # unleash-client-go
-Unleash Client for Go.  Read more about the [Unleash project](https://github.com/finn-no/unleash) 
+Unleash Client for Go.  Read more about the [Unleash project](https://github.com/Unleash/unleash)
 
+**Version 3.x of the client requires `unleash-server` v3.x or higher.**
 
 ## Getting started
 
@@ -46,8 +47,8 @@ destroy-method. This is typically not required.
 unleash.Close()
 
 ### Built in activation strategies
-The Go client comes with implementations for the built-in activation strategies 
-provided by unleash. 
+The Go client comes with implementations for the built-in activation strategies
+provided by unleash.
 
 - DefaultStrategy
 - UserIdStrategy
@@ -61,7 +62,7 @@ Read more about the strategies in [activation-strategy.md](https://github.com/Un
 
 ### Unleash context
 
-In order to use some of the common activation strategies you must provide a 
+In order to use some of the common activation strategies you must provide a
 [unleash-context](https://github.com/Unleash/unleash/blob/master/docs/unleash-context.md).
 This client SDK allows you to send in the unleash context as part of the `isEnabled` call:
 
