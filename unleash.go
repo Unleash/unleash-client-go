@@ -44,6 +44,12 @@ func Initialize(options ...ConfigOption) (err error) {
 	return
 }
 
+// IsReady is a channel operated method which specifies when the global unleash
+// client is ready
+func IsReady() bool {
+  return <-defaultClient.Ready()
+}
+
 // Close will close the default client.
 func Close() error {
 	return defaultClient.Close()
