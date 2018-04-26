@@ -45,5 +45,10 @@ strict-check:
 	@for d in $$(go list ./... | grep -v /vendor/); do golint $${d}; done
 	@go tool vet ${SRC}
 
+get-deps:
+    dep init
+    rm Gopkg.*
+    rm -rv vendor
+
 run: test-all install
 	@$(TARGET)
