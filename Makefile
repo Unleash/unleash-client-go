@@ -28,7 +28,7 @@ clean:
 fmt:
 	gofmt -l -w $(SRC)
 
-test:
+test: get-deps
 	go test -short ./...
 
 lint:
@@ -43,9 +43,7 @@ strict-check:
 	@go tool vet ${SRC}
 
 get-deps:
-    dep init
-    rm Gopkg.*
-    rm -rv vendor
+	go get -t ./...
 
 run: test-all install
 	@$(TARGET)
