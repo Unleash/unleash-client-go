@@ -1,8 +1,21 @@
+dist: trusty
+sudo: false
+
 language: go
 
-go:
-  - 1.x
+install:
+  # dep is used to manage dependencies
+  - go get -u github.com/golang/dep/cmd/dep
 
-script:
- - go vet ./...
- - go test ./...
+go:
+  - "1.8.x"
+  - "1.9.x"
+  - "1.10.x"
+  - tip
+
+matrix:
+  fast_finish: true
+  allow_failures:
+  - go: tip
+script: 
+  - make test

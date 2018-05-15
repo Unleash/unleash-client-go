@@ -1,13 +1,14 @@
 package unleash
 
 import (
+	"net/url"
+	"testing"
+	"time"
+
 	"github.com/Unleash/unleash-client-go/internal/api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gopkg.in/h2non/gock.v1"
-	"net/url"
-	"testing"
-	"time"
 )
 
 func TestMetrics_RegisterInstance(t *testing.T) {
@@ -67,8 +68,8 @@ func TestMetrics_DoPost(t *testing.T) {
 
 	m := client.metrics
 
-	serverUrl, _ := url.Parse(mockerServer)
-	res, err := m.doPost(serverUrl, &struct{}{})
+	serverURL, _ := url.Parse(mockerServer)
+	res, err := m.doPost(serverURL, &struct{}{})
 
 	assert.Nil(err, "doPost should not return an error")
 	assert.Equal(200, res.StatusCode, "statusCode should be 200")
