@@ -1,8 +1,11 @@
 language: go
 
 go:
-  - 1.x
+  - "1.10"
+ 
+go_import_path: github.com/Unleash/unleash-client-go
 
 script:
+ - go get -t -v ./... 
  - go vet ./...
  - go test ./...
