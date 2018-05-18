@@ -23,7 +23,6 @@ build: $(TARGET)
 
 clean:
 	rm -f $(TARGET)
-	rm *.png
 
 fmt:
 	gofmt -l -w $(SRC)
