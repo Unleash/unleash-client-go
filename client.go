@@ -2,11 +2,12 @@ package unleash
 
 import (
 	"fmt"
-	s "github.com/Unleash/unleash-client-go/internal/strategies"
-	"github.com/Unleash/unleash-client-go/strategy"
 	"net/url"
 	"strings"
 	"time"
+
+	s "github.com/Unleash/unleash-client-go/internal/strategies"
+	"github.com/Unleash/unleash-client-go/strategy"
 )
 
 const (
@@ -85,6 +86,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		},
 		errorChannels: errChannels,
 		ready:         make(chan bool, 1),
+		closed:        make(chan bool, 1),
 		count:         make(chan metric),
 		sent:          make(chan MetricsData),
 		registered:    make(chan ClientData, 1),
@@ -112,6 +114,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 	if uc.options.url == "" {
 		return nil, fmt.Errorf("Unleash server URL missing")
 	}
+	fmt.Printf("unleash server URL: %s\n", uc.options.url)
 
 	if strings.HasSuffix(uc.options.url, deprecatedSuffix) {
 		uc.warn(fmt.Errorf("Unleash server URL %s should no longer link directly to /features", uc.options.url))
@@ -122,7 +125,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		uc.options.url += "/"
 	}
 
-	parsedUrl, err := url.Parse(uc.options.url)
+	parsedURL, err := url.Parse(uc.options.url)
 	if err != nil {
 		return nil, err
 	}
@@ -132,13 +135,13 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 	}
 
 	if uc.options.instanceId == "" {
-		uc.options.instanceId = generateInstanceId()
+		uc.options.instanceId = generateInstanceID()
 	}
 
 	uc.repository = newRepository(
 		repositoryOptions{
 			backupPath:      uc.options.backupPath,
-			url:             *parsedUrl,
+			url:             *parsedURL,
 			appName:         uc.options.appName,
 			instanceId:      uc.options.instanceId,
 			refreshInterval: uc.options.refreshInterval,
@@ -165,7 +168,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 			instanceId:      uc.options.instanceId,
 			strategies:      strategyNames,
 			metricsInterval: uc.options.metricsInterval,
-			url:             *parsedUrl,
+			url:             *parsedURL,
 			httpClient:      uc.options.httpClient,
 			customHeaders:   uc.options.customHeaders,
 		},
@@ -255,6 +258,7 @@ func (uc *Client) Close() error {
 	uc.repository.Close()
 	uc.metrics.Close()
 	uc.closed <- true
+	fmt.Println("client closed")
 	return nil
 }
 

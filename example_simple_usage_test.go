@@ -2,17 +2,18 @@ package unleash_test
 
 import (
 	"fmt"
-	"github.com/Unleash/unleash-client-go"
 	"time"
+
+	"github.com/Unleash/unleash-client-go"
 )
 
-func init() {
-	unleash.Initialize(
-		unleash.WithListener(&unleash.DebugListener{}),
-		unleash.WithAppName("my-application"),
-		unleash.WithUrl("http://unleash.herokuapp.com/api/"),
-	)
-}
+// func init() {
+// 	unleash.Initialize(
+// 		unleash.WithListener(&unleash.DebugListener{}),
+// 		unleash.WithAppName("my-application"),
+// 		unleash.WithUrl("http://unleash.herokuapp.com/api/"),
+// 	)
+// }
 
 const PropertyName = "eid.enabled"
 

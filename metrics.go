@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/Unleash/unleash-client-go/internal/api"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/Unleash/unleash-client-go/internal/api"
 )
 
 // MetricsData represents the data sent to the unleash server.
@@ -88,6 +89,7 @@ func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
 
 func (m *metrics) Close() error {
 	m.stop()
+	fmt.Println("metrics stopped")
 	return nil
 }
 

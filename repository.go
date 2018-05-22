@@ -2,6 +2,7 @@ package unleash
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -18,6 +19,7 @@ type repository struct {
 }
 
 func newRepository(options repositoryOptions, channels repositoryChannels) *repository {
+	fmt.Println("initializing a new repository...")
 	repo := &repository{
 		options:            options,
 		repositoryChannels: channels,
@@ -32,7 +34,7 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 	}
 
 	repo.options.storage.Init(options.backupPath, options.appName)
-
+	repo.close = make(chan bool)
 	go repo.sync()
 
 	return repo
@@ -41,14 +43,17 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 func (r *repository) sync() {
 	defer r.cleanup()
 
+	refreshTimer := time.NewTimer(r.options.refreshInterval)
+	fmt.Printf("async(will refresh repository every %v)\n", r.options.refreshInterval)
+
 	r.fetch()
 	r.ready <- true
 
 	for {
-		refreshTimer := time.NewTimer(r.options.refreshInterval)
-
 		select {
 		case <-r.close:
+			refreshTimer.Stop()
+			fmt.Println("async(stopped the repository sync routine...)")
 			return
 		case <-refreshTimer.C:
 			r.fetch()
@@ -63,6 +68,7 @@ func (r *repository) cleanup() {
 }
 
 func (r *repository) fetch() {
+	fmt.Printf("fetching features...\n")
 	u, _ := r.options.url.Parse("./features")
 
 	req, err := http.NewRequest("GET", u.String(), nil)
@@ -122,5 +128,6 @@ func (r *repository) getToggle(key string) *api.Feature {
 
 func (r *repository) Close() error {
 	r.close <- true
+	fmt.Println("repository closed")
 	return nil
 }

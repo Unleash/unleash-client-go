@@ -9,10 +9,10 @@ import (
 )
 
 func getTmpDirPath() string {
-	return os.TempDir()
+	return os.TempDir() + "/"
 }
 
-func generateInstanceId() string {
+func generateInstanceID() string {
 	prefix := ""
 
 	if user, err := user.Current(); err == nil && user.Username != "" {

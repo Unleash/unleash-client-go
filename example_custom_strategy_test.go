@@ -2,22 +2,12 @@ package unleash_test
 
 import (
 	"fmt"
-	"github.com/Unleash/unleash-client-go"
-	"github.com/Unleash/unleash-client-go/context"
 	"strings"
 	"time"
-)
 
-func init() {
-	unleash.Initialize(
-		unleash.WithListener(&unleash.DebugListener{}),
-		unleash.WithAppName("my-application"),
-		unleash.WithUrl("https://unleash.herokuapp.com/api/"),
-		unleash.WithRefreshInterval(5*time.Second),
-		unleash.WithMetricsInterval(5*time.Second),
-		unleash.WithStrategies(&ActiveForUserWithEmailStrategy{}),
-	)
-}
+	"github.com/Unleash/unleash-client-go"
+	"github.com/Unleash/unleash-client-go/context"
+)
 
 type ActiveForUserWithEmailStrategy struct{}
 
