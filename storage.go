@@ -28,6 +28,9 @@ type Storage interface {
 
 	// Get returns the data for the specified feature toggle.
 	Get(string) (interface{}, bool)
+
+	// GetAll return all data.
+	GetAll() []interface{}
 }
 
 type defaultStorage struct {
@@ -79,4 +82,12 @@ func (ds *defaultStorage) Persist() error {
 func (ds defaultStorage) Get(key string) (interface{}, bool) {
 	val, ok := ds.data[key]
 	return val, ok
+}
+
+func (ds defaultStorage) GetAll() []interface{} {
+	result := make([]interface{}, 0)
+	for _, val := range ds.data {
+		result = append(result, val)
+	}
+	return result
 }

@@ -89,7 +89,6 @@ func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
 
 func (m *metrics) Close() error {
 	m.stop()
-	fmt.Println("metrics stopped")
 	return nil
 }
 

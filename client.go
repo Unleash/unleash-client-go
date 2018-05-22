@@ -3,9 +3,11 @@ package unleash
 import (
 	"fmt"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
+	"github.com/Unleash/unleash-client-go/api"
 	s "github.com/Unleash/unleash-client-go/internal/strategies"
 	"github.com/Unleash/unleash-client-go/strategy"
 )
@@ -114,7 +116,6 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 	if uc.options.url == "" {
 		return nil, fmt.Errorf("Unleash server URL missing")
 	}
-	fmt.Printf("unleash server URL: %s\n", uc.options.url)
 
 	if strings.HasSuffix(uc.options.url, deprecatedSuffix) {
 		uc.warn(fmt.Errorf("Unleash server URL %s should no longer link directly to /features", uc.options.url))
@@ -253,12 +254,52 @@ func (uc Client) IsEnabled(feature string, options ...FeatureOption) (enabled bo
 	return false
 }
 
+// GetFeaturesByPattern retrieves all features whose ID match the given pattern
+func (uc Client) GetFeaturesByPattern(pattern string) []api.Feature {
+	result := make([]api.Feature, 0)
+	r, err := regexp.Compile(pattern)
+	if err != nil {
+		return result
+	}
+	features := uc.repository.getAllToggles()
+	for _, f := range features {
+		if r.Match([]byte(f.Name)) {
+			ft := uc.GetFeature(f.Name)
+			if ft != nil {
+				result = append(result, *ft)
+			}
+		}
+	}
+	return result
+}
+
+// GetFeature queries the feature with the given name.
+func (uc Client) GetFeature(name string) *api.Feature {
+	f := uc.repository.getToggle(name)
+	if f == nil {
+		return nil
+	}
+	strategies := make([]api.Strategy, len(f.Strategies))
+	for i, s := range f.Strategies {
+		strategies[i] = api.Strategy{
+			Name:       s.Name,
+			Parameters: s.Parameters,
+		}
+	}
+	return &api.Feature{
+		Name:        f.Name,
+		Description: f.Description,
+		Enabled:     f.Enabled,
+		Strategies:  strategies,
+	}
+
+}
+
 // Close stops the client from syncing data from the server.
 func (uc *Client) Close() error {
 	uc.repository.Close()
 	uc.metrics.Close()
 	uc.closed <- true
-	fmt.Println("client closed")
 	return nil
 }
 
