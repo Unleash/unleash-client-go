@@ -295,6 +295,21 @@ func (uc Client) GetFeature(name string) *api.Feature {
 
 }
 
+// GetFeaturesByStrategy retrieves all features whose used a given Strategy
+func (uc Client) GetFeaturesByStrategy(strategyName string) []api.Feature {
+	result := make([]api.Feature, 0)
+	features := uc.repository.getAllToggles()
+	for _, feat := range features {
+		for _, str := range feat.Strategies {
+			if str.Name == strategyName {
+				ft := uc.GetFeature(feat.Name)
+				result = append(result, *ft)
+			}
+		}
+	}
+	return result
+}
+
 // Close stops the client from syncing data from the server.
 func (uc *Client) Close() error {
 	uc.repository.Close()
