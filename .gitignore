@@ -36,3 +36,5 @@ _testmain.go
 *.out
 
 .idea/
+.idea/vendor
+vendor

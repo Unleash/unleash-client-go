@@ -1,6 +1,9 @@
 package unleash
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/stretchr/testify/mock"
 )
 
@@ -15,6 +18,7 @@ type MockedListener struct {
 }
 
 func (l *MockedListener) OnError(err error) {
+	fmt.Printf("error occurred while http transport was of type %T: %v\n", http.DefaultTransport, err)
 	l.Called(err)
 }
 

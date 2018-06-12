@@ -32,7 +32,7 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 	}
 
 	repo.options.storage.Init(options.backupPath, options.appName)
-
+	repo.close = make(chan bool)
 	go repo.sync()
 
 	return repo
@@ -40,15 +40,13 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 
 func (r *repository) sync() {
 	defer r.cleanup()
-
 	r.fetch()
 	r.ready <- true
-
 	for {
 		refreshTimer := time.NewTimer(r.options.refreshInterval)
-
 		select {
 		case <-r.close:
+			refreshTimer.Stop()
 			return
 		case <-refreshTimer.C:
 			r.fetch()
@@ -118,6 +116,18 @@ func (r *repository) getToggle(key string) *api.Feature {
 		}
 	}
 	return nil
+}
+
+func (r *repository) getAllToggles() []api.Feature {
+	r.RLock()
+	defer r.RUnlock()
+	result := make([]api.Feature, 0)
+	for _, toggle := range r.options.storage.GetAll() {
+		if feature, ok := toggle.(api.Feature); ok {
+			result = append(result, feature)
+		}
+	}
+	return result
 }
 
 func (r *repository) Close() error {

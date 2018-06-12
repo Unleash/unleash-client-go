@@ -2,8 +2,9 @@ package unleash_test
 
 import (
 	"fmt"
-	"github.com/Unleash/unleash-client-go"
 	"time"
+
+	"github.com/Unleash/unleash-client-go"
 )
 
 // Sync runs the client event loop. All of the channels must be read to avoid blocking the
