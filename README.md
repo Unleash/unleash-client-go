@@ -74,3 +74,25 @@ ctx := context.Context{
 
 unleash.IsEnabled("someToggle", unleash.WithContext(ctx))
 ```
+
+## Development
+
+Requirements:
+* make
+* golint (go get -u golang.org/x/lint/golint)
+
+Run tests:
+
+    make 
+    
+Run lint check:
+
+    make lint
+    
+Run code-style checks:(currently failing)
+    
+    make strict-check
+    
+Run race-tests(currently failing):
+ 
+    make test-all
