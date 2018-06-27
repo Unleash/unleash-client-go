@@ -23,6 +23,7 @@ import (
 
 func init() {
 	unleash.Initialize(
+		unleash.WithListener(&unleash.DebugListener{}),
 		unleash.WithAppName("my-application"),
 		unleash.WithUrl("http://unleash.herokuapp.com/api/"),
 	)
@@ -74,6 +75,9 @@ ctx := context.Context{
 
 unleash.IsEnabled("someToggle", unleash.WithContext(ctx))
 ```
+
+### Caveat
+This client uses go routines to report several events and doesn't drain the channel by default. So you need to either register a listener using `WithListener` or drain the channel "manually" (demonstrated in [this example](https://github.com/Unleash/unleash-client-go/blob/master/example_with_instance_test.go)).
 
 ## Development
 
