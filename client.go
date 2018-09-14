@@ -241,6 +241,10 @@ func (uc Client) IsEnabled(feature string, options ...FeatureOption) (enabled bo
 		return false
 	}
 
+	if len(f.Strategies) == 0 {
+		return f.Enabled
+	}
+
 	for _, s := range f.Strategies {
 		foundStrategy := uc.getStrategy(s.Name)
 		if foundStrategy == nil {
