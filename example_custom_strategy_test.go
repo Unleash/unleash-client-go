@@ -8,17 +8,6 @@ import (
 	"time"
 )
 
-func init() {
-	unleash.Initialize(
-		unleash.WithListener(&unleash.DebugListener{}),
-		unleash.WithAppName("my-application"),
-		unleash.WithUrl("https://unleash.herokuapp.com/api/"),
-		unleash.WithRefreshInterval(5*time.Second),
-		unleash.WithMetricsInterval(5*time.Second),
-		unleash.WithStrategies(&ActiveForUserWithEmailStrategy{}),
-	)
-}
-
 type ActiveForUserWithEmailStrategy struct{}
 
 func (s ActiveForUserWithEmailStrategy) Name() string {
@@ -51,6 +40,14 @@ func (s ActiveForUserWithEmailStrategy) IsEnabled(params map[string]interface{},
 
 // ExampleCustomStrategy demonstrates using a custom strategy.
 func Example_customStrategy() {
+	unleash.Initialize(
+		unleash.WithListener(&unleash.DebugListener{}),
+		unleash.WithAppName("my-application"),
+		unleash.WithUrl("https://unleash.herokuapp.com/api/"),
+		unleash.WithRefreshInterval(5*time.Second),
+		unleash.WithMetricsInterval(5*time.Second),
+		unleash.WithStrategies(&ActiveForUserWithEmailStrategy{}),
+	)
 
 	ctx := context.Context{
 		Properties: map[string]string{
