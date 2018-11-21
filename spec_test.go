@@ -2,8 +2,8 @@ package unleash
 
 import (
 	"encoding/json"
-	"github.com/Unleash/unleash-client-go/context"
-	"github.com/Unleash/unleash-client-go/internal/api"
+	"github.com/Unleash/unleash-client-go/v3/context"
+	"github.com/Unleash/unleash-client-go/v3/internal/api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/h2non/gock.v1"
