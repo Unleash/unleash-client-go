@@ -48,3 +48,8 @@ func Initialize(options ...ConfigOption) (err error) {
 func Close() error {
 	return defaultClient.Close()
 }
+
+// WaitForReady will block until the default client is ready or return immediately.
+func WaitForReady() {
+	defaultClient.WaitForReady()
+}

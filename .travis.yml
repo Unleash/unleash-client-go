@@ -6,6 +6,9 @@ go:
 
 go_import_path: github.com/Unleash/unleash-client-go/v3
 
+before_install:
+  - git clone https://github.com/Unleash/client-specification.git ./testdata/client-specification
+
 script:
  - go get -t -v ./...
  - go vet ./...
