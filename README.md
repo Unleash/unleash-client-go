@@ -1,8 +1,21 @@
 [![Build Status](https://travis-ci.org/Unleash/unleash-client-go.svg?branch=master)](https://travis-ci.org/Unleash/unleash-client-go) [![GoDoc](https://godoc.org/github.com/Unleash/unleash-client-go?status.svg)](https://godoc.org/github.com/Unleash/unleash-client-go) [![Go Report Card](https://goreportcard.com/badge/github.com/Unleash/unleash-client-go)](https://goreportcard.com/report/github.com/Unleash/unleash-client-go)
 
 # unleash-client-go
-Unleash Client for Go.  Read more about the [Unleash project](https://github.com/finn-no/unleash) 
+Unleash Client for Go.  Read more about the [Unleash project](https://github.com/finn-no/unleash)
 
+**NOTE** The following instructions are for the v2 client which does not work with the latest
+version of the Unleash Server (v3) unless legacy routes are enabled. It is recommended that you
+use the `v3` branch:
+
+```bash
+go get github.com/Unleash/unleash-client-go/v3
+```
+
+```go
+import (
+	"github.com/Unleash/unleash-client-go/v3"
+)
+````
 
 ## Getting started
 
