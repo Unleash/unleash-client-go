@@ -2,8 +2,8 @@ package unleash_test
 
 import (
 	"fmt"
-	"github.com/Unleash/unleash-client-go"
-	"github.com/Unleash/unleash-client-go/context"
+	"github.com/Unleash/unleash-client-go/v3"
+	"github.com/Unleash/unleash-client-go/v3/context"
 	"strings"
 	"time"
 )
