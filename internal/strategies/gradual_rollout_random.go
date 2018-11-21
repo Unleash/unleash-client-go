@@ -33,5 +33,5 @@ func (s gradualRolloutRandomStrategy) IsEnabled(params map[string]interface{}, _
 		return false
 	}
 
-	return percentage >= float64(s.random.Intn(100))
+	return percentage >= float64(s.random.Intn(100)+1)
 }

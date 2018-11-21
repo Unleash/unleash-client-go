@@ -3,6 +3,7 @@ package strategies
 import (
 	"github.com/Unleash/unleash-client-go/context"
 	"github.com/Unleash/unleash-client-go/strategy"
+	"net"
 	"strings"
 )
 
@@ -23,13 +24,21 @@ func (s remoteAddressStrategy) IsEnabled(params map[string]interface{}, ctx *con
 		return false
 	}
 
+	remoteAddress := net.ParseIP(strings.TrimSpace(ctx.RemoteAddress))
+	if remoteAddress == nil {
+		return false
+	}
+
 	ips, ok := value.(string)
 	if !ok {
 		return false
 	}
 
 	for _, ip := range strings.Split(ips, ",") {
-		if strings.TrimSpace(ip) == ctx.RemoteAddress {
+		ip = strings.TrimSpace(ip)
+		if remoteAddress.Equal(net.ParseIP(ip)) {
+			return true
+		} else if _, ipNet, _ := net.ParseCIDR(ip); ipNet != nil && ipNet.Contains(remoteAddress) {
 			return true
 		}
 	}

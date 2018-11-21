@@ -144,6 +144,7 @@ func (m *metrics) registerInstance() {
 		m.err(err)
 		return
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode < http.StatusOK || resp.StatusCode > http.StatusMultipleChoices {
 		m.warn(fmt.Errorf("%s return %d", u.String(), resp.StatusCode))
@@ -172,6 +173,7 @@ func (m *metrics) sendMetrics() {
 		m.err(err)
 		return
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
 		m.warn(fmt.Errorf("%s return 404, stopping metrics", u.String()))
