@@ -242,7 +242,7 @@ func (m *metrics) getPayload() MetricsData {
 	return metricsData
 }
 
-func (m metrics) getClientData() ClientData {
+func (m *metrics) getClientData() ClientData {
 	return ClientData{
 		m.options.appName,
 		m.options.instanceId,
@@ -253,7 +253,7 @@ func (m metrics) getClientData() ClientData {
 	}
 }
 
-func (m metrics) getMetricsData() MetricsData {
+func (m *metrics) getMetricsData() MetricsData {
 	return MetricsData{
 		m.options.appName,
 		m.options.instanceId,
