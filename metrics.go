@@ -205,7 +205,7 @@ func (m *metrics) doPost(url *url.URL, payload interface{}) (*http.Response, err
 	return m.options.httpClient.Do(req)
 }
 
-func (m metrics) count(name string, enabled bool) {
+func (m *metrics) count(name string, enabled bool) {
 	if m.options.disableMetrics {
 		return
 	}
