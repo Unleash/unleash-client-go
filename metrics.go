@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/Unleash/unleash-client-go/v3/internal/api"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
+
+	"github.com/Unleash/unleash-client-go/v3/internal/api"
 )
 
 // MetricsData represents the data sent to the unleash server.
@@ -54,12 +56,12 @@ type metric struct {
 
 type metrics struct {
 	metricsChannels
-	options      metricsOptions
-	started      time.Time
-	bucket       api.Bucket
-	countChannel chan metric
-	stopped      chan bool
-	timer        *time.Timer
+	options  metricsOptions
+	started  time.Time
+	bucketMu sync.Mutex
+	bucket   api.Bucket
+	stopped  chan bool
+	timer    *time.Timer
 }
 
 func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
@@ -67,7 +69,6 @@ func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
 		metricsChannels: channels,
 		options:         options,
 		started:         time.Now(),
-		countChannel:    make(chan metric),
 		stopped:         make(chan bool),
 	}
 
@@ -75,7 +76,9 @@ func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
 		m.options.httpClient = http.DefaultClient
 	}
 
+	m.bucketMu.Lock()
 	m.resetBucket()
+	m.bucketMu.Unlock()
 
 	if m.options.metricsInterval > 0 {
 		m.startTimer()
@@ -109,18 +112,6 @@ func (m *metrics) stop() {
 func (m *metrics) sync() {
 	for {
 		select {
-		case mc := <-m.countChannel:
-			t, exists := m.bucket.Toggles[mc.Name]
-			if !exists {
-				t = api.ToggleCount{}
-			}
-			if mc.Enabled {
-				t.Yes++
-			} else {
-				t.No++
-			}
-			m.metricsChannels.count <- mc
-			m.bucket.Toggles[mc.Name] = t
 		case <-m.timer.C:
 			m.sendMetrics()
 		case <-m.stopped:
@@ -158,14 +149,17 @@ func (m *metrics) sendMetrics() {
 		return
 	}
 
+	m.bucketMu.Lock()
 	if m.bucket.IsEmpty() {
 		m.resetBucket()
 		m.startTimer()
+		m.bucketMu.Unlock()
 		return
 	}
+	payload := m.getPayload()
+	m.bucketMu.Unlock()
 
 	u, _ := m.options.url.Parse("./client/metrics")
-	payload := m.getPayload()
 	m.startTimer()
 	resp, err := m.doPost(u, payload)
 
@@ -215,7 +209,19 @@ func (m metrics) count(name string, enabled bool) {
 	if m.options.disableMetrics {
 		return
 	}
-	m.countChannel <- metric{name, enabled}
+	m.bucketMu.Lock()
+	defer m.bucketMu.Unlock()
+	t, exists := m.bucket.Toggles[name]
+	if !exists {
+		t = api.ToggleCount{}
+	}
+	if enabled {
+		t.Yes++
+	} else {
+		t.No++
+	}
+	m.metricsChannels.count <- metric{Name: name, Enabled: enabled}
+	m.bucket.Toggles[name] = t
 }
 
 func (m *metrics) resetBucket() {
