@@ -110,6 +110,9 @@ func (m *metrics) stop() {
 }
 
 func (m *metrics) sync() {
+	if m.options.disableMetrics {
+		return
+	}
 	for {
 		select {
 		case <-m.timer.C:

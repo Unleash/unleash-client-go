@@ -12,3 +12,5 @@ github.com/stretchr/testify v1.2.2 h1:bSDNvY7ZPG5RlJ8otE/7V6gMiyenm9RtJ7IUVIAoJ1
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 gopkg.in/h2non/gock.v1 v1.0.10 h1:D4j796HhgidcxF0LnDyFXcoEbEZWoLEWf0kRh61p22w=
 gopkg.in/h2non/gock.v1 v1.0.10/go.mod h1:KHI4Z1sxDW6P4N3DfTWSEza07YpkQP7KJBfglRMEjKY=
+gopkg.in/h2non/gock.v1 v1.0.12 h1:o3JJqe+h7R9Ay6LtMeFrKz1WnokrJDrNpDQs9KGqVn8=
+gopkg.in/h2non/gock.v1 v1.0.12/go.mod h1:KHI4Z1sxDW6P4N3DfTWSEza07YpkQP7KJBfglRMEjKY=
