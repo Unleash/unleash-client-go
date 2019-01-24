@@ -50,7 +50,14 @@ func TestMetrics_DoPost(t *testing.T) {
 
 	gock.New(mockerServer).
 		Post("/client/register").
+		MatchHeader("UNLEASH-APPNAME", mockAppName).
+		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
 		Reply(200)
+
+	gock.New(mockerServer).
+		Get("/client/features").
+		Reply(200).
+		JSON(api.FeatureResponse{})
 
 	gock.New(mockerServer).
 		Post("").
@@ -62,6 +69,7 @@ func TestMetrics_DoPost(t *testing.T) {
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
 		WithInstanceId(mockInstanceId),
+		WithListener(&DebugListener{}),
 	)
 	defer client.Close()
 
