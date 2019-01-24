@@ -21,6 +21,7 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 	repo := &repository{
 		options:            options,
 		repositoryChannels: channels,
+		close:              make(chan bool),
 	}
 
 	if options.httpClient == nil {

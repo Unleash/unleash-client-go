@@ -91,6 +91,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		count:         make(chan metric),
 		sent:          make(chan MetricsData),
 		registered:    make(chan ClientData, 1),
+		closed:        make(chan bool),
 	}
 
 	for _, opt := range options {

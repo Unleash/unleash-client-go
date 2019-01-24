@@ -29,12 +29,13 @@ func TestMetrics_RegisterInstance(t *testing.T) {
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
 
-	_, err := NewClient(
+	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
 		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
+	defer client.Close()
 
 	time.Sleep(1 * time.Second)
 
@@ -62,6 +63,7 @@ func TestMetrics_DoPost(t *testing.T) {
 		WithAppName(mockAppName),
 		WithInstanceId(mockInstanceId),
 	)
+	defer client.Close()
 
 	assert.Nil(err, "client should not return an error")
 
