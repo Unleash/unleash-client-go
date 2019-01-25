@@ -103,6 +103,10 @@ func (m *metrics) startTimer() {
 }
 
 func (m *metrics) stop() {
+	if m.options.disableMetrics {
+		return
+	}
+
 	if !m.timer.Stop() {
 		<-m.timer.C
 	}

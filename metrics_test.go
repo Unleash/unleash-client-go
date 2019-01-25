@@ -105,6 +105,7 @@ func TestMetrics_DisabledMetrics(t *testing.T) {
 		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
+	defer client.Close()
 
 	assert.Nil(err, "client should not return an error")
 
