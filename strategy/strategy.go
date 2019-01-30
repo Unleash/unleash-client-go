@@ -9,8 +9,8 @@ const (
 	// ParamPercentage is a property indicating a percentage.
 	ParamPercentage = "percentage"
 
-	// ParamGroupId is a property indicating a group ID.
-	ParamGroupId = "groupId"
+	// ParamGroupID is a property indicating a group ID.
+	ParamGroupID = "groupId"
 
 	// ParamIps is a property indicating a comma separated list of ip addresses.
 	ParamIps = "IPs"

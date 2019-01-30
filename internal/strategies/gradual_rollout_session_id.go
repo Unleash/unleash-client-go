@@ -5,20 +5,20 @@ import (
 	"github.com/Unleash/unleash-client-go/v3/strategy"
 )
 
-type gradualRolloutSessionId struct {
+type gradualRolloutSessionID struct {
 }
 
-func NewGradualRolloutSessionId() *gradualRolloutSessionId {
-	s := &gradualRolloutSessionId{}
+func NewGradualRolloutSessionId() *gradualRolloutSessionID {
+	s := &gradualRolloutSessionID{}
 	return s
 }
 
-func (s gradualRolloutSessionId) Name() string {
-	return "gradualRolloutSessionId"
+func (s gradualRolloutSessionID) Name() string {
+	return "gradualRolloutSessionID"
 }
 
-func (s gradualRolloutSessionId) IsEnabled(params map[string]interface{}, ctx *context.Context) bool {
-	if ctx == nil || ctx.SessionId == "" {
+func (s gradualRolloutSessionID) IsEnabled(params map[string]interface{}, ctx *context.Context) bool {
+	if ctx == nil || ctx.SessionID == "" {
 		return false
 	}
 
@@ -32,13 +32,13 @@ func (s gradualRolloutSessionId) IsEnabled(params map[string]interface{}, ctx *c
 		return false
 	}
 
-	groupIdValue := params[strategy.ParamGroupId]
+	groupIdValue := params[strategy.ParamGroupID]
 	groupId, ok := groupIdValue.(string)
 	if !ok {
 		return false
 	}
 
-	normalizedId := normalizedValue(ctx.SessionId, groupId)
+	normalizedId := normalizedValue(ctx.SessionID, groupId)
 
 	return percentage > 0.0 && float64(normalizedId) <= percentage
 }

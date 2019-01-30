@@ -18,7 +18,7 @@ func (s gradualRolloutUserId) Name() string {
 }
 
 func (s gradualRolloutUserId) IsEnabled(params map[string]interface{}, ctx *context.Context) bool {
-	if ctx == nil || ctx.UserId == "" {
+	if ctx == nil || ctx.UserID == "" {
 		return false
 	}
 
@@ -32,13 +32,13 @@ func (s gradualRolloutUserId) IsEnabled(params map[string]interface{}, ctx *cont
 		return false
 	}
 
-	groupIdValue := params[strategy.ParamGroupId]
+	groupIdValue := params[strategy.ParamGroupID]
 	groupId, ok := groupIdValue.(string)
 	if !ok {
 		return false
 	}
 
-	normalizedId := normalizedValue(ctx.UserId, groupId)
+	normalizedId := normalizedValue(ctx.UserID, groupId)
 
 	return percentage > 0.0 && float64(normalizedId) <= percentage
 }

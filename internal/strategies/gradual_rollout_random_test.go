@@ -26,10 +26,10 @@ func TestGradualRolloutRandomStrategy_IsEnabled(t *testing.T) {
 		for i := 0; i < rounds; i++ {
 			params := map[string]interface{}{
 				strategy.ParamPercentage: expectedPercentage,
-				strategy.ParamGroupId:    "groupId",
+				strategy.ParamGroupID:    "groupId",
 			}
 			enabled := s.IsEnabled(params, &context.Context{
-				SessionId: strconv.Itoa(i),
+				SessionID: strconv.Itoa(i),
 			})
 			if enabled {
 				enabledCount++

@@ -28,7 +28,7 @@ func (s userWithIdStrategy) IsEnabled(params map[string]interface{}, ctx *contex
 	}
 
 	for _, u := range strings.Split(userIds, ",") {
-		if strings.TrimSpace(u) == ctx.UserId {
+		if strings.TrimSpace(u) == ctx.UserID {
 			return true
 		}
 	}

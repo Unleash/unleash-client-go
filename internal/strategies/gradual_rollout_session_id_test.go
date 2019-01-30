@@ -8,22 +8,22 @@ import (
 	"testing"
 )
 
-func TestGradualRolloutSessionId_Name(t *testing.T) {
-	strategy := NewGradualRolloutSessionId()
-	assert.Equal(t, "gradualRolloutSessionId", strategy.Name(), "strategy should have correct name")
+func TestGradualRolloutSessionID_Name(t *testing.T) {
+	strategy := NewGradualRolloutSessionID()
+	assert.Equal(t, "gradualRolloutSessionID", strategy.Name(), "strategy should have correct name")
 }
 
-func TestGradualRolloutSessionId_IsEnabled(t *testing.T) {
-	s := NewGradualRolloutSessionId()
+func TestGradualRolloutSessionID_IsEnabled(t *testing.T) {
+	s := NewGradualRolloutSessionID()
 	assert := assert.New(t)
 
 	t.Run("p=100", func(t *testing.T) {
 		params := map[string]interface{}{
 			strategy.ParamPercentage: 100,
-			strategy.ParamGroupId:    "gr1",
+			strategy.ParamGroupID:    "gr1",
 		}
 		isEnabled := s.IsEnabled(params, &context.Context{
-			SessionId: "123",
+			SessionID: "123",
 		})
 		assert.True(isEnabled, "should be enabled when percentage is 100")
 	})
@@ -31,40 +31,40 @@ func TestGradualRolloutSessionId_IsEnabled(t *testing.T) {
 	t.Run("p=0", func(t *testing.T) {
 		params := map[string]interface{}{
 			strategy.ParamPercentage: 0,
-			strategy.ParamGroupId:    "gr1",
+			strategy.ParamGroupID:    "gr1",
 		}
 		isEnabled := s.IsEnabled(params, &context.Context{
-			SessionId: "123",
+			SessionID: "123",
 		})
 		assert.False(isEnabled, "should be disabled when percentage is 0")
 	})
 
 	t.Run("p1=p2", func(t *testing.T) {
-		sessionId := "123123"
+		sessionID := "123123"
 		groupId := "group1"
-		percentage := normalizedValue(sessionId, groupId)
+		percentage := normalizedValue(sessionID, groupId)
 
 		params := map[string]interface{}{
 			strategy.ParamPercentage: percentage,
-			strategy.ParamGroupId:    groupId,
+			strategy.ParamGroupID:    groupId,
 		}
 		isEnabled := s.IsEnabled(params, &context.Context{
-			SessionId: sessionId,
+			SessionID: sessionID,
 		})
 		assert.True(isEnabled, "should be enabled when percentage is exactly same")
 	})
 
 	t.Run("p1<p2", func(t *testing.T) {
-		sessionId := "123123"
+		sessionID := "123123"
 		groupId := "group1"
-		percentage := normalizedValue(sessionId, groupId) - 1
+		percentage := normalizedValue(sessionID, groupId) - 1
 
 		params := map[string]interface{}{
 			strategy.ParamPercentage: percentage,
-			strategy.ParamGroupId:    groupId,
+			strategy.ParamGroupID:    groupId,
 		}
 		isEnabled := s.IsEnabled(params, &context.Context{
-			SessionId: sessionId,
+			SessionID: sessionID,
 		})
 
 		assert.False(isEnabled, "should be disabled when percentage is just below required value")
@@ -81,10 +81,10 @@ func TestGradualRolloutSessionId_IsEnabled(t *testing.T) {
 			for i := 0; i < rounds; i++ {
 				params := map[string]interface{}{
 					strategy.ParamPercentage: expectedPercentage,
-					strategy.ParamGroupId:    "gr1",
+					strategy.ParamGroupID:    "gr1",
 				}
 				enabled := s.IsEnabled(params, &context.Context{
-					SessionId: strconv.Itoa(i),
+					SessionID: strconv.Itoa(i),
 				})
 				if enabled {
 					enabledCount++

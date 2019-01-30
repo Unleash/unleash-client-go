@@ -21,10 +21,10 @@ func TestGradualRolloutUserId_IsEnabled(t *testing.T) {
 	t.Run("p=100", func(t *testing.T) {
 		params := map[string]interface{}{
 			strategy.ParamPercentage: 100,
-			strategy.ParamGroupId:    "gr1",
+			strategy.ParamGroupID:    "gr1",
 		}
 		isEnabled := s.IsEnabled(params, &context.Context{
-			UserId: "123",
+			UserID: "123",
 		})
 		assert.True(isEnabled, "should be enabled when percentage is 100")
 	})
@@ -32,40 +32,40 @@ func TestGradualRolloutUserId_IsEnabled(t *testing.T) {
 	t.Run("p=0", func(t *testing.T) {
 		params := map[string]interface{}{
 			strategy.ParamPercentage: 0,
-			strategy.ParamGroupId:    "gr1",
+			strategy.ParamGroupID:    "gr1",
 		}
 		isEnabled := s.IsEnabled(params, &context.Context{
-			UserId: "123",
+			UserID: "123",
 		})
 		assert.False(isEnabled, "should be disabled when percentage is 0")
 	})
 
 	t.Run("p1=p2", func(t *testing.T) {
-		userId := "123123"
-		groupId := "group1"
-		percentage := normalizedValue(userId, groupId)
+		userID := "123123"
+		groupID := "group1"
+		percentage := normalizedValue(userID, groupID)
 
 		params := map[string]interface{}{
 			strategy.ParamPercentage: percentage,
-			strategy.ParamGroupId:    groupId,
+			strategy.ParamGroupID:    groupID,
 		}
 		isEnabled := s.IsEnabled(params, &context.Context{
-			UserId: userId,
+			UserID: userID,
 		})
 		assert.True(isEnabled, "should be enabled when percentage is exactly same")
 	})
 
 	t.Run("p1<p2", func(t *testing.T) {
-		userId := "123123"
-		groupId := "group1"
-		percentage := normalizedValue(userId, groupId) - 1
+		userID := "123123"
+		groupID := "group1"
+		percentage := normalizedValue(userID, groupID) - 1
 
 		params := map[string]interface{}{
 			strategy.ParamPercentage: percentage,
-			strategy.ParamGroupId:    groupId,
+			strategy.ParamGroupID:    groupID,
 		}
 		isEnabled := s.IsEnabled(params, &context.Context{
-			UserId: userId,
+			UserID: userID,
 		})
 		assert.False(isEnabled, "should be disabled when percentage is just below required value")
 	})
@@ -81,10 +81,10 @@ func TestGradualRolloutUserId_IsEnabled(t *testing.T) {
 			for i := 0; i < rounds; i++ {
 				params := map[string]interface{}{
 					strategy.ParamPercentage: expectedPercentage,
-					strategy.ParamGroupId:    "gr1",
+					strategy.ParamGroupID:    "gr1",
 				}
 				enabled := s.IsEnabled(params, &context.Context{
-					UserId: strconv.Itoa(i),
+					UserID: strconv.Itoa(i),
 				})
 				if enabled {
 					enabledCount++
