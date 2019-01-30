@@ -126,7 +126,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		uc.options.url += "/"
 	}
 
-	parsedUrl, err := url.Parse(uc.options.url)
+	parsedURL, err := url.Parse(uc.options.url)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +142,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 	uc.repository = newRepository(
 		repositoryOptions{
 			backupPath:      uc.options.backupPath,
-			url:             *parsedUrl,
+			url:             *parsedURL,
 			appName:         uc.options.appName,
 			instanceId:      uc.options.instanceId,
 			refreshInterval: uc.options.refreshInterval,
@@ -169,7 +169,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 			instanceId:      uc.options.instanceId,
 			strategies:      strategyNames,
 			metricsInterval: uc.options.metricsInterval,
-			url:             *parsedUrl,
+			url:             *parsedURL,
 			httpClient:      uc.options.httpClient,
 			customHeaders:   uc.options.customHeaders,
 		},
