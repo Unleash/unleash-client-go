@@ -5,7 +5,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/Unleash/unleash-client-go/v3/context"
 	"github.com/Unleash/unleash-client-go/v3/strategy"
 )
 
@@ -118,30 +117,6 @@ func WithHttpClient(client *http.Client) ConfigOption {
 func WithCustomHeaders(headers http.Header) ConfigOption {
 	return func(o *configOption) {
 		o.customHeaders = headers
-	}
-}
-
-type featureOption struct {
-	fallback *bool
-	ctx      *context.Context
-}
-
-// FeatureOption provides options for querying if a feature is enabled or not.
-type FeatureOption func(*featureOption)
-
-// WithFallback specfies what the value should be if the feature toggle is not found on the
-// unleash service.
-func WithFallback(fallback bool) FeatureOption {
-	return func(opts *featureOption) {
-		opts.fallback = &fallback
-	}
-}
-
-// WithContext allows the user to provide a context that will be passed into the active strategy
-// for determining if a specified feature should be enabled or not.
-func WithContext(ctx context.Context) FeatureOption {
-	return func(opts *featureOption) {
-		opts.ctx = &ctx
 	}
 }
 

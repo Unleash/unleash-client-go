@@ -2,6 +2,7 @@ package unleash
 
 import (
 	"fmt"
+	"github.com/Unleash/unleash-client-go/v3/feature"
 	s "github.com/Unleash/unleash-client-go/v3/internal/strategies"
 	"github.com/Unleash/unleash-client-go/v3/strategy"
 	"net/url"
@@ -218,21 +219,18 @@ func (uc *Client) sync() {
 }
 
 // IsEnabled queries whether or not the specified feature is enabled or not.
-func (uc Client) IsEnabled(feature string, options ...FeatureOption) (enabled bool) {
+func (uc Client) IsEnabled(name string, options ...feature.Option) (enabled bool) {
 	defer func() {
-		uc.metrics.count(feature, enabled)
+		uc.metrics.count(name, enabled)
 	}()
 
-	f := uc.repository.getToggle(feature)
+	f := uc.repository.getToggle(name)
 
-	var opts featureOption
-	for _, o := range options {
-		o(&opts)
-	}
+	opts := feature.FlattenOptions(options...)
 
 	if f == nil {
-		if opts.fallback != nil {
-			return *opts.fallback
+		if fallback := opts.Fallback(); fallback != nil {
+			return *fallback
 		}
 		return false
 	}
@@ -251,7 +249,7 @@ func (uc Client) IsEnabled(feature string, options ...FeatureOption) (enabled bo
 			// TODO: warnOnce missingStrategy
 			continue
 		}
-		if foundStrategy.IsEnabled(s.Parameters, opts.ctx) {
+		if foundStrategy.IsEnabled(s.Parameters, opts.Context()) {
 			return true
 		}
 	}

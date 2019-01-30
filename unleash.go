@@ -1,5 +1,9 @@
 package unleash
 
+import (
+	"github.com/Unleash/unleash-client-go/v3/feature"
+)
+
 var defaultClient *Client
 
 // ErrorListener defines an interface that be implemented in order to receive
@@ -34,7 +38,7 @@ type RepositoryListener interface {
 }
 
 // IsEnabled queries the default client whether or not the specified feature is enabled or not.
-func IsEnabled(feature string, options ...FeatureOption) bool {
+func IsEnabled(feature string, options ...feature.Option) bool {
 	return defaultClient.IsEnabled(feature, options...)
 }
 
