@@ -10,13 +10,14 @@ type FeatureResponse struct {
 }
 
 type Feature struct {
-	Name        string       `json:"name"`
-	Description string       `json:"description"`
-	Enabled     bool         `json:"enabled"`
-	Strategies  []Strategy   `json:"strategies"`
-	CreatedAt   time.Time    `json:"createdAt"`
-	Strategy    string       `json:"strategy"`
-	Parameters  ParameterMap `json:"parameters"`
+	Name        string              `json:"name"`
+	Description string              `json:"description"`
+	Enabled     bool                `json:"enabled"`
+	Strategies  []Strategy          `json:"strategies"`
+	CreatedAt   time.Time           `json:"createdAt"`
+	Strategy    string              `json:"strategy"`
+	Parameters  ParameterMap        `json:"parameters"`
+	Variants    []VariantDefinition `json:"variants"`
 }
 
 func (fr FeatureResponse) FeatureMap() map[string]interface{} {
