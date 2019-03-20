@@ -9,12 +9,12 @@ import (
 )
 
 func TestGradualRolloutSessionID_Name(t *testing.T) {
-	strategy := NewGradualRolloutSessionID()
+	strategy := NewGradualRolloutSessionId()
 	assert.Equal(t, "gradualRolloutSessionID", strategy.Name(), "strategy should have correct name")
 }
 
 func TestGradualRolloutSessionID_IsEnabled(t *testing.T) {
-	s := NewGradualRolloutSessionID()
+	s := NewGradualRolloutSessionId()
 	assert := assert.New(t)
 
 	t.Run("p=100", func(t *testing.T) {
