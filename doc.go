@@ -6,7 +6,7 @@ See https://github.com/Unleash/unleash for more information.
 Basics
 
 The API is very simple. The main functions of interest are Initialize and IsEnabled. Calling Initialize
-will create a default client and if a listener is supplied, it will start the sync loop. Internally the client
+will create a default client and it will start the sync loop. Internally the client
 consists of two components. The first is the repository which runs in a separate Go routine and polls the
 server to get the latest feature toggles. Once the feature toggles are fetched, they are stored by sending
 the data to an instance of the Storage interface which is responsible for storing the data both in memory
@@ -15,7 +15,8 @@ how often features were queried and whether or not they were enabled. The metric
 separate Go routine and will occasionally upload the latest metrics to the Unleash server. The client struct
 creates a set of channels that it passes to both of the above components and it uses those for communicating
 asynchronously. It is important to ensure that these channels get regularly drained to avoid blocking those
-Go routines. There are two ways this can be done.
+Go routines. As of v4 of Unleash, DefaultListener is created which will drain the channels and write a message
+using the standard libraries builtin logger. If you wish to change this behavior, there are two ways this can be done.
 
 Using the Listener Interfaces
 
@@ -26,14 +27,15 @@ you should implement:
  - RepositoryListener
  - MetricsListener
 If you are only interesting in tracking errors and warnings and don't care about any of the other signals,
-then you only need to implement the ErrorListener and pass this instance to WithListener(). The DebugListener
+then you only need to implement the ErrorListener and pass this instance to WithListener(). The DefaultListener
 shows an example of implementing all of the listeners in a single type.
 
 Reading the channels directly
 
-If you would prefer to have control over draining the channels yourself, then you must not call WithListener().
-Instead, you should read all of the channels continuously inside a select. The WithInstance example shows how
-to do this. Note that all channels must be drained, even if you are not interested in the result.
+If you would prefer to have control over draining the channels yourself, then you must  call WithListener(nil).
+This will reset the listener and force the user of the library to read from the channels continuously inside a select.
+The WithInstance example shows how to do this. Note that all channels must be drained, even if you are not interested
+in the result.
 
 Examples
 

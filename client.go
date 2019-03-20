@@ -85,6 +85,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 			disableMetrics:  false,
 			backupPath:      getTmpDirPath(),
 			strategies:      []strategy.Strategy{},
+			listener:        &DefaultListener{},
 		},
 		errorChannels: errChannels,
 		onReady:       make(chan bool, 1),

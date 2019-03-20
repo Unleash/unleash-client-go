@@ -37,6 +37,7 @@ func Example_withInstance() {
 
 	// Create the client with the desired options
 	client, err := unleash.NewClient(
+		unleash.WithListener(nil),
 		unleash.WithAppName("my-application"),
 		unleash.WithUrl("http://unleash.herokuapp.com/api/"),
 	)

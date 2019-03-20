@@ -11,7 +11,6 @@ const PropertyName = "eid.enabled"
 // ExampleSimpleUsage demonstrates the simplest way to use the unleash client.
 func Example_simpleUsage() {
 	unleash.Initialize(
-		unleash.WithListener(&unleash.DebugListener{}),
 		unleash.WithAppName("my-application"),
 		unleash.WithUrl("http://unleash.herokuapp.com/api/"),
 	)

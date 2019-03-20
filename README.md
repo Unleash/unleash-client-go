@@ -3,7 +3,16 @@
 # unleash-client-go
 Unleash Client for Go.  Read more about the [Unleash project](https://github.com/Unleash/unleash)
 
-**Version 3.x of the client requires `unleash-server` v3.x or higher.**
+**Version 4.x of the client requires `unleash-server` v4.x or higher.**
+
+## Migrating from v3
+
+This version of Unleash has some incompatible API changes that you should be aware of:
+
+* The `FeatureOption` type used with `IsEnabled` has been moved/renamed to `feature.Option`
+* `DebugListener` has been renamed to `DefaultListener` and now uses `log`
+* `WithListener()` is no longer required, but if you want to drain the channels manually you must
+  use `WithListener(nil)` to override the default listener.
 
 ## Getting started
 

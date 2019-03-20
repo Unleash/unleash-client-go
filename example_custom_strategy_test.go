@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Unleash/unleash-client-go/v3"
 	"github.com/Unleash/unleash-client-go/v3/context"
+	"github.com/Unleash/unleash-client-go/v3/feature"
 	"strings"
 	"time"
 )
@@ -41,7 +42,6 @@ func (s ActiveForUserWithEmailStrategy) IsEnabled(params map[string]interface{},
 // ExampleCustomStrategy demonstrates using a custom strategy.
 func Example_customStrategy() {
 	unleash.Initialize(
-		unleash.WithListener(&unleash.DebugListener{}),
 		unleash.WithAppName("my-application"),
 		unleash.WithUrl("https://unleash.herokuapp.com/api/"),
 		unleash.WithRefreshInterval(5*time.Second),
@@ -59,7 +59,7 @@ func Example_customStrategy() {
 
 	for {
 		<-timer.C
-		enabled := unleash.IsEnabled("unleash.me", unleash.WithContext(ctx))
+		enabled := unleash.IsEnabled("unleash.me", feature.WithContext(ctx))
 		fmt.Printf("feature is enabled? %v\n", enabled)
 		timer.Reset(1 * time.Second)
 	}
