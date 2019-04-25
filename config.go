@@ -76,9 +76,9 @@ func WithMetricsInterval(metricsInterval time.Duration) ConfigOption {
 }
 
 // WithDisabledMetrics specifies that the client should not log metrics to the unleash server.
-func WithDisableMetrics(disableMetrics bool) ConfigOption {
+func WithDisableMetrics() ConfigOption {
 	return func(o *configOption) {
-		o.disableMetrics = disableMetrics
+		o.disableMetrics = true
 	}
 }
 
