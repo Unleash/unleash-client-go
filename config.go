@@ -67,7 +67,7 @@ func WithRefreshInterval(refreshInterval time.Duration) ConfigOption {
 	}
 }
 
-// WithMetricsInterval specifies the times interval woth which the client should upload
+// WithMetricsInterval specifies the time interval with which the client should upload
 // the metrics data to the unleash server.
 func WithMetricsInterval(metricsInterval time.Duration) ConfigOption {
 	return func(o *configOption) {
@@ -129,7 +129,7 @@ type featureOption struct {
 // FeatureOption provides options for querying if a feature is enabled or not.
 type FeatureOption func(*featureOption)
 
-// WithFallback specfies what the value should be if the feature toggle is not found on the
+// WithFallback specifies what the value should be if the feature toggle is not found on the
 // unleash service.
 func WithFallback(fallback bool) FeatureOption {
 	return func(opts *featureOption) {
