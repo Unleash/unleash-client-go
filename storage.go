@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 // Storage is an interface that can be implemented in order to have control over how
@@ -38,7 +39,7 @@ type defaultStorage struct {
 
 func (ds *defaultStorage) Init(backupPath, appName string) {
 	ds.appName = appName
-	ds.path = fmt.Sprintf("%sunleash-repo-schema-v1-%s.json", backupPath, appName)
+	ds.path = filepath.Join(backupPath, fmt.Sprintf("unleash-repo-schema-v1-%s.json", appName))
 	ds.data = map[string]interface{}{}
 	ds.Load()
 }
