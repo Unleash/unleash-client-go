@@ -70,6 +70,7 @@ func (td TestDefinition) Run(t *testing.T) {
 		client, err := td.Mock()
 		assert.NoError(t, err)
 		t.Run(test.Description, test.RunWithClient(client))
+		client.Close()
 		td.Unmock()
 	}
 }
