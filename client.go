@@ -37,7 +37,7 @@ type Client struct {
 	repositoryListener RepositoryListener
 	ready              chan bool
 	onReady            chan bool
-	closed             chan bool
+	closed             chan struct{}
 	count              chan metric
 	sent               chan MetricsData
 	registered         chan ClientData
@@ -91,6 +91,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		count:         make(chan metric),
 		sent:          make(chan MetricsData),
 		registered:    make(chan ClientData, 1),
+		closed:        make(chan struct{}),
 	}
 
 	for _, opt := range options {
@@ -263,7 +264,7 @@ func (uc Client) IsEnabled(feature string, options ...FeatureOption) (enabled bo
 func (uc *Client) Close() error {
 	uc.repository.Close()
 	uc.metrics.Close()
-	uc.closed <- true
+	close(uc.closed)
 	return nil
 }
 
