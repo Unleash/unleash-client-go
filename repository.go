@@ -14,13 +14,14 @@ type repository struct {
 	sync.RWMutex
 	options repositoryOptions
 	etag    string
-	close   chan bool
+	close   chan struct{}
 }
 
 func newRepository(options repositoryOptions, channels repositoryChannels) *repository {
 	repo := &repository{
 		options:            options,
 		repositoryChannels: channels,
+		close:              make(chan struct{}),
 	}
 
 	if options.httpClient == nil {
@@ -121,6 +122,6 @@ func (r *repository) getToggle(key string) *api.Feature {
 }
 
 func (r *repository) Close() error {
-	r.close <- true
+	close(r.close)
 	return nil
 }
