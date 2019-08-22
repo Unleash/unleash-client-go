@@ -5,6 +5,7 @@ import (
 	"github.com/Unleash/unleash-client-go/v3/context"
 	"github.com/Unleash/unleash-client-go/v3/internal/api"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/h2non/gock.v1"
 	"os"
@@ -43,7 +44,11 @@ type TestDefinition struct {
 	Tests []TestCase `json:"tests"`
 }
 
-func (td TestDefinition) Mock() (*Client, error) {
+func (td TestDefinition) Mock(listener interface{}) (*Client, error) {
+	gock.New(mockHost).
+		Post("/client/register").
+		Reply(200)
+
 	gock.New(mockHost).
 		Get("/client/features").
 		Reply(200).
@@ -57,7 +62,7 @@ func (td TestDefinition) Mock() (*Client, error) {
 	return NewClient(
 		WithUrl(mockHost),
 		WithAppName("clientSpecificationTest"),
-		WithListener(MockedListener{}),
+		WithListener(listener),
 	)
 }
 
@@ -67,10 +72,19 @@ func (td TestDefinition) Unmock() () {
 
 func (td TestDefinition) Run(t *testing.T) {
 	for _, test := range td.Tests {
-		client, err := td.Mock()
+		listener := &MockedListener{}
+		listener.On("OnReady").Return()
+		listener.On("OnRegistered", mock.AnythingOfType("ClientData")).Return()
+		listener.On("OnCount", mock.AnythingOfType("string"), mock.AnythingOfType("bool")).Return()
+
+		client, err := td.Mock(listener)
 		assert.NoError(t, err)
 		t.Run(test.Description, test.RunWithClient(client))
 		client.Close()
+
+		listener.AssertCalled(t, "OnReady")
+		listener.AssertCalled(t, "OnRegistered", mock.AnythingOfType("ClientData"))
+
 		td.Unmock()
 	}
 }
