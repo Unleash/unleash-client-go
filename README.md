@@ -106,6 +106,6 @@ Run code-style checks:(currently failing)
     
     make strict-check
     
-Run race-tests(currently failing):
+Run race-tests:
  
     make test-all

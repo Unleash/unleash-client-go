@@ -2,6 +2,7 @@ package unleash
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -60,8 +61,11 @@ type metrics struct {
 	started  time.Time
 	bucketMu sync.Mutex
 	bucket   api.Bucket
-	stopped  chan bool
 	timer    *time.Timer
+	close    chan struct{}
+	closed   chan struct{}
+	ctx      context.Context
+	cancel   func()
 }
 
 func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
@@ -69,8 +73,12 @@ func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
 		metricsChannels: channels,
 		options:         options,
 		started:         time.Now(),
-		stopped:         make(chan bool),
+		close:           make(chan struct{}),
+		closed:          make(chan struct{}),
 	}
+	ctx, cancel := context.WithCancel(context.Background())
+	m.ctx = ctx
+	m.cancel = cancel
 
 	if m.options.httpClient == nil {
 		m.options.httpClient = http.DefaultClient
@@ -80,7 +88,10 @@ func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
 	m.resetBucket()
 	m.bucketMu.Unlock()
 
-	if m.options.metricsInterval > 0 {
+	if m.options.metricsInterval <= 0 {
+		m.options.disableMetrics = true
+	}
+	if !m.options.disableMetrics {
 		m.startTimer()
 		m.registerInstance()
 		go m.sync()
@@ -90,47 +101,33 @@ func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
 }
 
 func (m *metrics) Close() error {
-	m.stop()
+	if !m.options.disableMetrics {
+		m.timer.Stop()
+		m.cancel()
+		close(m.close)
+		m.options.disableMetrics = true
+	}
+	<-m.closed
 	return nil
 }
 
 func (m *metrics) startTimer() {
-	if m.options.disableMetrics {
-		return
-	}
-
 	m.timer = time.NewTimer(m.options.metricsInterval)
 }
 
-func (m *metrics) stop() {
-	if !m.timer.Stop() {
-		<-m.timer.C
-	}
-	m.stopped <- true
-}
-
 func (m *metrics) sync() {
-	if m.options.disableMetrics {
-		return
-	}
-
 	for {
 		select {
 		case <-m.timer.C:
 			m.sendMetrics()
-		case <-m.stopped:
-			m.options.disableMetrics = true
+		case <-m.close:
+			close(m.closed)
 			return
 		}
 	}
-
 }
 
 func (m *metrics) registerInstance() {
-	if m.options.disableMetrics {
-		return
-	}
-
 	u, _ := m.options.url.Parse("./client/register")
 	payload := m.getClientData()
 	resp, err := m.doPost(u, payload)
@@ -149,10 +146,6 @@ func (m *metrics) registerInstance() {
 }
 
 func (m *metrics) sendMetrics() {
-	if m.options.disableMetrics {
-		return
-	}
-
 	m.bucketMu.Lock()
 	if m.bucket.IsEmpty() {
 		m.resetBucket()
@@ -175,7 +168,7 @@ func (m *metrics) sendMetrics() {
 
 	if resp.StatusCode == http.StatusNotFound {
 		m.warn(fmt.Errorf("%s return 404, stopping metrics", u.String()))
-		m.stop()
+		m.Close()
 		return
 	}
 
@@ -197,6 +190,7 @@ func (m *metrics) doPost(url *url.URL, payload interface{}) (*http.Response, err
 	if err != nil {
 		return nil, err
 	}
+	req = req.WithContext(m.ctx)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Add("UNLEASH-APPNAME", m.options.appName)
 	req.Header.Add("UNLEASH-INSTANCEID", m.options.instanceId)

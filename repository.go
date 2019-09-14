@@ -1,6 +1,7 @@
 package unleash
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"sync"
@@ -15,6 +16,9 @@ type repository struct {
 	options repositoryOptions
 	etag    string
 	close   chan struct{}
+	closed  chan struct{}
+	ctx     context.Context
+	cancel  func()
 }
 
 func newRepository(options repositoryOptions, channels repositoryChannels) *repository {
@@ -22,7 +26,11 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 		options:            options,
 		repositoryChannels: channels,
 		close:              make(chan struct{}),
+		closed:             make(chan struct{}),
 	}
+	ctx, cancel := context.WithCancel(context.Background())
+	repo.ctx = ctx
+	repo.cancel = cancel
 
 	if options.httpClient == nil {
 		repo.options.httpClient = http.DefaultClient
@@ -50,6 +58,7 @@ func (r *repository) sync() {
 
 		select {
 		case <-r.close:
+			close(r.closed)
 			return
 		case <-refreshTimer.C:
 			r.fetch()
@@ -71,6 +80,7 @@ func (r *repository) fetch() {
 		r.err(err)
 		return
 	}
+	req = req.WithContext(r.ctx)
 
 	req.Header.Add("UNLEASH-APPNAME", r.options.appName)
 	req.Header.Add("UNLEASH-INSTANCEID", r.options.instanceId)
@@ -123,5 +133,7 @@ func (r *repository) getToggle(key string) *api.Feature {
 
 func (r *repository) Close() error {
 	close(r.close)
+	r.cancel()
+	<-r.closed
 	return nil
 }
