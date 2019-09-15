@@ -48,8 +48,6 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 }
 
 func (r *repository) sync() {
-	defer r.cleanup()
-
 	r.fetch()
 	r.ready <- true
 
@@ -58,17 +56,14 @@ func (r *repository) sync() {
 
 		select {
 		case <-r.close:
+			if err := r.options.storage.Persist(); err != nil {
+				r.err(err)
+			}
 			close(r.closed)
 			return
 		case <-refreshTimer.C:
 			r.fetch()
 		}
-	}
-}
-
-func (r *repository) cleanup() {
-	if err := r.options.storage.Persist(); err != nil {
-		r.err(err)
 	}
 }
 
