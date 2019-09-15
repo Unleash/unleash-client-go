@@ -267,8 +267,11 @@ func (uc Client) IsEnabled(feature string, options ...FeatureOption) (enabled bo
 func (uc *Client) Close() error {
 	uc.repository.Close()
 	uc.metrics.Close()
-	close(uc.close)
-	<-uc.closed
+	if uc.options.listener != nil {
+		// Wait for sync to exit.
+		close(uc.close)
+		<-uc.closed
+	}
 	return nil
 }
 
