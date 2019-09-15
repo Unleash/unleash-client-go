@@ -105,7 +105,6 @@ func (m *metrics) Close() error {
 		m.timer.Stop()
 		m.cancel()
 		close(m.close)
-		m.options.disableMetrics = true
 		<-m.closed
 	}
 	return nil
