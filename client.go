@@ -2,11 +2,12 @@ package unleash
 
 import (
 	"fmt"
-	s "github.com/Unleash/unleash-client-go/v3/internal/strategies"
-	"github.com/Unleash/unleash-client-go/v3/strategy"
 	"net/url"
 	"strings"
 	"time"
+
+	s "github.com/Unleash/unleash-client-go/v3/internal/strategies"
+	"github.com/Unleash/unleash-client-go/v3/strategy"
 )
 
 const (
@@ -37,6 +38,7 @@ type Client struct {
 	repositoryListener RepositoryListener
 	ready              chan bool
 	onReady            chan struct{}
+	close              chan struct{}
 	closed             chan struct{}
 	count              chan metric
 	sent               chan MetricsData
@@ -90,6 +92,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		count:         make(chan metric),
 		sent:          make(chan MetricsData),
 		registered:    make(chan ClientData, 1),
+		close:         make(chan struct{}),
 		closed:        make(chan struct{}),
 	}
 
@@ -212,7 +215,8 @@ func (uc *Client) sync() {
 			if uc.metricsListener != nil {
 				uc.metricsListener.OnRegistered(cd)
 			}
-		case <-uc.closed:
+		case <-uc.close:
+			close(uc.closed)
 			return
 		}
 	}
@@ -263,7 +267,11 @@ func (uc Client) IsEnabled(feature string, options ...FeatureOption) (enabled bo
 func (uc *Client) Close() error {
 	uc.repository.Close()
 	uc.metrics.Close()
-	close(uc.closed)
+	if uc.options.listener != nil {
+		// Wait for sync to exit.
+		close(uc.close)
+		<-uc.closed
+	}
 	return nil
 }
 
