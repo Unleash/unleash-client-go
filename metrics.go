@@ -61,7 +61,7 @@ type metrics struct {
 	started  time.Time
 	bucketMu sync.Mutex
 	bucket   api.Bucket
-	timer    *time.Timer
+	ticker   *time.Ticker
 	close    chan struct{}
 	closed   chan struct{}
 	ctx      context.Context
@@ -84,15 +84,12 @@ func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
 		m.options.httpClient = http.DefaultClient
 	}
 
-	m.bucketMu.Lock()
 	m.resetBucket()
-	m.bucketMu.Unlock()
-
 	if m.options.metricsInterval <= 0 {
 		m.options.disableMetrics = true
 	}
 	if !m.options.disableMetrics {
-		m.startTimer()
+		m.ticker = time.NewTicker(m.options.metricsInterval)
 		m.registerInstance()
 		go m.sync()
 	}
@@ -102,7 +99,7 @@ func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
 
 func (m *metrics) Close() error {
 	if !m.options.disableMetrics {
-		m.timer.Stop()
+		m.ticker.Stop()
 		m.cancel()
 		close(m.close)
 		<-m.closed
@@ -110,14 +107,10 @@ func (m *metrics) Close() error {
 	return nil
 }
 
-func (m *metrics) startTimer() {
-	m.timer = time.NewTimer(m.options.metricsInterval)
-}
-
 func (m *metrics) sync() {
 	for {
 		select {
-		case <-m.timer.C:
+		case <-m.ticker.C:
 			m.sendMetrics()
 		case <-m.close:
 			close(m.closed)
@@ -146,36 +139,43 @@ func (m *metrics) registerInstance() {
 
 func (m *metrics) sendMetrics() {
 	m.bucketMu.Lock()
-	if m.bucket.IsEmpty() {
-		m.resetBucket()
-		m.startTimer()
-		m.bucketMu.Unlock()
+	bucket := m.resetBucket()
+	m.bucketMu.Unlock()
+	if bucket.IsEmpty() {
 		return
 	}
-	payload := m.getPayload()
-	m.bucketMu.Unlock()
+	bucket.Stop = time.Now()
+	payload := MetricsData{
+		AppName:    m.options.appName,
+		InstanceID: m.options.instanceId,
+		Bucket:     bucket,
+	}
 
 	u, _ := m.options.url.Parse("./client/metrics")
-	m.startTimer()
 	resp, err := m.doPost(u, payload)
-
 	if err != nil {
 		m.err(err)
 		return
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusNotFound {
-		m.warn(fmt.Errorf("%s return 404, stopping metrics", u.String()))
-		m.Close()
-		return
-	}
-
 	if resp.StatusCode < http.StatusOK || resp.StatusCode > http.StatusMultipleChoices {
 		m.warn(fmt.Errorf("%s return %d", u.String(), resp.StatusCode))
-	}
+		// The post failed, re-add the metrics we attempted to send so
+		// they are included in the next post.
+		for name, tc := range bucket.Toggles {
+			m.add(name, true, tc.Yes)
+			m.add(name, false, tc.No)
+		}
 
-	m.sent <- payload
+		m.bucketMu.Lock()
+		// Set the start time of the current bucket to the one we
+		// attempted to send.
+		m.bucket.Start = bucket.Start
+		m.bucketMu.Unlock()
+	} else {
+		m.sent <- payload
+	}
 }
 
 func (m *metrics) doPost(url *url.URL, payload interface{}) (*http.Response, error) {
@@ -202,8 +202,8 @@ func (m *metrics) doPost(url *url.URL, payload interface{}) (*http.Response, err
 	return m.options.httpClient.Do(req)
 }
 
-func (m *metrics) count(name string, enabled bool) {
-	if m.options.disableMetrics {
+func (m *metrics) add(name string, enabled bool, num int32) {
+	if m.options.disableMetrics || num == 0 {
 		return
 	}
 	m.bucketMu.Lock()
@@ -213,30 +213,28 @@ func (m *metrics) count(name string, enabled bool) {
 		t = api.ToggleCount{}
 	}
 	if enabled {
-		t.Yes++
+		t.Yes += num
 	} else {
-		t.No++
+		t.No += num
 	}
-	m.metricsChannels.count <- metric{Name: name, Enabled: enabled}
 	m.bucket.Toggles[name] = t
 }
 
-func (m *metrics) resetBucket() {
+func (m *metrics) count(name string, enabled bool) {
+	if m.options.disableMetrics {
+		return
+	}
+	m.add(name, enabled, 1)
+	m.metricsChannels.count <- metric{Name: name, Enabled: enabled}
+}
+
+func (m *metrics) resetBucket() api.Bucket {
+	prev := m.bucket
 	m.bucket = api.Bucket{
 		Start:   time.Now(),
 		Toggles: map[string]api.ToggleCount{},
 	}
-}
-
-func (m *metrics) closeBucket() {
-	m.bucket.Stop = time.Now()
-}
-
-func (m *metrics) getPayload() MetricsData {
-	m.closeBucket()
-	metricsData := m.getMetricsData()
-	m.resetBucket()
-	return metricsData
+	return prev
 }
 
 func (m *metrics) getClientData() ClientData {
@@ -247,13 +245,5 @@ func (m *metrics) getClientData() ClientData {
 		m.options.strategies,
 		m.started,
 		int64(m.options.metricsInterval.Seconds()),
-	}
-}
-
-func (m *metrics) getMetricsData() MetricsData {
-	return MetricsData{
-		m.options.appName,
-		m.options.instanceId,
-		m.bucket,
 	}
 }

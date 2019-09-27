@@ -1,7 +1,14 @@
 package unleash
 
 import (
+	"bytes"
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"net/url"
+	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -118,4 +125,107 @@ func TestMetrics_DisabledMetrics(t *testing.T) {
 	time.Sleep(300 * time.Millisecond)
 	client.Close()
 	assert.True(gock.IsDone(), "there should be no more mocks")
+}
+
+func writeJSON(rw http.ResponseWriter, x interface{}) {
+	enc := json.NewEncoder(rw)
+	if err := enc.Encode(x); err != nil {
+		panic(err)
+	}
+}
+
+// TestMetrics_SendMetricsFail tests that no metrics are lost if /client/metrics
+// fails temporarily.
+func TestMetrics_SendMetricsFail(t *testing.T) {
+	assert := assert.New(t)
+
+	type metricsReq struct {
+		// body is the request body sent to /client/metrics
+		body []byte
+
+		// status is the status code returned from /client/metrics
+		status int
+	}
+	metricsCalls := make(chan metricsReq, 10)
+	var prevBody []byte
+	var sendStatus200 int32
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		switch req.Method + " " + req.URL.Path {
+		case "POST /client/register":
+		case "GET /client/features":
+			writeJSON(rw, api.FeatureResponse{})
+		case "POST /client/metrics":
+			body, err := ioutil.ReadAll(req.Body)
+			assert.Nil(err)
+			status200 := atomic.LoadInt32(&sendStatus200) == 1
+			status := 400
+			if status200 {
+				status = 200
+			}
+			if status200 || !bytes.Equal(prevBody, body) {
+				prevBody = body
+				metricsCalls <- metricsReq{body, status}
+			}
+			rw.WriteHeader(status)
+		default:
+			t.Fatalf("Unexpected request: %+v", req)
+		}
+	}))
+	defer srv.Close()
+
+	mockListener := &MockedListener{}
+	mockListener.On("OnReady").Return()
+	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("OnCount", "foo", true).Return()
+	mockListener.On("OnCount", "foo", false).Return()
+	mockListener.On("OnWarning", mock.MatchedBy(func(e error) bool {
+		return strings.HasSuffix(e.Error(), "/client/metrics return 400")
+	})).Return()
+	mockListener.On("OnSent", mock.AnythingOfType("MetricsData")).Return()
+	client, err := NewClient(
+		WithUrl(srv.URL),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithListener(mockListener),
+		WithMetricsInterval(time.Millisecond),
+	)
+	assert.Nil(err, "client should not return an error")
+	client.WaitForReady()
+
+	ck := func(status int, yes, no int32, r metricsReq) {
+		t.Helper()
+		var md MetricsData
+		err := json.Unmarshal(r.body, &md)
+		assert.Nil(err)
+		assert.Equal(status, r.status)
+		assert.Equal(yes, md.Bucket.Toggles["foo"].Yes)
+		assert.Equal(no, md.Bucket.Toggles["foo"].No)
+	}
+	m := client.metrics
+
+	// /client/metrics returns 400, check that the counts aren't reset.
+	m.count("foo", true)
+	ck(400, 1, 0, <-metricsCalls)
+	m.count("foo", false)
+	ck(400, 1, 1, <-metricsCalls)
+	m.count("foo", true)
+	ck(400, 2, 1, <-metricsCalls)
+
+	mockListener.AssertNotCalled(t, "OnSent", mock.AnythingOfType("MetricsData"))
+
+	atomic.StoreInt32(&sendStatus200, 1)
+	ck(200, 2, 1, <-metricsCalls)
+
+	// As /client/metrics returned 200 and m.count hasn't been called again
+	// there are no more metrics to report and thus /client/metrics
+	// shouldn't be called again.
+	select {
+	case r := <-metricsCalls:
+		t.Fatalf("Didn't expect request to /client/metrics, got %+v", r)
+	case <-time.NewTimer(500 * time.Millisecond).C:
+	}
+	client.Close()
+
+	// Now OnSent should have been called as /client/metrics returned 200.
+	mockListener.AssertCalled(t, "OnSent", mock.AnythingOfType("MetricsData"))
 }
