@@ -127,13 +127,6 @@ func TestMetrics_DisabledMetrics(t *testing.T) {
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
 
-func writeJSON(rw http.ResponseWriter, x interface{}) {
-	enc := json.NewEncoder(rw)
-	if err := enc.Encode(x); err != nil {
-		panic(err)
-	}
-}
-
 // TestMetrics_SendMetricsFail tests that no metrics are lost if /client/metrics
 // fails temporarily.
 func TestMetrics_SendMetricsFail(t *testing.T) {
