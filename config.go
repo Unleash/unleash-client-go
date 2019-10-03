@@ -11,6 +11,7 @@ import (
 
 type configOption struct {
 	appName         string
+	environment     string
 	instanceId      string
 	url             string
 	refreshInterval time.Duration
@@ -41,6 +42,13 @@ func WithListener(listener interface{}) ConfigOption {
 func WithAppName(appName string) ConfigOption {
 	return func(o *configOption) {
 		o.appName = appName
+	}
+}
+
+// WithEnvironment specifies the environment
+func WithEnvironment(env string) ConfigOption {
+	return func(o *configOption) {
+		o.environment = env
 	}
 }
 
