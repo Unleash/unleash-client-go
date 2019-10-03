@@ -14,4 +14,8 @@ type Context struct {
 
 	// Properties is a map of additional properties.
 	Properties map[string]string
+
+	Environment string
+
+	AppName string
 }

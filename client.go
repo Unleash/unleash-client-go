@@ -131,6 +131,10 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		return nil, fmt.Errorf("Unleash client appName missing")
 	}
 
+	if uc.options.environment == "" {
+		uc.options.environment = "default"
+	}
+
 	if uc.options.instanceId == "" {
 		uc.options.instanceId = generateInstanceId()
 	}
