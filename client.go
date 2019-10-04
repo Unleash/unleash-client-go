@@ -2,11 +2,14 @@ package unleash
 
 import (
 	"fmt"
-	s "github.com/Unleash/unleash-client-go/internal/strategies"
-	"github.com/Unleash/unleash-client-go/strategy"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/Unleash/unleash-client-go/context"
+	s "github.com/Unleash/unleash-client-go/internal/strategies"
+	"github.com/Unleash/unleash-client-go/strategy"
+	"github.com/imdario/mergo"
 )
 
 const (
@@ -247,6 +250,11 @@ func (uc Client) IsEnabled(feature string, options ...FeatureOption) (enabled bo
 			// TODO: warnOnce missingStrategy
 			continue
 		}
+
+		staticContext := &context.Context{AppName: uc.options.appName, Environment: "default"}
+
+		mergo.Merge(&opts.ctx, staticContext, mergo.WithOverride)
+
 		if foundStrategy.IsEnabled(s.Parameters, opts.ctx) {
 			return true
 		}
