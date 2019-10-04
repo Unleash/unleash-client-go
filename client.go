@@ -6,8 +6,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Unleash/unleash-client-go/v3/context"
 	s "github.com/Unleash/unleash-client-go/v3/internal/strategies"
 	"github.com/Unleash/unleash-client-go/v3/strategy"
+	"github.com/imdario/mergo"
 )
 
 const (
@@ -260,6 +262,11 @@ func (uc Client) IsEnabled(feature string, options ...FeatureOption) (enabled bo
 			// TODO: warnOnce missingStrategy
 			continue
 		}
+
+		staticContext := &context.Context{AppName: uc.options.appName, Environment: "default"}
+
+		mergo.Merge(&opts.ctx, staticContext, mergo.WithOverride)
+
 		if foundStrategy.IsEnabled(s.Parameters, opts.ctx) {
 			return true
 		}
