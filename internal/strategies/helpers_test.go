@@ -54,3 +54,9 @@ func TestNormalizedValue(t *testing.T) {
 	assert.Equal(t, uint32(73), normalizedValue("123", "gr1"))
 	assert.Equal(t, uint32(25), normalizedValue("999", "groupX"))
 }
+
+func TestCoalesce(t *testing.T) {
+	assert.Equal(t, "", coalesce())
+	assert.Equal(t, "foo", coalesce("foo"))
+	assert.Equal(t, "bar", coalesce("", "bar"))
+}

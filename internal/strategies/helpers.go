@@ -54,3 +54,13 @@ func normalizedValue(id string, groupId string) uint32 {
 	hashCode := hash.Sum32()
 	return hashCode % uint32(100) + 1
 }
+
+// coalesce returns the first non-empty string in the list of arguments
+func coalesce(str ...string) string {
+	for _, s := range str {
+		if s != "" {
+			return s
+		}
+	}
+	return ""
+}
