@@ -25,6 +25,7 @@ var defaultStrategies = []strategy.Strategy{
 	*s.NewGradualRolloutUserId(),
 	*s.NewRemoteAddressStrategy(),
 	*s.NewUserWithIdStrategy(),
+	*s.NewFlexibleRolloutStrategy(),
 }
 
 // Client is a structure representing an API client of an Unleash server.

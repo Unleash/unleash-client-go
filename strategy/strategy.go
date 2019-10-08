@@ -17,6 +17,12 @@ const (
 
 	// ParamUserIds is a property indicating a comma separated list of user ids.
 	ParamUserIds = "userIds"
+
+	// ParamStickiness indicates which context property is sticky.
+	ParamStickiness = "stickiness"
+
+	// ParamRollout is a property indicating a rollout percentage.
+	ParamRollout = "rollout"
 )
 
 // Strategy is an interface for defining new custom strategies.
