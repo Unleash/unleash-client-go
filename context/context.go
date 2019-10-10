@@ -44,3 +44,22 @@ func (ctx Context) Override(src Context) *Context {
 
 	return &ctx
 }
+
+// Field allows accessing the fields of the context by name. The typed fields are searched
+// first and if nothing matches, it will search the properties.
+func (ctx Context) Field(name string) string {
+	switch name {
+	case "userId":
+		return ctx.UserId
+	case "sessionId":
+		return ctx.SessionId
+	case "remoteAddress":
+		return ctx.RemoteAddress
+	case "environment":
+		return ctx.Environment
+	case "appName":
+		return ctx.AppName
+	default:
+		return ctx.Properties[name]
+	}
+}
