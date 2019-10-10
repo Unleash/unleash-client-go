@@ -2,11 +2,13 @@ package unleash
 
 import (
 	"fmt"
+
 	"net/url"
 	"strings"
 	"time"
 
 	"github.com/Unleash/unleash-client-go/v3/context"
+	"github.com/Unleash/unleash-client-go/v3/internal/constraints"
 	s "github.com/Unleash/unleash-client-go/v3/internal/strategies"
 	"github.com/Unleash/unleash-client-go/v3/strategy"
 )
@@ -275,7 +277,7 @@ func (uc Client) IsEnabled(feature string, options ...FeatureOption) (enabled bo
 			continue
 		}
 
-		if foundStrategy.IsEnabled(s.Parameters, ctx) {
+		if constraints.Check(ctx, s.Constraints) && foundStrategy.IsEnabled(s.Parameters, ctx) {
 			return true
 		}
 	}
