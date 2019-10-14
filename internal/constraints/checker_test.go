@@ -54,7 +54,7 @@ func TestCheck(t *testing.T) {
 			constraints: []api.Constraint{
 				{
 					ContextName: "environment",
-					Operator:    "NOT IN",
+					Operator:    "NOT_IN",
 					Values:      []string{"prod"},
 				},
 			},
@@ -68,7 +68,7 @@ func TestCheck(t *testing.T) {
 			constraints: []api.Constraint{
 				{
 					ContextName: "environment",
-					Operator:    "NOT IN",
+					Operator:    "NOT_IN",
 					Values:      []string{"prod"},
 				},
 				{

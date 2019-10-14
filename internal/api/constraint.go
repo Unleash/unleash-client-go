@@ -4,7 +4,7 @@ type Operator string
 
 const (
 	OperatorIn    Operator = "IN"
-	OperatorNotIn Operator = "NOT IN"
+	OperatorNotIn Operator = "NOT_IN"
 )
 
 type Constraint struct {
