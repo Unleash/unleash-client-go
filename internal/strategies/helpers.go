@@ -2,8 +2,11 @@ package strategies
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"strconv"
+	"time"
+
 	"github.com/spaolacci/murmur3"
 )
 
@@ -63,4 +66,9 @@ func coalesce(str ...string) string {
 		}
 	}
 	return ""
+}
+
+// newRand creates a new random number generator
+func newRand() *rand.Rand {
+	return rand.New(rand.NewSource(time.Now().Unix() + int64(os.Getpid())))
 }

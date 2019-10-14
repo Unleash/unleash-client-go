@@ -4,7 +4,6 @@ import (
 	"github.com/Unleash/unleash-client-go/v3/context"
 	"github.com/Unleash/unleash-client-go/v3/strategy"
 	"math/rand"
-	"time"
 )
 
 type gradualRolloutRandomStrategy struct {
@@ -13,7 +12,7 @@ type gradualRolloutRandomStrategy struct {
 
 func NewGradualRolloutRandomStrategy() *gradualRolloutRandomStrategy {
 	s := &gradualRolloutRandomStrategy{
-		rand.New(rand.NewSource(time.Now().Unix())),
+		newRand(),
 	}
 	return s
 }

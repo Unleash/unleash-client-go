@@ -3,7 +3,6 @@ package strategies
 import (
 	"math/rand"
 	"strconv"
-	"time"
 
 	"github.com/Unleash/unleash-client-go/v3/context"
 	"github.com/Unleash/unleash-client-go/v3/strategy"
@@ -25,7 +24,7 @@ type flexibleRolloutStrategy struct {
 // NewFlexibleRolloutStrategy creates a new instance of the flexible rollout strategy.
 func NewFlexibleRolloutStrategy() *flexibleRolloutStrategy {
 	s := &flexibleRolloutStrategy{
-		random: rand.New(rand.NewSource(time.Now().Unix())),
+		random: newRand(),
 	}
 	return s
 }

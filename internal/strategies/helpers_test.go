@@ -60,3 +60,7 @@ func TestCoalesce(t *testing.T) {
 	assert.Equal(t, "foo", coalesce("foo"))
 	assert.Equal(t, "bar", coalesce("", "bar"))
 }
+
+func TestNewRand(t *testing.T) {
+	assert.NotNil(t, newRand())
+}
