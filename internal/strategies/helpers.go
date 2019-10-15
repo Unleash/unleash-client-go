@@ -70,5 +70,5 @@ func coalesce(str ...string) string {
 
 // newRand creates a new random number generator
 func newRand() *rand.Rand {
-	return rand.New(rand.NewSource(time.Now().Unix() + int64(os.Getpid())))
+	return rand.New(rand.NewSource(time.Now().UnixNano() + int64(os.Getpid())))
 }
