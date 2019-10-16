@@ -92,10 +92,6 @@ func (r *rng) string() string {
 // newRng creates a new random number generator for numbers between 1-100
 // and uses a mutex internally to ensure safe concurrent reads.
 func newRng() *rng {
-	r := &rng{}
-	r.Lock()
 	seed := time.Now().UnixNano() + int64(os.Getpid())
-	r.random = rand.New(rand.NewSource(seed))
-	r.Unlock()
-	return r
+	return &rng{random: rand.New(rand.NewSource(seed))}
 }
