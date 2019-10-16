@@ -3,6 +3,7 @@ package strategies
 import (
 	"github.com/stretchr/testify/assert"
 	"os"
+	"sync"
 	"testing"
 )
 
@@ -61,6 +62,29 @@ func TestCoalesce(t *testing.T) {
 	assert.Equal(t, "bar", coalesce("", "bar"))
 }
 
-func TestNewRand(t *testing.T) {
-	assert.NotNil(t, newRand())
+func TestNewRng(t *testing.T) {
+	rng := newRng()
+
+	wg := sync.WaitGroup{}
+
+	testGen := func(n int) {
+		for i := 0; i < n; i++ {
+			randomInt := rng.int()
+			assert.True(t, randomInt >= 0 && randomInt <= 100)
+
+			randomString := rng.string()
+			assert.True(t, len(randomString) <= 3)
+
+			randomFloat := rng.float()
+			assert.True(t, randomFloat > 0.0 && randomFloat <= 100.0)
+		}
+		wg.Done()
+	}
+
+	goRoutines := 20
+	wg.Add(goRoutines)
+	for j := 0; j < goRoutines; j++ {
+		go testGen(100)
+	}
+	wg.Wait()
 }

@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/spaolacci/murmur3"
@@ -68,7 +69,33 @@ func coalesce(str ...string) string {
 	return ""
 }
 
-// newRand creates a new random number generator
-func newRand() *rand.Rand {
-	return rand.New(rand.NewSource(time.Now().UnixNano() + int64(os.Getpid())))
+type rng struct {
+	sync.Mutex
+	random *rand.Rand
+}
+
+func (r *rng) int() int {
+	r.Lock()
+	n := r.random.Intn(100) + 1
+	r.Unlock()
+	return n
+}
+
+func (r *rng) float() float64 {
+	return float64(r.int())
+}
+
+func (r *rng) string() string {
+	return strconv.Itoa(r.int())
+}
+
+// newRng creates a new random number generator for numbers between 1-100
+// and uses a mutex internally to ensure safe concurrent reads.
+func newRng() *rng {
+	r := &rng{}
+	r.Lock()
+	seed := time.Now().UnixNano() + int64(os.Getpid())
+	r.random = rand.New(rand.NewSource(seed))
+	r.Unlock()
+	return r
 }

@@ -1,9 +1,6 @@
 package strategies
 
 import (
-	"math/rand"
-	"strconv"
-
 	"github.com/Unleash/unleash-client-go/v3/context"
 	"github.com/Unleash/unleash-client-go/v3/strategy"
 )
@@ -18,23 +15,19 @@ const (
 )
 
 type flexibleRolloutStrategy struct {
-	random *rand.Rand
+	random *rng
 }
 
 // NewFlexibleRolloutStrategy creates a new instance of the flexible rollout strategy.
 func NewFlexibleRolloutStrategy() *flexibleRolloutStrategy {
 	s := &flexibleRolloutStrategy{
-		random: newRand(),
+		random: newRng(),
 	}
 	return s
 }
 
 func (s flexibleRolloutStrategy) Name() string {
 	return "flexibleRollout"
-}
-
-func (s flexibleRolloutStrategy) randomNumber() string {
-	return strconv.Itoa(s.random.Intn(100) + 1)
 }
 
 func (s flexibleRolloutStrategy) resolveStickiness(st stickiness, ctx context.Context) string {
@@ -44,9 +37,9 @@ func (s flexibleRolloutStrategy) resolveStickiness(st stickiness, ctx context.Co
 	case sessionIDStickiness:
 		return ctx.SessionId
 	case randomStickiness:
-		return s.randomNumber()
+		return s.random.string()
 	default:
-		return coalesce(ctx.UserId, ctx.SessionId, s.randomNumber())
+		return coalesce(ctx.UserId, ctx.SessionId, s.random.string())
 	}
 }
 
