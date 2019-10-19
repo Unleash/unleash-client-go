@@ -3,7 +3,9 @@ package unleash
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"net/url"
 	"sync"
 	"time"
 
@@ -13,12 +15,14 @@ import (
 type repository struct {
 	repositoryChannels
 	sync.RWMutex
-	options repositoryOptions
-	etag    string
-	close   chan struct{}
-	closed  chan struct{}
-	ctx     context.Context
-	cancel  func()
+	options       repositoryOptions
+	etag          string
+	close         chan struct{}
+	closed        chan struct{}
+	ctx           context.Context
+	cancel        func()
+	isReady       bool
+	refreshTicker *time.Ticker
 }
 
 func newRepository(options repositoryOptions, channels repositoryChannels) *repository {
@@ -27,6 +31,7 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 		repositoryChannels: channels,
 		close:              make(chan struct{}),
 		closed:             make(chan struct{}),
+		refreshTicker:      time.NewTicker(options.refreshInterval),
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	repo.ctx = ctx
@@ -47,13 +52,22 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 	return repo
 }
 
+func (r *repository) fetchAndReportError() {
+	err := r.fetch()
+	if err != nil {
+		if urlErr, ok := err.(*url.Error); !(ok && urlErr.Err == context.Canceled) {
+			r.err(err)
+		}
+	}
+	if !r.isReady && err == nil {
+		r.isReady = true
+		r.ready <- true
+	}
+}
+
 func (r *repository) sync() {
-	r.fetch()
-	r.ready <- true
-
+	r.fetchAndReportError()
 	for {
-		refreshTimer := time.NewTimer(r.options.refreshInterval)
-
 		select {
 		case <-r.close:
 			if err := r.options.storage.Persist(); err != nil {
@@ -61,19 +75,18 @@ func (r *repository) sync() {
 			}
 			close(r.closed)
 			return
-		case <-refreshTimer.C:
-			r.fetch()
+		case <-r.refreshTicker.C:
+			r.fetchAndReportError()
 		}
 	}
 }
 
-func (r *repository) fetch() {
+func (r *repository) fetch() error {
 	u, _ := r.options.url.Parse("./client/features")
 
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
-		r.err(err)
-		return
+		return err
 	}
 	req = req.WithContext(r.ctx)
 
@@ -91,27 +104,38 @@ func (r *repository) fetch() {
 
 	resp, err := r.options.httpClient.Do(req)
 	if err != nil {
-		r.err(err)
-		return
+		return err
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotModified {
-		return
+		return nil
+	}
+	if err := statusIsOK(resp); err != nil {
+		return err
 	}
 
 	var featureResp api.FeatureResponse
 	dec := json.NewDecoder(resp.Body)
 	if err := dec.Decode(&featureResp); err != nil {
-		r.err(err)
-		return
+		return err
 	}
 
 	r.Lock()
 	r.etag = resp.Header.Get("Etag")
 	r.options.storage.Reset(featureResp.FeatureMap(), true)
 	r.Unlock()
+	return nil
+}
+
+func statusIsOK(resp *http.Response) error {
+	s := resp.StatusCode
+	if 200 <= s && s < 300 {
+		return nil
+	}
+
+	return fmt.Errorf("%s %s returned status code %d", resp.Request.Method, resp.Request.URL, s)
 }
 
 func (r *repository) getToggle(key string) *api.Feature {
@@ -130,5 +154,6 @@ func (r *repository) Close() error {
 	close(r.close)
 	r.cancel()
 	<-r.closed
+	r.refreshTicker.Stop()
 	return nil
 }

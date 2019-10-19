@@ -28,8 +28,8 @@ type MetricListener interface {
 // RepositoryListener defines an interface that can be implemented in order to receive events that are relevant to
 // the feature toggle repository.
 type RepositoryListener interface {
-	// OnReady is called once the repository has successfully loaded the options from the specified
-	// storage option.
+	// OnReady is called when the client has loaded the feature toggles from
+	// the Unleash server.
 	OnReady()
 }
 
