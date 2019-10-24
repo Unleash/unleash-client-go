@@ -2,8 +2,12 @@ package strategies
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"strconv"
+	"sync"
+	"time"
+
 	"github.com/spaolacci/murmur3"
 )
 
@@ -53,4 +57,41 @@ func normalizedValue(id string, groupId string) uint32 {
 	hash.Write([]byte(value))
 	hashCode := hash.Sum32()
 	return hashCode % uint32(100) + 1
+}
+
+// coalesce returns the first non-empty string in the list of arguments
+func coalesce(str ...string) string {
+	for _, s := range str {
+		if s != "" {
+			return s
+		}
+	}
+	return ""
+}
+
+type rng struct {
+	sync.Mutex
+	random *rand.Rand
+}
+
+func (r *rng) int() int {
+	r.Lock()
+	n := r.random.Intn(100) + 1
+	r.Unlock()
+	return n
+}
+
+func (r *rng) float() float64 {
+	return float64(r.int())
+}
+
+func (r *rng) string() string {
+	return strconv.Itoa(r.int())
+}
+
+// newRng creates a new random number generator for numbers between 1-100
+// and uses a mutex internally to ensure safe concurrent reads.
+func newRng() *rng {
+	seed := time.Now().UnixNano() + int64(os.Getpid())
+	return &rng{random: rand.New(rand.NewSource(seed))}
 }

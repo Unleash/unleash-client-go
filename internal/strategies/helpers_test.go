@@ -3,6 +3,7 @@ package strategies
 import (
 	"github.com/stretchr/testify/assert"
 	"os"
+	"sync"
 	"testing"
 )
 
@@ -53,4 +54,37 @@ func TestParameterAsFloat64(t *testing.T) {
 func TestNormalizedValue(t *testing.T) {
 	assert.Equal(t, uint32(73), normalizedValue("123", "gr1"))
 	assert.Equal(t, uint32(25), normalizedValue("999", "groupX"))
+}
+
+func TestCoalesce(t *testing.T) {
+	assert.Equal(t, "", coalesce())
+	assert.Equal(t, "foo", coalesce("foo"))
+	assert.Equal(t, "bar", coalesce("", "bar"))
+}
+
+func TestNewRng(t *testing.T) {
+	rng := newRng()
+
+	wg := sync.WaitGroup{}
+
+	testGen := func(n int) {
+		for i := 0; i < n; i++ {
+			randomInt := rng.int()
+			assert.True(t, randomInt >= 0 && randomInt <= 100)
+
+			randomString := rng.string()
+			assert.True(t, len(randomString) <= 3)
+
+			randomFloat := rng.float()
+			assert.True(t, randomFloat > 0.0 && randomFloat <= 100.0)
+		}
+		wg.Done()
+	}
+
+	goRoutines := 20
+	wg.Add(goRoutines)
+	for j := 0; j < goRoutines; j++ {
+		go testGen(100)
+	}
+	wg.Wait()
 }

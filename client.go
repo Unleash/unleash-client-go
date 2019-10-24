@@ -2,10 +2,13 @@ package unleash
 
 import (
 	"fmt"
+
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/Unleash/unleash-client-go/v3/context"
+	"github.com/Unleash/unleash-client-go/v3/internal/constraints"
 	s "github.com/Unleash/unleash-client-go/v3/internal/strategies"
 	"github.com/Unleash/unleash-client-go/v3/strategy"
 )
@@ -24,6 +27,7 @@ var defaultStrategies = []strategy.Strategy{
 	*s.NewGradualRolloutUserId(),
 	*s.NewRemoteAddressStrategy(),
 	*s.NewUserWithIdStrategy(),
+	*s.NewFlexibleRolloutStrategy(),
 }
 
 // Client is a structure representing an API client of an Unleash server.
@@ -43,6 +47,7 @@ type Client struct {
 	count              chan metric
 	sent               chan MetricsData
 	registered         chan ClientData
+	staticContext      *context.Context
 }
 
 type errorChannels struct {
@@ -80,6 +85,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 
 	uc := &Client{
 		options: configOption{
+			environment:     "default",
 			refreshInterval: 15 * time.Second,
 			metricsInterval: 60 * time.Second,
 			disableMetrics:  false,
@@ -98,6 +104,11 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 
 	for _, opt := range options {
 		opt(&uc.options)
+	}
+
+	uc.staticContext = &context.Context{
+		Environment: uc.options.environment,
+		AppName:     uc.options.appName,
 	}
 
 	if uc.options.listener != nil {
@@ -235,6 +246,11 @@ func (uc Client) IsEnabled(feature string, options ...FeatureOption) (enabled bo
 		o(&opts)
 	}
 
+	ctx := uc.staticContext
+	if opts.ctx != nil {
+		ctx = ctx.Override(*opts.ctx)
+	}
+
 	if f == nil {
 		if opts.fallback != nil {
 			return *opts.fallback
@@ -256,7 +272,8 @@ func (uc Client) IsEnabled(feature string, options ...FeatureOption) (enabled bo
 			// TODO: warnOnce missingStrategy
 			continue
 		}
-		if foundStrategy.IsEnabled(s.Parameters, opts.ctx) {
+
+		if constraints.Check(ctx, s.Constraints) && foundStrategy.IsEnabled(s.Parameters, ctx) {
 			return true
 		}
 	}

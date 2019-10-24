@@ -6,9 +6,10 @@ type StrategyResponse struct {
 }
 
 type Strategy struct {
-	Id         int          `json:"id"`
-	Name       string       `json:"name"`
-	Parameters ParameterMap `json:"parameters"`
+	Id          int          `json:"id"`
+	Name        string       `json:"name"`
+	Constraints []Constraint `json:"constraints"`
+	Parameters  ParameterMap `json:"parameters"`
 }
 
 type ParameterDescription struct {

@@ -3,17 +3,15 @@ package strategies
 import (
 	"github.com/Unleash/unleash-client-go/v3/context"
 	"github.com/Unleash/unleash-client-go/v3/strategy"
-	"math/rand"
-	"time"
 )
 
 type gradualRolloutRandomStrategy struct {
-	random *rand.Rand
+	random *rng
 }
 
 func NewGradualRolloutRandomStrategy() *gradualRolloutRandomStrategy {
 	s := &gradualRolloutRandomStrategy{
-		rand.New(rand.NewSource(time.Now().Unix())),
+		newRng(),
 	}
 	return s
 }
@@ -33,5 +31,5 @@ func (s gradualRolloutRandomStrategy) IsEnabled(params map[string]interface{}, _
 		return false
 	}
 
-	return percentage >= float64(s.random.Intn(100)+1)
+	return percentage >= s.random.float()
 }
