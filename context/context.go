@@ -22,6 +22,8 @@ type Context struct {
 	Properties map[string]string
 }
 
+// Override will take all non-empty values in 'src' and replace the
+// corresponding values in this context with those.
 func (ctx Context) Override(src Context) *Context {
 	if src.UserId != "" {
 		ctx.UserId = src.UserId
