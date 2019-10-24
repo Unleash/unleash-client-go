@@ -2,16 +2,18 @@ package unleash
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
+	"sync"
+	"testing"
+
 	"github.com/Unleash/unleash-client-go/v3/context"
 	"github.com/Unleash/unleash-client-go/v3/internal/api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/h2non/gock.v1"
-	"os"
-	"path/filepath"
-	"testing"
-	)
+)
 
 const mockHost = "http://unleash-apu"
 const specFolder = "./testdata/client-specification/specifications"
@@ -33,14 +35,23 @@ type TestCase struct {
 func (tc TestCase) RunWithClient(client *Client) func(*testing.T) {
 	return func(t *testing.T) {
 		client.WaitForReady()
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go func() {
+			// Call IsEnabled concurrently with itself to catch
+			// potential data races with go test -race.
+			client.IsEnabled(tc.ToggleName, WithContext(tc.Context))
+			wg.Done()
+		}()
 		result := client.IsEnabled(tc.ToggleName, WithContext(tc.Context))
+		wg.Wait()
 		assert.Equal(t, tc.ExpectedResult, result)
 	}
 }
 
 type TestDefinition struct {
-	Name  string    `json:"name"`
-	State TestState `json:"state"`
+	Name  string     `json:"name"`
+	State TestState  `json:"state"`
 	Tests []TestCase `json:"tests"`
 }
 
@@ -66,7 +77,7 @@ func (td TestDefinition) Mock(listener interface{}) (*Client, error) {
 	)
 }
 
-func (td TestDefinition) Unmock() () {
+func (td TestDefinition) Unmock() {
 	gock.OffAll()
 }
 

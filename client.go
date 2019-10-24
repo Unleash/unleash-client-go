@@ -233,7 +233,9 @@ func (uc *Client) sync() {
 	}
 }
 
-// IsEnabled queries whether or not the specified feature is enabled or not.
+// IsEnabled queries whether the specified feature is enabled or not.
+//
+// It is safe to call this method from multiple goroutines concurrently.
 func (uc Client) IsEnabled(feature string, options ...FeatureOption) (enabled bool) {
 	defer func() {
 		uc.metrics.count(feature, enabled)
@@ -336,6 +338,8 @@ func (uc Client) getStrategy(name string) strategy.Strategy {
 
 // WaitForReady will block until the internal repository has loaded the feature toggles from the
 // storage engine. It will return immediately if the repository is already ready.
+//
+// It is safe to call this method from multiple goroutines concurrently.
 func (uc *Client) WaitForReady() {
 	<-uc.onReady
 }
