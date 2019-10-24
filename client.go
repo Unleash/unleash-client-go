@@ -254,7 +254,9 @@ func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled b
 	}
 
 	if f == nil {
-		if opts.fallback != nil {
+		if opts.fallbackFunc != nil {
+			return opts.fallbackFunc(feature, ctx)
+		} else if opts.fallback != nil {
 			return *opts.fallback
 		}
 		return false
