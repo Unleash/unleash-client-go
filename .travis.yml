@@ -1,10 +1,18 @@
 language: go
 
+env:
+  global:
+    - CC_TEST_REPORTER_ID=83fb34bd3ac446ecd2d13daa0ff9dc9384f63499d61b73e7f062c2850564d233
 go:
   - 1.9.x
   - 1.12.x
 
 go_import_path: github.com/Unleash/unleash-client-go/v3
+
+before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
 
 before_install:
   - git clone https://github.com/Unleash/client-specification.git ./testdata/client-specification
@@ -12,4 +20,8 @@ before_install:
 script:
  - go get -t -v ./...
  - go vet ./...
- - go test -v ./...
+ - go test -race -coverprofile=cover.out -covermode=atomic -v ./...
+
+after_script:
+  - ./cc-test-reporter format-coverage -t gocov -p unleash-client-go -o ./coverage/cc.json ./cover.out
+  - ./cc-test-reporter upload-coverage -i ./coverage/cc.json
