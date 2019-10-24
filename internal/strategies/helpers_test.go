@@ -1,10 +1,12 @@
 package strategies
 
 import (
-	"github.com/stretchr/testify/assert"
 	"os"
+	"strings"
 	"sync"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestResolveHostname(t *testing.T) {
@@ -87,4 +89,34 @@ func TestNewRng(t *testing.T) {
 		go testGen(100)
 	}
 	wg.Wait()
+}
+
+func BenchmarkNormalizedValue(b *testing.B) {
+	// Add two sub-benchmarks since the compiler allows
+	// strings and byte slices up to 32 bytes to be allocated
+	// on the stack when they do not escape.
+
+	const (
+		smallId    = "1234567"
+		smallGroup = "group42"
+	)
+
+	var (
+		largeId    = strings.Repeat("a", 16)
+		largeGroup = strings.Repeat("b", 16)
+	)
+
+	b.Run("value less than 32 bytes", func(b *testing.B) {
+		b.ReportAllocs()
+		for i := 0; i < b.N; i++ {
+			_ = normalizedValue(smallId, smallGroup)
+		}
+	})
+
+	b.Run("value greater than 32 bytes", func(b *testing.B) {
+		b.ReportAllocs()
+		for i := 0; i < b.N; i++ {
+			_ = normalizedValue(largeId, largeGroup)
+		}
+	})
 }
