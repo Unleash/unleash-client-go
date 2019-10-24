@@ -1,7 +1,6 @@
 package strategies
 
 import (
-	"fmt"
 	"math/rand"
 	"os"
 	"strconv"
@@ -52,11 +51,10 @@ func parameterAsFloat64(param interface{}) (result float64, ok bool) {
 }
 
 func normalizedValue(id string, groupId string) uint32 {
-	value := fmt.Sprintf("%s:%s", groupId, id)
 	hash := murmur3.New32()
-	hash.Write([]byte(value))
+	hash.Write([]byte(groupId + ":" + id))
 	hashCode := hash.Sum32()
-	return hashCode % uint32(100) + 1
+	return hashCode%uint32(100) + 1
 }
 
 // coalesce returns the first non-empty string in the list of arguments
