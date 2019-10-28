@@ -4,8 +4,8 @@ env:
   global:
     - CC_TEST_REPORTER_ID=83fb34bd3ac446ecd2d13daa0ff9dc9384f63499d61b73e7f062c2850564d233
 go:
-  - 1.9.x
-  - 1.12.x
+  - 1.10.x
+  - 1.13.x
 
 go_import_path: github.com/Unleash/unleash-client-go/v3
 
