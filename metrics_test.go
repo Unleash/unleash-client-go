@@ -1,12 +1,12 @@
 package unleash
 
 import (
-	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"reflect"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -140,14 +140,14 @@ func TestMetrics_SendMetricsFail(t *testing.T) {
 	assert := assert.New(t)
 
 	type metricsReq struct {
-		// body is the request body sent to /client/metrics
-		body []byte
+		// toggles are the toggles sent to /client/metrics
+		toggles map[string]api.ToggleCount
 
 		// status is the status code returned from /client/metrics
 		status int
 	}
 	metricsCalls := make(chan metricsReq, 10)
-	var prevBody []byte
+	var prevToggles map[string]api.ToggleCount
 	var sendStatus200 int32
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		switch req.Method + " " + req.URL.Path {
@@ -162,9 +162,14 @@ func TestMetrics_SendMetricsFail(t *testing.T) {
 			if status200 {
 				status = 200
 			}
-			if status200 || !bytes.Equal(prevBody, body) {
-				prevBody = body
-				metricsCalls <- metricsReq{body, status}
+
+			var md MetricsData
+			err = json.Unmarshal(body, &md)
+			assert.Nil(err)
+
+			if status200 || !reflect.DeepEqual(md.Bucket.Toggles, prevToggles) {
+				prevToggles = md.Bucket.Toggles
+				metricsCalls <- metricsReq{md.Bucket.Toggles, status}
 			}
 			rw.WriteHeader(status)
 		default:
@@ -194,12 +199,9 @@ func TestMetrics_SendMetricsFail(t *testing.T) {
 
 	ck := func(status int, yes, no int32, r metricsReq) {
 		t.Helper()
-		var md MetricsData
-		err := json.Unmarshal(r.body, &md)
-		assert.Nil(err)
 		assert.Equal(status, r.status)
-		assert.Equal(yes, md.Bucket.Toggles["foo"].Yes)
-		assert.Equal(no, md.Bucket.Toggles["foo"].No)
+		assert.Equal(yes, r.toggles["foo"].Yes)
+		assert.Equal(no, r.toggles["foo"].No)
 	}
 	m := client.metrics
 
