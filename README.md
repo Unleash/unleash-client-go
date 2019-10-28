@@ -5,6 +5,13 @@ Unleash Client for Go.  Read more about the [Unleash project](https://github.com
 
 **Version 3.x of the client requires `unleash-server` v3.x or higher.**
 
+## Go Version
+
+The client is currently tested against Go 1.10.x and 1.13.x. These versions will be updated
+as new versions of Go are released.
+
+The client may work on older versions of Go as well, but are not actively tested.
+
 ## Getting started
 
 ### 1. Install unleash-client-go
