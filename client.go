@@ -304,8 +304,9 @@ func (uc Client) Warnings() <-chan error {
 	return uc.warnings
 }
 
-// Ready returns the ready signal for the client and is fired after the repository of locally stored
-// toggles has been loaded.
+// Ready returns the ready channel for the client. A value will be available on
+// the channel when the feature toggles have been loaded from the Unleash
+// server.
 func (uc Client) Ready() <-chan bool {
 	return uc.ready
 }
@@ -336,8 +337,9 @@ func (uc Client) getStrategy(name string) strategy.Strategy {
 	return nil
 }
 
-// WaitForReady will block until the internal repository has loaded the feature toggles from the
-// storage engine. It will return immediately if the repository is already ready.
+// WaitForReady will block until the client has loaded the feature toggles from
+// the Unleash server. It will return immediately if the toggles have already
+// been loaded,
 //
 // It is safe to call this method from multiple goroutines concurrently.
 func (uc *Client) WaitForReady() {

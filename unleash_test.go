@@ -1,6 +1,9 @@
 package unleash
 
 import (
+	"encoding/json"
+	"net/http"
+
 	"github.com/stretchr/testify/mock"
 )
 
@@ -36,4 +39,11 @@ func (l *MockedListener) OnSent(payload MetricsData) {
 
 func (l *MockedListener) OnRegistered(payload ClientData) {
 	l.Called(payload)
+}
+
+func writeJSON(rw http.ResponseWriter, x interface{}) {
+	enc := json.NewEncoder(rw)
+	if err := enc.Encode(x); err != nil {
+		panic(err)
+	}
 }
