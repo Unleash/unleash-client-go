@@ -236,7 +236,7 @@ func (uc *Client) sync() {
 // IsEnabled queries whether the specified feature is enabled or not.
 //
 // It is safe to call this method from multiple goroutines concurrently.
-func (uc Client) IsEnabled(feature string, options ...FeatureOption) (enabled bool) {
+func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled bool) {
 	defer func() {
 		uc.metrics.count(feature, enabled)
 	}()
@@ -295,40 +295,40 @@ func (uc *Client) Close() error {
 }
 
 // Errors returns the error channel for the client.
-func (uc Client) Errors() <-chan error {
+func (uc *Client) Errors() <-chan error {
 	return uc.errors
 }
 
 // Warnings returns the warnings channel for the client.
-func (uc Client) Warnings() <-chan error {
+func (uc *Client) Warnings() <-chan error {
 	return uc.warnings
 }
 
 // Ready returns the ready channel for the client. A value will be available on
 // the channel when the feature toggles have been loaded from the Unleash
 // server.
-func (uc Client) Ready() <-chan bool {
+func (uc *Client) Ready() <-chan bool {
 	return uc.ready
 }
 
 // Count returns the count channel which gives an update when a toggle has been queried.
-func (uc Client) Count() <-chan metric {
+func (uc *Client) Count() <-chan metric {
 	return uc.count
 }
 
 // Registered returns the registered signal indicating that the client has successfully connected to the
 // metrics service.
-func (uc Client) Registered() <-chan ClientData {
+func (uc *Client) Registered() <-chan ClientData {
 	return uc.registered
 }
 
 // Sent returns the sent channel which receives data whenever the client has successfully sent metrics to
 // the metrics service.
-func (uc Client) Sent() <-chan MetricsData {
+func (uc *Client) Sent() <-chan MetricsData {
 	return uc.sent
 }
 
-func (uc Client) getStrategy(name string) strategy.Strategy {
+func (uc *Client) getStrategy(name string) strategy.Strategy {
 	for _, strategy := range uc.strategies {
 		if strategy.Name() == name {
 			return strategy
