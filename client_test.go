@@ -1,6 +1,8 @@
 package unleash
 
 import (
+	"github.com/Unleash/unleash-client-go/v3/context"
+	"github.com/stretchr/testify/mock"
 	"testing"
 
 	"github.com/Unleash/unleash-client-go/v3/internal/api"
@@ -43,5 +45,48 @@ func TestClientWithoutListener(t *testing.T) {
 	<-client.Registered()
 	<-client.Ready()
 	client.Close()
+	assert.True(gock.IsDone(), "there should be no more mocks")
+}
+
+func TestClient_WithFallbackFunc(t *testing.T) {
+	assert := assert.New(t)
+	defer gock.OffAll()
+
+	gock.New(mockerServer).
+		Post("/client/register").
+		MatchHeader("UNLEASH-APPNAME", mockAppName).
+		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
+		Reply(200)
+
+	gock.New(mockerServer).
+		Get("/client/features").
+		Reply(200).
+		JSON(api.FeatureResponse{})
+
+	feature := "does_not_exist"
+
+	mockListener := &MockedListener{}
+	mockListener.On("OnReady").Return()
+	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("OnCount", feature, true).Return()
+
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithListener(mockListener),
+	)
+
+	assert.NoError(err)
+
+	client.WaitForReady()
+
+	fallback := func(f string, ctx *context.Context) bool {
+		return f == feature
+	}
+
+	isEnabled := client.IsEnabled("does_not_exist", WithFallbackFunc(fallback))
+	assert.True(isEnabled)
+
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }

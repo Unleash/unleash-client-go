@@ -129,9 +129,13 @@ func WithCustomHeaders(headers http.Header) ConfigOption {
 	}
 }
 
+// FallbackFunc represents a function to be called if the feature is not found.
+type FallbackFunc func(feature string, ctx *context.Context) bool
+
 type featureOption struct {
-	fallback *bool
-	ctx      *context.Context
+	fallback     *bool
+	fallbackFunc FallbackFunc
+	ctx          *context.Context
 }
 
 // FeatureOption provides options for querying if a feature is enabled or not.
@@ -142,6 +146,14 @@ type FeatureOption func(*featureOption)
 func WithFallback(fallback bool) FeatureOption {
 	return func(opts *featureOption) {
 		opts.fallback = &fallback
+	}
+}
+
+// WithFallbackFunc specifies a fallback function to evaluate a feature
+// toggle in the event that it is not found on the service.
+func WithFallbackFunc(fallback FallbackFunc) FeatureOption {
+	return func(opts *featureOption) {
+		opts.fallbackFunc = fallback
 	}
 }
 
