@@ -129,7 +129,7 @@ func WithCustomHeaders(headers http.Header) ConfigOption {
 	}
 }
 
-// FallbackFunc represents a function to be called if the feature if not found.
+// FallbackFunc represents a function to be called if the feature is not found.
 type FallbackFunc func(feature string, ctx *context.Context) bool
 
 type featureOption struct {
