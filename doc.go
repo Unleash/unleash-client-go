@@ -1,7 +1,7 @@
 /*
 Package unleash is a client library for connecting to an Unleash feature toggle server.
 
-See https://github.com/Unleash/unleash for more information.
+See https://github.com/konfortes/unleash for more information.
 
 Basics
 

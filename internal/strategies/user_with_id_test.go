@@ -1,8 +1,8 @@
 package strategies
 
 import (
-	"github.com/Unleash/unleash-client-go/v3/context"
-	"github.com/Unleash/unleash-client-go/v3/strategy"
+	"github.com/konfortes/unleash-client-go/v3/context"
+	"github.com/konfortes/unleash-client-go/v3/strategy"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
