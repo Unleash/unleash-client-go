@@ -1,8 +1,13 @@
 package api
 
 import (
-	"github.com/konfortes/unleash-client-go/v3/context"
+	"fmt"
+	"math/rand"
+	"strconv"
 	"time"
+
+	"github.com/konfortes/unleash-client-go/v3/context"
+	"github.com/spaolacci/murmur3"
 )
 
 type ParameterMap map[string]interface{}
@@ -48,7 +53,7 @@ func (fr FeatureResponse) FeatureMap() map[string]interface{} {
 	return features
 }
 
-// SelectVariant selects the correct variant based on wither context or weights
+// SelectVariant selects the correct variant based on either context or weights
 func (f Feature) SelectVariant(ctx *context.Context) *VariantPayload {
 
 	selectedVariant := f.variantFromOverrides(ctx)
@@ -67,11 +72,6 @@ func (f Feature) variantFromOverrides(ctx *context.Context) *Variant {
 		}
 	}
 	return selectedVariant
-}
-
-func (f Feature) variantFromWeights(ctx *context.Context) *Variant {
-	// TODO: implement
-	return &f.Variants[0]
 }
 
 func (v Variant) matchesContext(ctx *context.Context) bool {
@@ -102,4 +102,56 @@ func (vo VariantOverride) matchesContext(ctx *context.Context) bool {
 		}
 	}
 	return matches
+}
+
+func (f Feature) variantFromWeights(ctx *context.Context) *Variant {
+	totalWeight := int32(0)
+	var retVariant *Variant
+
+	for _, variant := range f.Variants {
+		totalWeight += variant.Weight
+	}
+
+	if totalWeight <= 0 {
+		return nil
+	}
+
+	variantWeight := getNormalizedNumber(variantSeed(ctx), f.Name, totalWeight)
+
+	counter := uint32(0)
+	for _, variant := range f.Variants {
+		if variant.Weight == 0 {
+			continue
+		}
+		counter += uint32(variant.Weight)
+
+		if counter < variantWeight {
+			continue
+		} else {
+			retVariant = &variant
+			break
+		}
+	}
+
+	return retVariant
+}
+
+func getNormalizedNumber(identifier, groupID string, normalizer int32) uint32 {
+
+	seed := fmt.Sprintf("%s:%s", identifier, groupID)
+	return (murmur3.Sum32([]byte(seed)) % uint32(normalizer)) + 1
+}
+
+func variantSeed(ctx *context.Context) string {
+	if ctx.UserId != "" {
+		return ctx.UserId
+	}
+	if ctx.SessionId != "" {
+		return ctx.SessionId
+	}
+	if ctx.RemoteAddress != "" {
+		return ctx.RemoteAddress
+	}
+
+	return strconv.Itoa(rand.Intn(1000000))
 }
