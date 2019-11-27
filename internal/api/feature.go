@@ -24,18 +24,20 @@ type Feature struct {
 }
 
 type Variant struct {
-	Name      string         `json:"name"`
-	Weight    int32          `json:"weight"`
-	Payload   VariantPayload `json:"payload"`
-	Overrides []struct {
-		ContextName string   `json:"context_name"`
-		Values      []string `json:"values"`
-	} `json:"overrides"`
+	Name      string            `json:"name"`
+	Weight    int32             `json:"weight"`
+	Payload   VariantPayload    `json:"payload"`
+	Overrides []VariantOverride `json:"overrides"`
 }
 
 type VariantPayload struct {
 	Type  string `json:"type"`
 	Value string `json:"value"`
+}
+
+type VariantOverride struct {
+	ContextName string   `json:"context_name"`
+	Values      []string `json:"values"`
 }
 
 func (fr FeatureResponse) FeatureMap() map[string]interface{} {
@@ -46,7 +48,58 @@ func (fr FeatureResponse) FeatureMap() map[string]interface{} {
 	return features
 }
 
+// SelectVariant selects the correct variant based on wither context or weights
 func (f Feature) SelectVariant(ctx *context.Context) *VariantPayload {
-	// TODO: handle overrides logic
-	return &f.Variants[0].Payload
+
+	selectedVariant := f.variantFromOverrides(ctx)
+	if selectedVariant == nil {
+		selectedVariant = f.variantFromWeights(ctx)
+	}
+
+	return &selectedVariant.Payload
+}
+
+func (f Feature) variantFromOverrides(ctx *context.Context) *Variant {
+	var selectedVariant *Variant
+	for _, variant := range f.Variants {
+		if variant.matchesContext(ctx) {
+			selectedVariant = &variant
+		}
+	}
+	return selectedVariant
+}
+
+func (f Feature) variantFromWeights(ctx *context.Context) *Variant {
+	// TODO: implement
+	return &f.Variants[0]
+}
+
+func (v Variant) matchesContext(ctx *context.Context) bool {
+	for _, override := range v.Overrides {
+		if override.matchesContext(ctx) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (vo VariantOverride) matchesContext(ctx *context.Context) bool {
+	var contextValue string
+	switch vo.ContextName {
+	case "userId":
+		contextValue = ctx.UserId
+	case "sessionId":
+		contextValue = ctx.SessionId
+	case "remoteAddress":
+		contextValue = ctx.RemoteAddress
+	}
+
+	matches := false
+	for _, val := range vo.Values {
+		if val == contextValue {
+			matches = true
+		}
+	}
+	return matches
 }
