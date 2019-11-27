@@ -3,7 +3,7 @@ package unleash
 import (
 	"testing"
 
-	"github.com/konfortes/unleash-client-go/v3/internal/api"
+	"github.com/Unleash/unleash-client-go/v3/internal/api"
 	"github.com/stretchr/testify/assert"
 )
 

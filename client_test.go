@@ -1,11 +1,11 @@
 package unleash
 
 import (
-	"github.com/konfortes/unleash-client-go/v3/context"
+	"github.com/Unleash/unleash-client-go/v3/context"
 	"github.com/stretchr/testify/mock"
 	"testing"
 
-	"github.com/konfortes/unleash-client-go/v3/internal/api"
+	"github.com/Unleash/unleash-client-go/v3/internal/api"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/h2non/gock.v1"
 )

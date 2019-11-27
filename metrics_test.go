@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/konfortes/unleash-client-go/v3/internal/api"
+	"github.com/Unleash/unleash-client-go/v3/internal/api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gopkg.in/h2non/gock.v1"

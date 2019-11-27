@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/konfortes/unleash-client-go/v3/internal/api"
+	"github.com/Unleash/unleash-client-go/v3/internal/api"
 )
 
 // MetricsData represents the data sent to the unleash server.
