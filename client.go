@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/konfortes/unleash-client-go/v3/context"
+	"github.com/konfortes/unleash-client-go/v3/internal/api"
 	"github.com/konfortes/unleash-client-go/v3/internal/constraints"
 	s "github.com/konfortes/unleash-client-go/v3/internal/strategies"
 	"github.com/konfortes/unleash-client-go/v3/strategy"
@@ -231,6 +232,55 @@ func (uc *Client) sync() {
 			return
 		}
 	}
+}
+
+// GetVariant queries for the feature variance value.
+//
+// It is safe to call this method from multiple goroutines concurrently.
+func (uc *Client) GetVariant(feature string, options ...VariantFeatureOption) (bool, *api.VariantPayload) {
+	// TODO: handle metrics
+	// defer func() {
+	// 	uc.metrics.count(feature, enabled)
+	// }()
+
+	f := uc.repository.getToggle(feature)
+
+	var opts varFeatureOption
+	for _, o := range options {
+		o(&opts)
+	}
+
+	ctx := uc.staticContext
+	if opts.ctx != nil {
+		ctx = ctx.Override(*opts.ctx)
+	}
+
+	if f == nil || len(f.Variants) == 0 {
+		if opts.fallbackFunc != nil {
+			return true, opts.fallbackFunc(feature, ctx)
+		} else if opts.fallback != nil {
+			return true, opts.fallback
+		}
+		return false, nil
+	}
+
+	if !f.Enabled {
+		return false, nil
+	}
+
+	// TODO: handle no strategies case
+	for _, s := range f.Strategies {
+		foundStrategy := uc.getStrategy(s.Name)
+		if foundStrategy == nil {
+			// TODO: warnOnce missingStrategy
+			continue
+		}
+
+		if constraints.Check(ctx, s.Constraints) && foundStrategy.IsEnabled(s.Parameters, ctx) {
+			return true, f.SelectVariant(ctx)
+		}
+	}
+	return false, nil
 }
 
 // IsEnabled queries whether the specified feature is enabled or not.

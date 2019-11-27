@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/konfortes/unleash-client-go/v3/context"
+	"github.com/konfortes/unleash-client-go/v3/internal/api"
 	"github.com/konfortes/unleash-client-go/v3/strategy"
 )
 
@@ -132,20 +133,40 @@ func WithCustomHeaders(headers http.Header) ConfigOption {
 // FallbackFunc represents a function to be called if the feature is not found.
 type FallbackFunc func(feature string, ctx *context.Context) bool
 
+// FallbackVarFunc represents a function to be called if the feature is not found.
+type FallbackVarFunc func(feature string, ctx *context.Context) *api.VariantPayload
+
 type featureOption struct {
 	fallback     *bool
 	fallbackFunc FallbackFunc
 	ctx          *context.Context
 }
 
+type varFeatureOption struct {
+	fallback     *api.VariantPayload
+	fallbackFunc FallbackVarFunc
+	ctx          *context.Context
+}
+
 // FeatureOption provides options for querying if a feature is enabled or not.
 type FeatureOption func(*featureOption)
+
+// VariantFeatureOption provides options for querying for a feature variant.
+type VariantFeatureOption func(*varFeatureOption)
 
 // WithFallback specifies what the value should be if the feature toggle is not found on the
 // unleash service.
 func WithFallback(fallback bool) FeatureOption {
 	return func(opts *featureOption) {
 		opts.fallback = &fallback
+	}
+}
+
+// WithFallback specifies what the value should be if the feature toggle is not found on the
+// unleash service.
+func WithVarFallback(varPayload api.VariantPayload) VariantFeatureOption {
+	return func(opts *varFeatureOption) {
+		opts.fallback = &varPayload
 	}
 }
 
