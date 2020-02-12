@@ -23,6 +23,7 @@ type configOption struct {
 	storage         Storage
 	httpClient      *http.Client
 	customHeaders   http.Header
+	sqlitePath      string
 }
 
 // ConfigOption represents a option for configuring the client.
@@ -68,7 +69,7 @@ func WithUrl(url string) ConfigOption {
 }
 
 // WithRefreshInterval specifies the time interval with which the client should sync the
-// feature toggles from the unleash server.
+// feature toggles from the unleash server. Ignored when using a sqlite local database.
 func WithRefreshInterval(refreshInterval time.Duration) ConfigOption {
 	return func(o *configOption) {
 		o.refreshInterval = refreshInterval
@@ -91,7 +92,7 @@ func WithDisableMetrics(disableMetrics bool) ConfigOption {
 }
 
 // WithBackupPath specifies the path that is passed to the storage implementation for storing
-// the feature toggles locally.
+// the feature toggles locally. Ignored when using a sqlite local database.
 func WithBackupPath(backupPath string) ConfigOption {
 	return func(o *configOption) {
 		o.backupPath = backupPath
@@ -107,7 +108,7 @@ func WithStrategies(strategies ...strategy.Strategy) ConfigOption {
 }
 
 // WithStorage specifies which storage implementation the repository should use for storing feature
-// toggles.
+// toggles. Ignored when using a sqlite local database.
 func WithStorage(storage Storage) ConfigOption {
 	return func(o *configOption) {
 		o.storage = storage
@@ -122,10 +123,19 @@ func WithHttpClient(client *http.Client) ConfigOption {
 }
 
 // WithCustomHeaders specifies any custom headers that should be sent along with requests to the
-// server.
+// server. Ignored when using a sqlite local database.
 func WithCustomHeaders(headers http.Header) ConfigOption {
 	return func(o *configOption) {
 		o.customHeaders = headers
+	}
+}
+
+// WithDatabasePath sets the path for the local sqlite database where features
+// are populated by an external process. This disables the fetching from the
+// unleash server and will only rely on the local database.
+func WithDatabasePath(path string) ConfigOption {
+	return func(o *configOption) {
+		o.sqlitePath = path
 	}
 }
 

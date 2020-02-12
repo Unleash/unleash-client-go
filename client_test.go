@@ -1,9 +1,10 @@
 package unleash
 
 import (
+	"testing"
+
 	"github.com/Unleash/unleash-client-go/v3/context"
 	"github.com/stretchr/testify/mock"
-	"testing"
 
 	"github.com/Unleash/unleash-client-go/v3/internal/api"
 	"github.com/stretchr/testify/assert"
@@ -89,4 +90,37 @@ func TestClient_WithFallbackFunc(t *testing.T) {
 	assert.True(isEnabled)
 
 	assert.True(gock.IsDone(), "there should be no more mocks")
+}
+
+func TestClientWithSqliteDatabase(t *testing.T) {
+	assert := assert.New(t)
+
+	_, _, path := buildTestSqliteRepository(assert)
+
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithDatabasePath(path),
+		WithDisableMetrics(true),
+	)
+	assert.Nil(err, "client should not return an error")
+
+	go func() {
+		for {
+			select {
+			case e := <-client.Errors():
+				t.Fatalf("Unexpected error: %v", e)
+			case w := <-client.Warnings():
+				t.Fatalf("Unexpected warning: %v", w)
+			case <-client.Count():
+			case <-client.Sent():
+			}
+		}
+	}()
+	<-client.Ready()
+
+	assert.True(client.IsEnabled("dummy.feature1"))
+
+	assert.False(client.IsEnabled("dummy.feature2"))
+	client.Close()
 }

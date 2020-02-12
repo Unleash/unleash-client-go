@@ -34,7 +34,7 @@ var defaultStrategies = []strategy.Strategy{
 type Client struct {
 	errorChannels
 	options            configOption
-	repository         *repository
+	repository         Repository
 	metrics            *metrics
 	strategies         []strategy.Strategy
 	errorListener      ErrorListener
@@ -152,22 +152,35 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		uc.options.instanceId = generateInstanceId()
 	}
 
-	uc.repository = newRepository(
-		repositoryOptions{
-			backupPath:      uc.options.backupPath,
-			url:             *parsedUrl,
-			appName:         uc.options.appName,
-			instanceId:      uc.options.instanceId,
-			refreshInterval: uc.options.refreshInterval,
-			storage:         uc.options.storage,
-			httpClient:      uc.options.httpClient,
-			customHeaders:   uc.options.customHeaders,
-		},
-		repositoryChannels{
-			errorChannels: errChannels,
-			ready:         uc.ready,
-		},
-	)
+	if uc.options.sqlitePath == "" {
+		uc.repository = NewHttpRepository(
+			repositoryOptions{
+				backupPath:      uc.options.backupPath,
+				url:             *parsedUrl,
+				appName:         uc.options.appName,
+				instanceId:      uc.options.instanceId,
+				refreshInterval: uc.options.refreshInterval,
+				storage:         uc.options.storage,
+				httpClient:      uc.options.httpClient,
+				customHeaders:   uc.options.customHeaders,
+			},
+			repositoryChannels{
+				errorChannels: errChannels,
+				ready:         uc.ready,
+			},
+		)
+	} else {
+		uc.repository, err = NewSqliteRepository(
+			uc.options.sqlitePath,
+			repositoryChannels{
+				errorChannels: errChannels,
+				ready:         uc.ready,
+			},
+		)
+		if err != nil {
+			return nil, fmt.Errorf("Could not initizalize client. %s", err.Error())
+		}
+	}
 
 	uc.strategies = append(defaultStrategies, uc.options.strategies...)
 
@@ -241,7 +254,7 @@ func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled b
 		uc.metrics.count(feature, enabled)
 	}()
 
-	f := uc.repository.getToggle(feature)
+	f := uc.repository.GetToggle(feature)
 
 	var opts featureOption
 	for _, o := range options {

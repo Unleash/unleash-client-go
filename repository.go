@@ -12,7 +12,12 @@ import (
 	"github.com/Unleash/unleash-client-go/v3/internal/api"
 )
 
-type repository struct {
+type Repository interface {
+	GetToggle(key string) *api.Feature
+	Close() error
+}
+
+type httpRepository struct {
 	repositoryChannels
 	sync.RWMutex
 	options       repositoryOptions
@@ -25,8 +30,8 @@ type repository struct {
 	refreshTicker *time.Ticker
 }
 
-func newRepository(options repositoryOptions, channels repositoryChannels) *repository {
-	repo := &repository{
+func NewHttpRepository(options repositoryOptions, channels repositoryChannels) Repository {
+	repo := &httpRepository{
 		options:            options,
 		repositoryChannels: channels,
 		close:              make(chan struct{}),
@@ -52,7 +57,7 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 	return repo
 }
 
-func (r *repository) fetchAndReportError() {
+func (r *httpRepository) fetchAndReportError() {
 	err := r.fetch()
 	if err != nil {
 		if urlErr, ok := err.(*url.Error); !(ok && urlErr.Err == context.Canceled) {
@@ -65,7 +70,7 @@ func (r *repository) fetchAndReportError() {
 	}
 }
 
-func (r *repository) sync() {
+func (r *httpRepository) sync() {
 	r.fetchAndReportError()
 	for {
 		select {
@@ -81,7 +86,7 @@ func (r *repository) sync() {
 	}
 }
 
-func (r *repository) fetch() error {
+func (r *httpRepository) fetch() error {
 	u, _ := r.options.url.Parse("./client/features")
 
 	req, err := http.NewRequest("GET", u.String(), nil)
@@ -138,7 +143,7 @@ func statusIsOK(resp *http.Response) error {
 	return fmt.Errorf("%s %s returned status code %d", resp.Request.Method, resp.Request.URL, s)
 }
 
-func (r *repository) getToggle(key string) *api.Feature {
+func (r *httpRepository) GetToggle(key string) *api.Feature {
 	r.RLock()
 	defer r.RUnlock()
 
@@ -150,7 +155,7 @@ func (r *repository) getToggle(key string) *api.Feature {
 	return nil
 }
 
-func (r *repository) Close() error {
+func (r *httpRepository) Close() error {
 	close(r.close)
 	r.cancel()
 	<-r.closed
