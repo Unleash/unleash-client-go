@@ -95,7 +95,9 @@ func TestClient_WithFallbackFunc(t *testing.T) {
 func TestClientWithSqliteDatabase(t *testing.T) {
 	assert := assert.New(t)
 
-	_, _, path := buildTestSqliteRepository(assert)
+	// building the fixtures
+	repo, _, path := buildTestSqliteRepository(assert)
+	repo.Close()
 
 	client, err := NewClient(
 		WithUrl(mockerServer),
