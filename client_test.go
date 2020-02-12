@@ -139,13 +139,12 @@ func TestClientWithSqliteDatabaseDefault(t *testing.T) {
 		WithAppName(mockAppName),
 		WithDatabasePath(path),
 		WithDisableMetrics(true),
+		WithListener(DebugListener{}),
 	)
 	assert.Nil(err, "client should not return an error")
 	WaitForReady()
 
-
 	assert.True(IsEnabled("dummy.feature1"))
-
 	assert.False(IsEnabled("dummy.feature2"))
 	Close()
 }
