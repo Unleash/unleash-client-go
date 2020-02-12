@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"crawshaw.io/sqlite/sqlitex"
-	"github.com/Unleash/unleash-client-go/v3/internal/api"
+	"github.com/seatgeek/unleash-client-go/v3/internal/api"
 )
 
 type sqliteRepository struct {

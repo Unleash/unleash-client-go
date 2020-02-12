@@ -3,10 +3,10 @@ package unleash
 import (
 	"testing"
 
-	"github.com/Unleash/unleash-client-go/v3/context"
+	"github.com/seatgeek/unleash-client-go/v3/context"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/Unleash/unleash-client-go/v3/internal/api"
+	"github.com/seatgeek/unleash-client-go/v3/internal/api"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/h2non/gock.v1"
 )

@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Unleash/unleash-client-go/v3/context"
-	"github.com/Unleash/unleash-client-go/v3/internal/constraints"
-	s "github.com/Unleash/unleash-client-go/v3/internal/strategies"
-	"github.com/Unleash/unleash-client-go/v3/strategy"
+	"github.com/seatgeek/unleash-client-go/v3/context"
+	"github.com/seatgeek/unleash-client-go/v3/internal/constraints"
+	s "github.com/seatgeek/unleash-client-go/v3/internal/strategies"
+	"github.com/seatgeek/unleash-client-go/v3/strategy"
 )
 
 const (

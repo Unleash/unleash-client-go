@@ -1,8 +1,8 @@
 package constraints
 
 import (
-	"github.com/Unleash/unleash-client-go/v3/context"
-	"github.com/Unleash/unleash-client-go/v3/internal/api"
+	"github.com/seatgeek/unleash-client-go/v3/context"
+	"github.com/seatgeek/unleash-client-go/v3/internal/api"
 )
 
 func checkConstraint(ctx *context.Context, constraint api.Constraint) bool {
