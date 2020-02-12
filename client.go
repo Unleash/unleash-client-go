@@ -180,6 +180,14 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		if err != nil {
 			return nil, fmt.Errorf("Could not initizalize client. %s", err.Error())
 		}
+
+		defer func() {
+			close(uc.onReady)
+			if uc.repositoryListener != nil {
+				uc.repositoryListener.OnReady()
+			}
+		}()
+
 	}
 
 	uc.strategies = append(defaultStrategies, uc.options.strategies...)

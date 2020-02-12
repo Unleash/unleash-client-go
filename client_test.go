@@ -126,3 +126,26 @@ func TestClientWithSqliteDatabase(t *testing.T) {
 	assert.False(client.IsEnabled("dummy.feature2"))
 	client.Close()
 }
+
+func TestClientWithSqliteDatabaseDefault(t *testing.T) {
+	assert := assert.New(t)
+
+	// building the fixtures
+	repo, _, path := buildTestSqliteRepository(assert)
+	repo.Close()
+
+	err := Initialize(
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithDatabasePath(path),
+		WithDisableMetrics(true),
+	)
+	assert.Nil(err, "client should not return an error")
+	WaitForReady()
+
+
+	assert.True(IsEnabled("dummy.feature1"))
+
+	assert.False(IsEnabled("dummy.feature2"))
+	Close()
+}
