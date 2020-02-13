@@ -152,6 +152,32 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		uc.options.instanceId = generateInstanceId()
 	}
 
+	uc.strategies = append(defaultStrategies, uc.options.strategies...)
+
+	strategyNames := make([]string, len(uc.strategies))
+	for i, strategy := range uc.strategies {
+		strategyNames[i] = strategy.Name()
+	}
+
+	uc.metrics = newMetrics(
+		metricsOptions{
+			appName:         uc.options.appName,
+			instanceId:      uc.options.instanceId,
+			strategies:      strategyNames,
+			metricsInterval: uc.options.metricsInterval,
+			url:             *parsedUrl,
+			httpClient:      uc.options.httpClient,
+			customHeaders:   uc.options.customHeaders,
+			disableMetrics:  uc.options.disableMetrics,
+		},
+		metricsChannels{
+			errorChannels: errChannels,
+			count:         uc.count,
+			sent:          uc.sent,
+			registered:    uc.registered,
+		},
+	)
+
 	if uc.options.sqlitePath == "" {
 		uc.repository = NewHttpRepository(
 			repositoryOptions{
@@ -181,32 +207,6 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 			return nil, fmt.Errorf("Could not initizalize client. %s", err.Error())
 		}
 	}
-
-	uc.strategies = append(defaultStrategies, uc.options.strategies...)
-
-	strategyNames := make([]string, len(uc.strategies))
-	for i, strategy := range uc.strategies {
-		strategyNames[i] = strategy.Name()
-	}
-
-	uc.metrics = newMetrics(
-		metricsOptions{
-			appName:         uc.options.appName,
-			instanceId:      uc.options.instanceId,
-			strategies:      strategyNames,
-			metricsInterval: uc.options.metricsInterval,
-			url:             *parsedUrl,
-			httpClient:      uc.options.httpClient,
-			customHeaders:   uc.options.customHeaders,
-			disableMetrics:  uc.options.disableMetrics,
-		},
-		metricsChannels{
-			errorChannels: errChannels,
-			count:         uc.count,
-			sent:          uc.sent,
-			registered:    uc.registered,
-		},
-	)
 
 	return uc, nil
 }
