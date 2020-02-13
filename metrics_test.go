@@ -84,7 +84,7 @@ func TestMetrics_DoPost(t *testing.T) {
 
 	assert.Nil(err, "client should not return an error")
 
-	m := client.metrics
+	m := client.metrics.(*metrics)
 
 	serverUrl, _ := url.Parse(mockerServer)
 	res, err := m.doPost(serverUrl, &struct{}{})
@@ -199,11 +199,11 @@ func TestMetrics_SendMetricsFail(t *testing.T) {
 	m := client.metrics
 
 	// /client/metrics returns 400, check that the counts aren't reset.
-	m.count("foo", true)
+	m.Count("foo", true)
 	ck(400, 1, 0, <-metricsCalls)
-	m.count("foo", false)
+	m.Count("foo", false)
 	ck(400, 1, 1, <-metricsCalls)
-	m.count("foo", true)
+	m.Count("foo", true)
 	ck(400, 2, 1, <-metricsCalls)
 
 	mockListener.AssertNotCalled(t, "OnSent", mock.AnythingOfType("MetricsData"))
@@ -211,7 +211,7 @@ func TestMetrics_SendMetricsFail(t *testing.T) {
 	atomic.StoreInt32(&sendStatus200, 1)
 	ck(200, 2, 1, <-metricsCalls)
 
-	// As /client/metrics returned 200 and m.count hasn't been called again
+	// As /client/metrics returned 200 and m.Count hasn't been called again
 	// there are no more metrics to report and thus /client/metrics
 	// shouldn't be called again.
 	select {

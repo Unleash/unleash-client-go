@@ -35,7 +35,7 @@ type Client struct {
 	errorChannels
 	options            configOption
 	repository         Repository
-	metrics            *metrics
+	metrics            Metrics
 	strategies         []strategy.Strategy
 	errorListener      ErrorListener
 	metricsListener    MetricListener
@@ -92,6 +92,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 			backupPath:      getTmpDirPath(),
 			strategies:      []strategy.Strategy{},
 		},
+		metrics:       NullMetrics{},
 		errorChannels: errChannels,
 		onReady:       make(chan struct{}),
 		ready:         make(chan bool, 1),
@@ -251,7 +252,7 @@ func (uc *Client) sync() {
 // It is safe to call this method from multiple goroutines concurrently.
 func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled bool) {
 	defer func() {
-		uc.metrics.count(feature, enabled)
+		uc.metrics.Count(feature, enabled)
 	}()
 
 	f := uc.repository.GetToggle(feature)

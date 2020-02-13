@@ -47,6 +47,16 @@ type ClientData struct {
 	Interval int64 `json:"interval"`
 }
 
+type Metrics interface {
+	Count(name string, enabled bool)
+	Close() error
+}
+
+type NullMetrics struct{}
+
+func (n NullMetrics) Count(name string, enabled bool)       {}
+func (n NullMetrics) Close() error { return nil }
+
 type metric struct {
 	// Name is the name of the feature toggle.
 	Name string
@@ -220,7 +230,7 @@ func (m *metrics) add(name string, enabled bool, num int32) {
 	m.bucket.Toggles[name] = t
 }
 
-func (m *metrics) count(name string, enabled bool) {
+func (m *metrics) Count(name string, enabled bool) {
 	if m.options.disableMetrics {
 		return
 	}
