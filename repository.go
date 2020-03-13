@@ -150,6 +150,14 @@ func (r *repository) getToggle(key string) *api.Feature {
 	return nil
 }
 
+func (r *repository) list() []api.Feature {
+	var features []api.Feature
+	for _, feature := range r.options.storage.List() {
+		features = append(features, feature.(api.Feature))
+	}
+	return features
+}
+
 func (r *repository) Close() error {
 	close(r.close)
 	r.cancel()
