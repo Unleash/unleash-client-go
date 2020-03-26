@@ -9,6 +9,7 @@ import (
 
 	"github.com/Unleash/unleash-client-go/v3/context"
 	"github.com/Unleash/unleash-client-go/v3/feature"
+	"github.com/Unleash/unleash-client-go/v3/internal/api"
 	"github.com/Unleash/unleash-client-go/v3/internal/constraints"
 	s "github.com/Unleash/unleash-client-go/v3/internal/strategies"
 	"github.com/Unleash/unleash-client-go/v3/strategy"
@@ -351,13 +352,46 @@ func (uc *Client) WaitForReady() {
 
 // ListFeatures returns all available features toggles.
 func (uc *Client) ListFeatures() []*feature.Feature {
+	return convertFeatures(uc)
+}
+
+func convertFeatures(uc *Client) []*feature.Feature {
 	var features []*feature.Feature
 	for _, f := range uc.repository.list() {
 		features = append(features, &feature.Feature{
-			Name:         f.Name,
-			Description:  f.Description,
-			Enabled:      f.Enabled,
+			Name:        f.Name,
+			Description: f.Description,
+			Enabled:     f.Enabled,
+			Strategies:  convertStrategies(f.Strategies),
+			CreatedAt:   f.CreatedAt,
+			Strategy:    f.Strategy,
+			Parameters:  feature.ParameterMap(f.Parameters),
 		})
 	}
 	return features
+}
+
+func convertStrategies(apiStrategies []api.Strategy) []*feature.Strategy {
+	var featureStrategies []*feature.Strategy
+	for _, st := range apiStrategies {
+		featureStrategies = append(featureStrategies, &feature.Strategy{
+			Id:          st.Id,
+			Name:        st.Name,
+			Constraints: convertConstraints(st.Constraints),
+			Parameters:  feature.ParameterMap(st.Parameters),
+		})
+	}
+	return featureStrategies
+}
+
+func convertConstraints(c []api.Constraint) []*feature.Constraint {
+	var featureConstraints []*feature.Constraint
+	for _, c := range c {
+		featureConstraints = append(featureConstraints, &feature.Constraint{
+			ContextName: c.ContextName,
+			Operator:    feature.Operator(c.Operator),
+			Values:      c.Values,
+		})
+	}
+	return featureConstraints
 }
