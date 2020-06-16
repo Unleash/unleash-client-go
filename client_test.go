@@ -113,7 +113,7 @@ func TestClient_ListFeatures(t *testing.T) {
 					Name:        "feature-name",
 					Description: "feature-desc",
 					Enabled:     true,
-					CreatedAt:   time.Unix(1, 2),
+					CreatedAt:   time.Date(1974, time.May, 19, 1, 2, 3, 4, time.UTC),
 					Strategy:    "feature-strategy",
 					Strategies: []api.Strategy{
 						{
@@ -158,7 +158,7 @@ func TestClient_ListFeatures(t *testing.T) {
 			Name:        "feature-name",
 			Description: "feature-desc",
 			Enabled:     true,
-			CreatedAt:   time.Unix(1, 2),
+			CreatedAt:   time.Date(1974, time.May, 19, 1, 2, 3, 4, time.UTC),
 			Strategy:    "feature-strategy",
 			Strategies: []*feature.Strategy{
 				{
