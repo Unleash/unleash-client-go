@@ -29,6 +29,9 @@ _testmain.go
 *.so
 *.dylib
 
+# Test data
+testdata/
+
 # Test binary, build with `go test -c`
 *.test
 

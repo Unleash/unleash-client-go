@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Unleash/unleash-client-go/v3/internal/api"
+	"github.com/Unleash/unleash-client-go/v3/api"
 )
 
 type repository struct {

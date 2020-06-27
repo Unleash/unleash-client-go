@@ -3,14 +3,13 @@ package unleash
 import (
 	"time"
 
+	"github.com/Unleash/unleash-client-go/v3/api"
 	"github.com/Unleash/unleash-client-go/v3/context"
-	"github.com/Unleash/unleash-client-go/v3/feature"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"testing"
 
-	"github.com/Unleash/unleash-client-go/v3/internal/api"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/h2non/gock.v1"
 )
@@ -104,38 +103,40 @@ func TestClient_ListFeatures(t *testing.T) {
 		Post("/client/register").
 		Reply(200)
 
+	features := []api.Feature{
+		{
+			Name:        "feature-name",
+			Description: "feature-desc",
+			Enabled:     true,
+			CreatedAt:   time.Date(1974, time.May, 19, 1, 2, 3, 4, time.UTC),
+			Strategy:    "feature-strategy",
+			Strategies: []api.Strategy{
+				{
+					Id:   1,
+					Name: "strategy-name",
+					Constraints: []api.Constraint{
+						{
+							ContextName: "context-name",
+							Operator:    api.OperatorIn,
+							Values:      []string{"constraint-value-1", "constraint-value-2"},
+						},
+					},
+					Parameters: map[string]interface{}{
+						"strategy-param-1": "strategy-value-1",
+					},
+				},
+			},
+			Parameters: map[string]interface{}{
+				"feature-param-1": "feature-value-1",
+			},
+		},
+	}
+
 	gock.New(mockerServer).
 		Get("/client/features").
 		Reply(200).
 		JSON(api.FeatureResponse{
-			Features: []api.Feature{
-				{
-					Name:        "feature-name",
-					Description: "feature-desc",
-					Enabled:     true,
-					CreatedAt:   time.Date(1974, time.May, 19, 1, 2, 3, 4, time.UTC),
-					Strategy:    "feature-strategy",
-					Strategies: []api.Strategy{
-						{
-							Id:   1,
-							Name: "strategy-name",
-							Constraints: []api.Constraint{
-								{
-									ContextName: "context-name",
-									Operator:    api.OperatorIn,
-									Values:      []string{"constraint-value-1", "constraint-value-2"},
-								},
-							},
-							Parameters: map[string]interface{}{
-								"strategy-param-1": "strategy-value-1",
-							},
-						},
-					},
-					Parameters: map[string]interface{}{
-						"feature-param-1": "feature-value-1",
-					},
-				},
-			},
+			Features: features,
 		})
 
 	mockListener := &MockedListener{}
@@ -153,32 +154,5 @@ func TestClient_ListFeatures(t *testing.T) {
 
 	client.WaitForReady()
 
-	require.Equal(t, []*feature.Feature{
-		{
-			Name:        "feature-name",
-			Description: "feature-desc",
-			Enabled:     true,
-			CreatedAt:   time.Date(1974, time.May, 19, 1, 2, 3, 4, time.UTC),
-			Strategy:    "feature-strategy",
-			Strategies: []*feature.Strategy{
-				{
-					Id:          1,
-					Name:        "strategy-name",
-					Constraints: []*feature.Constraint{
-						{
-							ContextName: "context-name",
-							Operator: feature.OperatorIn,
-							Values: []string{ "constraint-value-1", "constraint-value-2"},
-						},
-					},
-					Parameters: map[string]interface{}{
-						"strategy-param-1": "strategy-value-1",
-					},
-				},
-			},
-			Parameters: map[string]interface{}{
-				"feature-param-1": "feature-value-1",
-			},
-		},
-	}, client.ListFeatures())
+	require.Equal(t, features, client.ListFeatures())
 }

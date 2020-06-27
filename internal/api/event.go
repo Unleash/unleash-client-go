@@ -1,9 +1,13 @@
 package api
 
-import "time"
+import (
+	"time"
+
+	"github.com/Unleash/unleash-client-go/v3/api"
+)
 
 type EventResponse struct {
-	Response
+	api.Response
 	Events []Event `json:"events"`
 }
 
@@ -20,7 +24,7 @@ type EventData struct {
 	Name        string     `json:"name"`
 	Description string     `json:"description"`
 	Enabled     bool       `json:"enabled"`
-	Strategies  []Strategy `json:"strategies"`
+	Strategies  []api.Strategy `json:"strategies"`
 	CreatedAt   time.Time  `json:"createdAt"`
 }
 
