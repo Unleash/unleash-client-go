@@ -18,14 +18,27 @@ type FeatureResponse struct {
 }
 
 type Feature struct {
-	Name        string       `json:"name"`
-	Description string       `json:"description"`
-	Enabled     bool         `json:"enabled"`
-	Strategies  []Strategy   `json:"strategies"`
-	CreatedAt   time.Time    `json:"createdAt"`
-	Strategy    string       `json:"strategy"`
-	Parameters  ParameterMap `json:"parameters"`
-	Variants    []Variant    `json:"variants"`
+	// Name is the name of the feature toggle.
+	Name string `json:"name"`
+
+	// Description is a description of the feature toggle.
+	Description string `json:"description"`
+
+	// Enabled indicates whether the feature was enabled or not.
+	Enabled bool `json:"enabled"`
+
+	// Strategies is a list of names of the strategies supported by the client.
+	Strategies []Strategy `json:"strategies"`
+
+	// CreatedAt is the creation time of the feature toggle.
+	CreatedAt time.Time `json:"createdAt"`
+
+	// Strategy is the strategy of the feature toggle.
+	Strategy string `json:"strategy"`
+
+	// Parameters is the parameters of the feature toggle.
+	Parameters ParameterMap `json:"parameters"`
+	Variants   []Variant    `json:"variants"`
 }
 
 type Variant struct {

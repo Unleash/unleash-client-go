@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Unleash/unleash-client-go/v3/api"
 	"github.com/Unleash/unleash-client-go/v3/context"
 	"github.com/Unleash/unleash-client-go/v3/internal/api"
 	"github.com/Unleash/unleash-client-go/v3/internal/constraints"
@@ -396,4 +397,9 @@ func (uc *Client) getStrategy(name string) strategy.Strategy {
 // It is safe to call this method from multiple goroutines concurrently.
 func (uc *Client) WaitForReady() {
 	<-uc.onReady
+}
+
+// ListFeatures returns all available features toggles.
+func (uc *Client) ListFeatures() []api.Feature {
+	return uc.repository.list()
 }

@@ -12,7 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Unleash/unleash-client-go/v3/internal/api"
+	"github.com/Unleash/unleash-client-go/v3/api"
+	internalapi "github.com/Unleash/unleash-client-go/v3/internal/api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gopkg.in/h2non/gock.v1"
@@ -134,13 +135,13 @@ func TestMetrics_SendMetricsFail(t *testing.T) {
 
 	type metricsReq struct {
 		// toggles are the toggles sent to /client/metrics
-		toggles map[string]api.ToggleCount
+		toggles map[string]internalapi.ToggleCount
 
 		// status is the status code returned from /client/metrics
 		status int
 	}
 	metricsCalls := make(chan metricsReq, 10)
-	var prevToggles map[string]api.ToggleCount
+	var prevToggles map[string]internalapi.ToggleCount
 	var sendStatus200 int32
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		switch req.Method + " " + req.URL.Path {
