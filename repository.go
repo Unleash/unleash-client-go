@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Unleash/unleash-client-go/v3/internal/api"
+	"github.com/Unleash/unleash-client-go/v3/api"
 )
 
 type repository struct {
@@ -148,6 +148,17 @@ func (r *repository) getToggle(key string) *api.Feature {
 		}
 	}
 	return nil
+}
+
+func (r *repository) list() []api.Feature {
+	r.RLock()
+	defer r.RUnlock()
+
+	var features []api.Feature
+	for _, feature := range r.options.storage.List() {
+		features = append(features, feature.(api.Feature))
+	}
+	return features
 }
 
 func (r *repository) Close() error {
