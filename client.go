@@ -31,7 +31,6 @@ type Client struct {
 	options            configOption
 	repository         *repository
 	metrics            *metrics
-	strategies         []strategy.Strategy
 	errorListener      ErrorListener
 	metricsListener    MetricListener
 	repositoryListener RepositoryListener
@@ -135,16 +134,19 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		uc.options.instanceId = generateInstanceId()
 	}
 
+	strategies := append(defaultStrategies, uc.options.strategies...)
+
 	uc.repository = newRepository(
 		repositoryOptions{
-			backupPath:      uc.options.backupPath,
-			url:             *parsedUrl,
-			appName:         uc.options.appName,
-			instanceId:      uc.options.instanceId,
-			refreshInterval: uc.options.refreshInterval,
-			storage:         uc.options.storage,
-			httpClient:      uc.options.httpClient,
-			customHeaders:   uc.options.customHeaders,
+			backupPath:       uc.options.backupPath,
+			url:              *parsedUrl,
+			appName:          uc.options.appName,
+			instanceId:       uc.options.instanceId,
+			refreshInterval:  uc.options.refreshInterval,
+			storage:          uc.options.storage,
+			httpClient:       uc.options.httpClient,
+			customHeaders:    uc.options.customHeaders,
+			clientStrategies: strategies,
 		},
 		repositoryChannels{
 			errorChannels: errChannels,
@@ -152,10 +154,8 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		},
 	)
 
-	uc.strategies = append(defaultStrategies, uc.options.strategies...)
-
-	strategyNames := make([]string, len(uc.strategies))
-	for i, strategy := range uc.strategies {
+	strategyNames := make([]string, len(strategies))
+	for i, strategy := range strategies {
 		strategyNames[i] = strategy.Name()
 	}
 
@@ -237,16 +237,12 @@ func (uc Client) IsEnabled(feature string, options ...FeatureOption) (enabled bo
 		return false
 	}
 
-	for _, s := range f.Strategies {
-		foundStrategy := uc.getStrategy(s.Name)
-		if foundStrategy == nil {
-			// TODO: warnOnce missingStrategy
-			continue
-		}
-		if foundStrategy.IsEnabled(s.Parameters, opts.ctx) {
+	for _, s := range f.SupportedStrategies {
+		if s.ClientStrategy.IsEnabled(s.FeatureStrategy.Parameters, opts.ctx) {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -289,13 +285,4 @@ func (uc Client) Registered() <-chan ClientData {
 // the metrics service.
 func (uc Client) Sent() <-chan MetricsData {
 	return uc.sent
-}
-
-func (uc Client) getStrategy(name string) strategy.Strategy {
-	for _, strategy := range uc.strategies {
-		if strategy.Name() == name {
-			return strategy
-		}
-	}
-	return nil
 }

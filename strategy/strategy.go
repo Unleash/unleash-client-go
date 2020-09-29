@@ -29,3 +29,13 @@ type Strategy interface {
 	// enabled.
 	IsEnabled(map[string]interface{}, *context.Context) bool
 }
+
+// AdoptableStrategy extends without breaking the Strategy interface.
+// As to allow initiate more efficient strategy for specific feature.
+// For example it can be implemented in user_with_id strategy so Adopt will
+// return Strategy that will hold a map of valid user. This way it will not have to
+// parse user ids string and run in a loop to search for match on each call.
+type AdoptableStrategy interface {
+	// Adopt creates new Strategy adopted to strategy parameters.
+	Adopt(map[string]interface{}) Strategy
+}
