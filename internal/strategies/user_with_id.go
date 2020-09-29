@@ -6,7 +6,9 @@ import (
 	"strings"
 )
 
-type userWithIdStrategy struct{}
+type userWithIdStrategy struct {
+	userIds map[string]bool
+}
 
 func NewUserWithIdStrategy() *userWithIdStrategy {
 	return &userWithIdStrategy{}
@@ -16,21 +18,26 @@ func (s userWithIdStrategy) Name() string {
 	return "userWithId"
 }
 
-func (s userWithIdStrategy) IsEnabled(params map[string]interface{}, ctx *context.Context) bool {
+func (s userWithIdStrategy) IsEnabled(_ map[string]interface{}, ctx *context.Context) bool {
+	_, ok := s.userIds[ctx.UserId]
+	return ok
+}
+
+func (s userWithIdStrategy) Adopt(params map[string]interface{}) strategy.Strategy {
 	value, found := params[strategy.ParamUserIds]
 	if !found {
-		return false
+		return nil
 	}
 
 	userIds, ok := value.(string)
 	if !ok {
-		return false
+		return nil
 	}
 
+	usersMap := make(map[string]bool, len(s.userIds))
 	for _, u := range strings.Split(userIds, ",") {
-		if strings.TrimSpace(u) == ctx.UserId {
-			return true
-		}
+		usersMap[strings.TrimSpace(u)] = true
 	}
-	return false
+
+	return &userWithIdStrategy{userIds: usersMap}
 }

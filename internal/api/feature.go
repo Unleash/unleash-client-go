@@ -54,12 +54,12 @@ func (f *Feature) initFeature(clientStrategies []strategy.Strategy) {
 func getStrategy(featureStrategy Strategy, clientStrategies []strategy.Strategy) *SupportedStrategies {
 	for _, clientStrategy := range clientStrategies {
 		if clientStrategy.Name() == featureStrategy.Name {
-			adoptableStrategy, ok := clientStrategy.(strategy.AdoptableStrategy)
-			if ok {
-				return &SupportedStrategies{
-					FeatureStrategy: featureStrategy,
-					ClientStrategy:  adoptableStrategy.Adopt(featureStrategy.Parameters),
-				}
+			if adoptableStrategy, ok := clientStrategy.(strategy.AdoptableStrategy); ok {
+				clientStrategy = adoptableStrategy.Adopt(featureStrategy.Parameters)
+			}
+
+			if clientStrategy == nil {
+				return nil
 			}
 
 			return &SupportedStrategies{
