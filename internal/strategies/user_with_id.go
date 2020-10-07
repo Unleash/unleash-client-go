@@ -23,7 +23,7 @@ func (s userWithIdStrategy) IsEnabled(_ map[string]interface{}, ctx *context.Con
 	return ok
 }
 
-func (s userWithIdStrategy) Adopt(params map[string]interface{}) strategy.Strategy {
+func (s userWithIdStrategy) CloneEfficient(params map[string]interface{}) strategy.Strategy {
 	value, found := params[strategy.ParamUserIds]
 	if !found {
 		return nil

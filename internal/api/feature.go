@@ -54,8 +54,8 @@ func (f *Feature) initFeature(clientStrategies []strategy.Strategy) {
 func getStrategy(featureStrategy Strategy, clientStrategies []strategy.Strategy) *SupportedStrategies {
 	for _, clientStrategy := range clientStrategies {
 		if clientStrategy.Name() == featureStrategy.Name {
-			if adoptableStrategy, ok := clientStrategy.(strategy.AdoptableStrategy); ok {
-				clientStrategy = adoptableStrategy.Adopt(featureStrategy.Parameters)
+			if adoptableStrategy, ok := clientStrategy.(strategy.EfficientStrategy); ok {
+				clientStrategy = adoptableStrategy.CloneEfficient(featureStrategy.Parameters)
 			}
 
 			if clientStrategy == nil {

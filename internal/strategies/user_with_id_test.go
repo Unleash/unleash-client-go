@@ -23,8 +23,8 @@ func TestUserWithIdStrategy_IsEnabled(t *testing.T) {
 		}
 
 		as := s
-		if adoptable, ok := s.(strategy.AdoptableStrategy); ok {
-			as = adoptable.Adopt(params)
+		if adoptable, ok := s.(strategy.EfficientStrategy); ok {
+			as = adoptable.CloneEfficient(params)
 		}
 
 		ctx := &context.Context{
@@ -39,8 +39,8 @@ func TestUserWithIdStrategy_IsEnabled(t *testing.T) {
 		}
 
 		as := s
-		if adoptable, ok := s.(strategy.AdoptableStrategy); ok {
-			as = adoptable.Adopt(params)
+		if adoptable, ok := s.(strategy.EfficientStrategy); ok {
+			as = adoptable.CloneEfficient(params)
 		}
 
 		ctx := &context.Context{
@@ -55,8 +55,8 @@ func TestUserWithIdStrategy_IsEnabled(t *testing.T) {
 		}
 
 		as := s
-		if adoptable, ok := s.(strategy.AdoptableStrategy); ok {
-			as = adoptable.Adopt(params)
+		if adoptable, ok := s.(strategy.EfficientStrategy); ok {
+			as = adoptable.CloneEfficient(params)
 		}
 
 		ctx := &context.Context{
@@ -71,8 +71,8 @@ func TestUserWithIdStrategy_IsEnabled(t *testing.T) {
 		}
 
 		as := s
-		if adoptable, ok := s.(strategy.AdoptableStrategy); ok {
-			as = adoptable.Adopt(params)
+		if adoptable, ok := s.(strategy.EfficientStrategy); ok {
+			as = adoptable.CloneEfficient(params)
 		}
 
 		ctx := &context.Context{
