@@ -129,6 +129,7 @@ func TestClient_ListFeatures(t *testing.T) {
 			Parameters: map[string]interface{}{
 				"feature-param-1": "feature-value-1",
 			},
+			SupportedStrategies: []api.SupportedStrategies{},
 		},
 	}
 

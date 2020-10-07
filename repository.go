@@ -124,7 +124,7 @@ func (r *repository) fetch() error {
 
 	r.Lock()
 	r.etag = resp.Header.Get("Etag")
-	r.options.storage.Reset(featureResp.FeatureMap(), true)
+	r.options.storage.Reset(featureResp.FeatureMap(r.options.clientStrategies), true)
 	r.Unlock()
 	return nil
 }

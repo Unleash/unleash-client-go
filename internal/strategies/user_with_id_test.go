@@ -13,46 +13,71 @@ func TestUserWithIdStrategy_Name(t *testing.T) {
 }
 
 func TestUserWithIdStrategy_IsEnabled(t *testing.T) {
-	s := NewUserWithIdStrategy()
+	var s strategy.Strategy
+	s = NewUserWithIdStrategy()
 	assert := assert.New(t)
 
 	t.Run("u=u", func(t *testing.T) {
 		params := map[string]interface{}{
 			strategy.ParamUserIds: "123",
 		}
+
+		as := s
+		if adoptable, ok := s.(strategy.EfficientStrategy); ok {
+			as = adoptable.CloneEfficient(params)
+		}
+
 		ctx := &context.Context{
 			UserId: "123",
 		}
-		assert.True(s.IsEnabled(params, ctx), "user-with-id-strategy should be enabled for userId")
+		assert.True(as.IsEnabled(params, ctx), "user-with-id-strategy should be enabled for userId")
 	})
 
 	t.Run("u=list(a, u)", func(t *testing.T) {
 		params := map[string]interface{}{
 			strategy.ParamUserIds: "123, 122, 12312312",
 		}
+
+		as := s
+		if adoptable, ok := s.(strategy.EfficientStrategy); ok {
+			as = adoptable.CloneEfficient(params)
+		}
+
 		ctx := &context.Context{
 			UserId: "12312312",
 		}
-		assert.True(s.IsEnabled(params, ctx), "user-with-id-strategy should be enabled for userId in list")
+		assert.True(as.IsEnabled(params, ctx), "user-with-id-strategy should be enabled for userId in list")
 	})
 
 	t.Run("u!=list(a, b)", func(t *testing.T) {
 		params := map[string]interface{}{
 			strategy.ParamUserIds: "123, 122, 122",
 		}
+
+		as := s
+		if adoptable, ok := s.(strategy.EfficientStrategy); ok {
+			as = adoptable.CloneEfficient(params)
+		}
+
 		ctx := &context.Context{
 			UserId: "12",
 		}
-		assert.False(s.IsEnabled(params, ctx), "user-with-id-strategy should not be enabled for userId NOT in list")
+		assert.False(as.IsEnabled(params, ctx), "user-with-id-strategy should not be enabled for userId NOT in list")
 	})
 
 	t.Run("u=list(a,u)", func(t *testing.T) {
 		params := map[string]interface{}{
 			strategy.ParamUserIds: "123,122,12312312",
 		}
+
+		as := s
+		if adoptable, ok := s.(strategy.EfficientStrategy); ok {
+			as = adoptable.CloneEfficient(params)
+		}
+
 		ctx := &context.Context{
 			UserId: "122",
 		}
-		assert.True(s.IsEnabled(params, ctx), "user-with-id-strategy should be enabled for userId in list")
+		assert.True(as.IsEnabled(params, ctx), "user-with-id-strategy should be enabled for userId in list")
 	})
 }
