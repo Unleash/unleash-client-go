@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Unleash/unleash-client-go/v3/api"
 	"github.com/Unleash/unleash-client-go/v3/context"
 	"github.com/Unleash/unleash-client-go/v3/internal/constraints"
 	s "github.com/Unleash/unleash-client-go/v3/internal/strategies"
@@ -36,7 +37,6 @@ type Client struct {
 	options            configOption
 	repository         *repository
 	metrics            *metrics
-	strategies         []strategy.Strategy
 	errorListener      ErrorListener
 	metricsListener    MetricListener
 	repositoryListener RepositoryListener
@@ -152,16 +152,19 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		uc.options.instanceId = generateInstanceId()
 	}
 
+	strategies := append(defaultStrategies, uc.options.strategies...)
+
 	uc.repository = newRepository(
 		repositoryOptions{
-			backupPath:      uc.options.backupPath,
-			url:             *parsedUrl,
-			appName:         uc.options.appName,
-			instanceId:      uc.options.instanceId,
-			refreshInterval: uc.options.refreshInterval,
-			storage:         uc.options.storage,
-			httpClient:      uc.options.httpClient,
-			customHeaders:   uc.options.customHeaders,
+			backupPath:       uc.options.backupPath,
+			url:              *parsedUrl,
+			appName:          uc.options.appName,
+			instanceId:       uc.options.instanceId,
+			refreshInterval:  uc.options.refreshInterval,
+			storage:          uc.options.storage,
+			httpClient:       uc.options.httpClient,
+			customHeaders:    uc.options.customHeaders,
+			clientStrategies: strategies,
 		},
 		repositoryChannels{
 			errorChannels: errChannels,
@@ -169,10 +172,8 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		},
 	)
 
-	uc.strategies = append(defaultStrategies, uc.options.strategies...)
-
-	strategyNames := make([]string, len(uc.strategies))
-	for i, strategy := range uc.strategies {
+	strategyNames := make([]string, len(strategies))
+	for i, strategy := range strategies {
 		strategyNames[i] = strategy.Name()
 	}
 
@@ -270,14 +271,9 @@ func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled b
 		return f.Enabled
 	}
 
-	for _, s := range f.Strategies {
-		foundStrategy := uc.getStrategy(s.Name)
-		if foundStrategy == nil {
-			// TODO: warnOnce missingStrategy
-			continue
-		}
-
-		if constraints.Check(ctx, s.Constraints) && foundStrategy.IsEnabled(s.Parameters, ctx) {
+	for _, s := range f.SupportedStrategies {
+		if constraints.Check(ctx, s.FeatureStrategy.Constraints) &&
+			s.ClientStrategy.IsEnabled(s.FeatureStrategy.Parameters, opts.ctx) {
 			return true
 		}
 	}
@@ -330,15 +326,6 @@ func (uc *Client) Sent() <-chan MetricsData {
 	return uc.sent
 }
 
-func (uc *Client) getStrategy(name string) strategy.Strategy {
-	for _, strategy := range uc.strategies {
-		if strategy.Name() == name {
-			return strategy
-		}
-	}
-	return nil
-}
-
 // WaitForReady will block until the client has loaded the feature toggles from
 // the Unleash server. It will return immediately if the toggles have already
 // been loaded,
@@ -346,4 +333,9 @@ func (uc *Client) getStrategy(name string) strategy.Strategy {
 // It is safe to call this method from multiple goroutines concurrently.
 func (uc *Client) WaitForReady() {
 	<-uc.onReady
+}
+
+// ListFeatures returns all available features toggles.
+func (uc *Client) ListFeatures() []api.Feature {
+	return uc.repository.list()
 }

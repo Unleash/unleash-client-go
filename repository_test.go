@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Unleash/unleash-client-go/v3/internal/api"
+	"github.com/Unleash/unleash-client-go/v3/api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
