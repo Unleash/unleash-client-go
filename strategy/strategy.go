@@ -35,3 +35,13 @@ type Strategy interface {
 	// enabled.
 	IsEnabled(map[string]interface{}, *context.Context) bool
 }
+
+// EfficientStrategy extends without breaking the Strategy interface.
+// To allow initiate more efficient strategy for specific feature.
+// For example it can be implemented in user_with_id strategy so CloneEfficient will
+// return Strategy that will hold a map of valid user. This way it will not have to
+// parse user ids string and run in a loop to search for match on each call.
+type EfficientStrategy interface {
+	// CloneToEfficient creates new Strategy that uses the parameter in more efficient way.
+	CloneEfficient(map[string]interface{}) Strategy
+}
