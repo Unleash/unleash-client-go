@@ -3,6 +3,7 @@ package unleash
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -14,6 +15,7 @@ import (
 
 type Repository interface {
 	GetToggle(key string) *api.Feature
+	GetConfig(key string) string
 	Close() error
 }
 
@@ -153,6 +155,11 @@ func (r *httpRepository) GetToggle(key string) *api.Feature {
 		}
 	}
 	return nil
+}
+
+func (r * httpRepository) GetConfig(key string) string {
+	r.err(errors.New("Configuration params not implemented for http repositories"))
+	return "{}"
 }
 
 func (r *httpRepository) Close() error {

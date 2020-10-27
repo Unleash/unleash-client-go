@@ -3,6 +3,7 @@ package unleash
 import (
 	"fmt"
 
+	"encoding/json"
 	"net/url"
 	"strings"
 	"time"
@@ -296,6 +297,61 @@ func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled b
 		}
 	}
 	return false
+}
+
+type ConfigInt struct {
+	data int64
+}
+
+func (uc *Client) GetConfigInt(key string) int64 {
+	c := uc.repository.GetConfig(key)
+	var v = ConfigInt{}
+	json.Unmarshal([]byte(c), &v)
+	return v.data
+}
+
+type ConfigString struct {
+	data string
+}
+
+func (uc *Client) GetConfigString(key string) string {
+	c := uc.repository.GetConfig(key)
+	var v = ConfigString{}
+	json.Unmarshal([]byte(c), &v)
+	return v.data
+}
+
+type ConfigFloat struct {
+	data float64
+}
+
+func (uc *Client) GetConfigFloat(key string) float64 {
+	c := uc.repository.GetConfig(key)
+	var v = ConfigFloat{}
+	json.Unmarshal([]byte(c), &v)
+	return v.data
+}
+
+type ConfigIntList struct {
+	data []int32
+}
+
+func (uc *Client) GetConfigIntList(key string) []int32 {
+	c := uc.repository.GetConfig(key)
+	var v = ConfigIntList{}
+	json.Unmarshal([]byte(c), &v)
+	return v.data
+}
+
+type ConfigStringList struct {
+	data []string
+}
+
+func (uc *Client) GetConfigStringList(key string) []string {
+	c := uc.repository.GetConfig(key)
+	var v = ConfigStringList{}
+	json.Unmarshal([]byte(c), &v)
+	return v.data
 }
 
 // Close stops the client from syncing data from the server.

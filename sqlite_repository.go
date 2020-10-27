@@ -69,3 +69,32 @@ func (s *sqliteRepository) GetToggle(key string) *api.Feature {
 
 	return &api.Feature{Name: key, Enabled: enabled, Strategies: strategies}
 }
+
+func (s *sqliteRepository) GetConfig(key string) string {
+	conn := s.handle.Get(context.Background())
+	if conn == nil {
+		s.callbacks.err(fmt.Errorf("Could not get sqlite connection for key %s", key))
+	}
+	defer s.handle.Put(conn)
+
+	stmt, err := conn.Prepare("SELECT data FROM runtime_values WHERE full_name = $key")
+	if err != nil {
+		s.callbacks.err(fmt.Errorf("Could not fetch config value %s: %s", key, err.Error()))
+		return "{}"
+	}
+	defer stmt.Reset()
+	
+	stmt.SetText("$key", key)
+	hasRow, err := stmt.Step()
+	if err != nil {
+		s.callbacks.err(fmt.Errorf("Could not fetch config value %s: %s", key, err.Error()))
+		return "{}"
+	}
+
+	if !hasRow {
+		s.callbacks.err(fmt.Errorf("Did not find config value %s", key))
+		return "{}"
+	}
+
+	return stmt.GetText("data")
+}
