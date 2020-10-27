@@ -53,3 +53,10 @@ func Close() error {
 func WaitForReady() {
 	defaultClient.WaitForReady()
 }
+
+func GetClient() *Client {
+	if defaultClient == nil {
+		panic("Default unleash client was not initialized")
+	}
+	return defaultClient
+}
