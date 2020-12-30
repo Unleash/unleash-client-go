@@ -29,7 +29,7 @@ type TestCase struct {
 	Description    string          `json:"description"`
 	Context        context.Context `json:"context"`
 	ToggleName     string          `json:"toggleName"`
-	ExpectedResult bool            `json:"expectedResult"`
+	ExpectedResult interface{}     `json:"expectedResult"`
 }
 
 func (tc TestCase) RunWithClient(client *Client) func(*testing.T) {
@@ -45,14 +45,20 @@ func (tc TestCase) RunWithClient(client *Client) func(*testing.T) {
 		}()
 		result := client.IsEnabled(tc.ToggleName, WithContext(tc.Context))
 		wg.Wait()
-		assert.Equal(t, tc.ExpectedResult, result)
+		switch tc.ExpectedResult.(type) {
+		case bool:
+			assert.Equal(t, tc.ExpectedResult, result)
+		case api.Variant:
+			assert.Equal(t, tc.ExpectedResult, client.GetVariant(tc.ToggleName, nil))
+		}
 	}
 }
 
 type TestDefinition struct {
-	Name  string     `json:"name"`
-	State TestState  `json:"state"`
-	Tests []TestCase `json:"tests"`
+	Name         string     `json:"name"`
+	State        TestState  `json:"state"`
+	Tests        []TestCase `json:"tests"`
+	VariantTests []TestCase `json:"variantTests"`
 }
 
 func (td TestDefinition) Mock(listener interface{}) (*Client, error) {
@@ -82,7 +88,7 @@ func (td TestDefinition) Unmock() {
 }
 
 func (td TestDefinition) Run(t *testing.T) {
-	for _, test := range td.Tests {
+	runTest := func(test TestCase) {
 		listener := &MockedListener{}
 		listener.On("OnReady").Return()
 		listener.On("OnRegistered", mock.AnythingOfType("ClientData")).Return()
@@ -97,6 +103,14 @@ func (td TestDefinition) Run(t *testing.T) {
 		listener.AssertCalled(t, "OnRegistered", mock.AnythingOfType("ClientData"))
 
 		td.Unmock()
+	}
+
+	for _, test := range td.Tests {
+		runTest(test)
+	}
+
+	for _, test := range td.VariantTests {
+		runTest(test)
 	}
 }
 
