@@ -228,6 +228,24 @@ func (m *metrics) count(name string, enabled bool) {
 	m.metricsChannels.count <- metric{Name: name, Enabled: enabled}
 }
 
+func (m *metrics) countVariants(name string, variantName string) {
+	if m.options.disableMetrics {
+		return
+	}
+	
+	t, _ := m.bucket.Toggles[name]
+	if len(t.Variants) == 0 {
+		t.Variants = make(map[string]int32)
+	} 
+
+	if _ , ok := t.Variants[variantName]; !ok {
+		t.Variants[variantName] = 1
+	} else {
+		t.Variants[variantName] += 1
+	}
+	m.bucket.Toggles[name] = t
+}
+
 func (m *metrics) resetBucket() api.Bucket {
 	prev := m.bucket
 	m.bucket = api.Bucket{

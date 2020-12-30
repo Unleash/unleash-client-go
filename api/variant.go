@@ -26,29 +26,6 @@ type Variant struct {
 	Enabled    bool       `json:"enabled"`
 }
 
-func (f Feature) GetVariant(ctx *context.Context) *Variant {
-	if f.Enabled && len(f.Variants) > 0 {
-		variant := f.getOverrideVariant(ctx)
-		if variant == nil {
-			variant = f.getVariantFromWeights(ctx)
-		}
-		variant.Enabled = true
-		return variant
-	}
-	return DISABLED_VARIANT
-}
-
-func (f Feature) getOverrideVariant(ctx *context.Context) *Variant {
-	for _, variant := range f.Variants {
-		for _, override := range variant.Overrides {
-			if override.matchValue(ctx) {
-				return &variant
-			}
-		}
-	}
-	return nil
-}
-
 func (o Override) getIdentifier(ctx *context.Context) string {
 	var value string
 	switch o.ContextName {
@@ -58,15 +35,30 @@ func (o Override) getIdentifier(ctx *context.Context) string {
 		value = ctx.SessionId
 	case "remoteAddress":
 		value = ctx.RemoteAddress
+	default:
+		if len(ctx.Properties) > 0 {
+			for k, v := range ctx.Properties {
+				if k == o.ContextName {
+					value = v
+				}
+			}
+		}
 	}
 	return value
 }
 
 func (o Override) matchValue(ctx *context.Context) bool {
+	if len(o.Values) == 0 {
+		return false
+	}
 	for _, value := range o.Values {
 		if value == o.getIdentifier(ctx) {
 			return true
 		}
 	}
 	return false
+}
+
+func GetDefaultVariant() *Variant {
+	return DISABLED_VARIANT
 }

@@ -51,6 +51,18 @@ func (fr FeatureResponse) FeatureMap() map[string]interface{} {
 	return features
 }
 
+func (f Feature) GetVariant(ctx *context.Context) *Variant {
+	if f.Enabled && len(f.Variants) > 0 {
+		variant := f.getOverrideVariant(ctx)
+		if variant == nil {
+			variant = f.getVariantFromWeights(ctx)
+		}
+		variant.Enabled = true
+		return variant
+	}
+	return DISABLED_VARIANT
+}
+
 func (f Feature) getVariantFromWeights(ctx *context.Context) *Variant {
 	if len(f.Variants) > 0 {
 		totalWeight := 0
@@ -73,6 +85,17 @@ func (f Feature) getVariantFromWeights(ctx *context.Context) *Variant {
 		}
 	}
 	return DISABLED_VARIANT
+}
+
+func (f Feature) getOverrideVariant(ctx *context.Context) *Variant {
+	for _, variant := range f.Variants {
+		for _, override := range variant.Overrides {
+			if override.matchValue(ctx) {
+				return &variant
+			}
+		}
+	}
+	return nil
 }
 
 func getSeed(ctx *context.Context) string {

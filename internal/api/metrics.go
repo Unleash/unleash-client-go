@@ -5,6 +5,7 @@ import "time"
 type ToggleCount struct {
 	Yes int32 `json:"yes"`
 	No  int32 `json:"no"`
+	Variants map[string]int32 `json:"variants"`
 }
 
 type Bucket struct {
