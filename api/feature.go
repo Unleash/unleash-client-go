@@ -98,15 +98,14 @@ func (f Feature) getOverrideVariant(ctx *context.Context) *Variant {
 }
 
 func getSeed(ctx *context.Context) string {
-	seed := strconv.Itoa(rand.Intn(10000))
 	if ctx.UserId != "" {
-		seed = ctx.UserId
+		return ctx.UserId
 	} else if ctx.SessionId != "" {
-		seed = ctx.SessionId
+		return  ctx.SessionId
 	} else if ctx.RemoteAddress != "" {
-		seed = ctx.RemoteAddress
+		return ctx.RemoteAddress
 	}
-	return seed
+	return strconv.Itoa(rand.Intn(10000))
 }
 
 func getNormalizedNumber(identifier, groupId string, normalizer int) uint32 {
