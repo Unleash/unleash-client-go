@@ -51,6 +51,7 @@ func (fr FeatureResponse) FeatureMap() map[string]interface{} {
 	return features
 }
 
+// Get variant for a given feature which is considered as enabled
 func (f Feature) GetVariant(ctx *context.Context) *Variant {
 	if f.Enabled && len(f.Variants) > 0 {
 		variant := f.getOverrideVariant(ctx)
@@ -64,24 +65,21 @@ func (f Feature) GetVariant(ctx *context.Context) *Variant {
 }
 
 func (f Feature) getVariantFromWeights(ctx *context.Context) *Variant {
-	if len(f.Variants) > 0 {
-		totalWeight := 0
-		for _, variant := range f.Variants {
-			totalWeight += variant.Weight
-		}
-		if totalWeight == 0 {
-			return DISABLED_VARIANT
-		}
+	totalWeight := 0
+	for _, variant := range f.Variants {
+		totalWeight += variant.Weight
+	}
+	if totalWeight == 0 {
+		return DISABLED_VARIANT
+	}
 
-		target := getNormalizedNumber(getSeed(ctx), f.Name, totalWeight)
+	target := getNormalizedNumber(getSeed(ctx), f.Name, totalWeight)
+	counter := uint32(0)
+	for _, variant := range f.Variants {
+		counter += uint32(variant.Weight)
 
-		counter := uint32(0)
-		for _, variant := range f.Variants {
-			counter += uint32(variant.Weight)
-
-			if counter >= target {
-				return &variant
-			}
+		if counter >= target {
+			return &variant
 		}
 	}
 	return DISABLED_VARIANT
@@ -91,6 +89,7 @@ func (f Feature) getOverrideVariant(ctx *context.Context) *Variant {
 	for _, variant := range f.Variants {
 		for _, override := range variant.Overrides {
 			if override.matchValue(ctx) {
+				variant.Overrides = nil
 				return &variant
 			}
 		}
@@ -99,17 +98,17 @@ func (f Feature) getOverrideVariant(ctx *context.Context) *Variant {
 }
 
 func getSeed(ctx *context.Context) string {
+	seed := strconv.Itoa(rand.Intn(10000))
 	if ctx.UserId != "" {
-		return ctx.UserId
+		seed = ctx.UserId
 	} else if ctx.SessionId != "" {
-		return ctx.SessionId
+		seed = ctx.SessionId
 	} else if ctx.RemoteAddress != "" {
-		return ctx.RemoteAddress
-	} else {
-		return strconv.Itoa(rand.Intn(10000))
+		seed = ctx.RemoteAddress
 	}
+	return seed
 }
 
-func getNormalizedNumber(identifier string, groupId string, normalizer int) uint32 {
-	return (murmur3.Sum32([]byte(fmt.Sprintf("%s:%s", identifier, groupId))) % uint32(normalizer)) + 1
+func getNormalizedNumber(identifier, groupId string, normalizer int) uint32 {
+	return (murmur3.Sum32([]byte(fmt.Sprintf("%s:%s", groupId, identifier))) % uint32(normalizer)) + 1
 }

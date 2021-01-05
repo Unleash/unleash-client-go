@@ -84,7 +84,7 @@ func (suite *VariantTestSuite) SetupTest() {
 			Name:   "VarF",
 			Weight: 34,
 		},
-	}	
+	}
 }
 
 func (suite *VariantTestSuite) TestGetVariantWhenFeatureHasNoVariant() {
@@ -197,7 +197,7 @@ func (suite *VariantTestSuite) TestGetVariant_ShouldReturnVarD() {
 		Variants: suite.VariantWithoutOverride,
 	}
 	mockContext := &context.Context{
-		UserId:        "40",
+		UserId:        "123",
 	}
 	suite.Equal("VarD", mockFeature.GetVariant(mockContext).Name, "Should return VarD")
 	suite.Equal(true, mockFeature.GetVariant(mockContext).Enabled, "Should be equal")
@@ -210,7 +210,7 @@ func (suite *VariantTestSuite) TestGetVariant_ShouldReturnVarE() {
 		Variants: suite.VariantWithoutOverride,
 	}
 	mockContext := &context.Context{
-		UserId:        "123",
+		UserId:        "163",
 	}
 	suite.Equal("VarE", mockFeature.GetVariant(mockContext).Name, "Should return VarE")
 	suite.Equal(true, mockFeature.GetVariant(mockContext).Enabled, "Should be equal")
@@ -223,12 +223,11 @@ func (suite *VariantTestSuite) TestGetVariant_ShouldReturnVarF() {
 		Variants: suite.VariantWithoutOverride,
 	}
 	mockContext := &context.Context{
-		UserId:        "163",
+		UserId:        "40",
 	}
 	suite.Equal("VarF", mockFeature.GetVariant(mockContext).Name, "Should return VarF")
 	suite.Equal(true, mockFeature.GetVariant(mockContext).Enabled, "Should be equal")
 }
-
 
 func TestVariantSuite(t *testing.T) {
 	ts := VariantTestSuite{}
