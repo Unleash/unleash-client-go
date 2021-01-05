@@ -29,7 +29,23 @@ type TestCase struct {
 	Description    string          `json:"description"`
 	Context        context.Context `json:"context"`
 	ToggleName     string          `json:"toggleName"`
-	ExpectedResult interface{}     `json:"expectedResult"`
+	ExpectedResult bool            `json:"expectedResult"`
+}
+
+type VariantTestCase struct {
+	Description    string          `json:"description"`
+	Context        context.Context `json:"context"`
+	ToggleName     string          `json:"toggleName"`
+	ExpectedResult *api.Variant    `json:"expectedResult"`
+}
+
+type Runner interface {
+	GetDescription() string
+	RunWithClient(*Client) func(*testing.T)
+}
+
+func (tc TestCase) GetDescription() string {
+	return tc.Description
 }
 
 func (tc TestCase) RunWithClient(client *Client) func(*testing.T) {
@@ -45,20 +61,38 @@ func (tc TestCase) RunWithClient(client *Client) func(*testing.T) {
 		}()
 		result := client.IsEnabled(tc.ToggleName, WithContext(tc.Context))
 		wg.Wait()
-		switch tc.ExpectedResult.(type) {
-		case bool:
-			assert.Equal(t, tc.ExpectedResult, result)
-		case api.Variant:
-			assert.Equal(t, tc.ExpectedResult, client.GetVariant(tc.ToggleName, nil))
-		}
+		assert.Equal(t, tc.ExpectedResult, result)
+	}
+}
+
+func (vtc VariantTestCase) GetDescription() string {
+	return vtc.Description
+}
+
+func (vtc VariantTestCase) RunWithClient(client *Client) func(*testing.T) {
+	client.staticContext = &vtc.Context
+	return func(t *testing.T) {
+		client.WaitForReady()
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go func() {
+			// Call IsEnabled concurrently with itself to catch
+			// potential data races with go test -race.
+			client.IsEnabled(vtc.ToggleName, WithContext(vtc.Context))
+			wg.Done()
+		}()
+		result := client.IsEnabled(vtc.ToggleName, WithContext(vtc.Context))
+		wg.Wait()
+		assert.Equal(t, vtc.ExpectedResult.Enabled, result)
+		assert.Equal(t, vtc.ExpectedResult, client.GetVariant(vtc.ToggleName, nil))
 	}
 }
 
 type TestDefinition struct {
-	Name         string     `json:"name"`
-	State        TestState  `json:"state"`
-	Tests        []TestCase `json:"tests"`
-	VariantTests []TestCase `json:"variantTests"`
+	Name         string            `json:"name"`
+	State        TestState         `json:"state"`
+	Tests        []TestCase        `json:"tests"`
+	VariantTests []VariantTestCase `json:"variantTests"`
 }
 
 func (td TestDefinition) Mock(listener interface{}) (*Client, error) {
@@ -88,7 +122,7 @@ func (td TestDefinition) Unmock() {
 }
 
 func (td TestDefinition) Run(t *testing.T) {
-	runTest := func(test TestCase) {
+	runTest := func(test Runner) {
 		listener := &MockedListener{}
 		listener.On("OnReady").Return()
 		listener.On("OnRegistered", mock.AnythingOfType("ClientData")).Return()
@@ -96,7 +130,7 @@ func (td TestDefinition) Run(t *testing.T) {
 
 		client, err := td.Mock(listener)
 		assert.NoError(t, err)
-		t.Run(test.Description, test.RunWithClient(client))
+		t.Run(test.GetDescription(), test.RunWithClient(client))
 		client.Close()
 
 		listener.AssertCalled(t, "OnReady")
