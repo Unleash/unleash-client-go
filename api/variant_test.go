@@ -9,19 +9,21 @@ import (
 
 type VariantTestSuite struct {
 	suite.Suite
-	VariantWithOverride []Variant
-	VariantWithoutOverride []Variant
+	VariantWithOverride    []VariantInternal
+	VariantWithoutOverride []VariantInternal
 }
 
 func (suite *VariantTestSuite) SetupTest() {
-	suite.VariantWithOverride = []Variant{
-		Variant{
-			Name:   "VarA",
-			Weight: 33,
-			Payload: Payload{
-				Type:  "string",
-				Value: "Test 1",
+	suite.VariantWithOverride = []VariantInternal{
+		VariantInternal{
+			Variant: Variant{
+				Name: "VarA",
+				Payload: Payload{
+					Type:  "string",
+					Value: "Test 1",
+				},
 			},
+			Weight: 33,
 			Overrides: []Override{
 				Override{
 					ContextName: "userId",
@@ -37,13 +39,15 @@ func (suite *VariantTestSuite) SetupTest() {
 				},
 			},
 		},
-		Variant{
-			Name:   "VarB",
-			Weight: 33,
-			Payload: Payload{
-				Type:  "string",
-				Value: "Test 2",
+		VariantInternal{
+			Variant: Variant{
+				Name: "VarB",
+				Payload: Payload{
+					Type:  "string",
+					Value: "Test 2",
+				},
 			},
+			Weight: 33,
 			Overrides: []Override{
 				Override{
 					ContextName: "remoteAddress",
@@ -53,13 +57,15 @@ func (suite *VariantTestSuite) SetupTest() {
 				},
 			},
 		},
-		Variant{
-			Name:   "VarC",
-			Weight: 34,
-			Payload: Payload{
-				Type:  "string",
-				Value: "Test 3",
+		VariantInternal{
+			Variant: Variant{
+				Name: "VarC",
+				Payload: Payload{
+					Type:  "string",
+					Value: "Test 3",
+				},
 			},
+			Weight: 34,
 			Overrides: []Override{
 				Override{
 					ContextName: "env",
@@ -71,17 +77,23 @@ func (suite *VariantTestSuite) SetupTest() {
 		},
 	}
 
-	suite.VariantWithoutOverride = []Variant{
-		Variant{
-			Name:   "VarD",
+	suite.VariantWithoutOverride = []VariantInternal{
+		{
+			Variant: Variant{
+				Name: "VarD",
+			},
 			Weight: 33,
 		},
-		Variant{
-			Name:   "VarE",
+		{
+			Variant: Variant{
+				Name: "VarE",
+			},
 			Weight: 33,
 		},
-		Variant{
-			Name:   "VarF",
+		{
+			Variant: Variant{
+				Name: "VarF",
+			},
 			Weight: 34,
 		},
 	}
@@ -129,7 +141,6 @@ func (suite *VariantTestSuite) TestGetVariant_OverrideOnUserId() {
 	suite.Equal(true, mockFeature.GetVariant(mockContext).Enabled, "Should be equal")
 	suite.Equal(expectedPayload, mockFeature.GetVariant(mockContext).Payload, "Should be equal")
 }
-
 
 func (suite *VariantTestSuite) TestGetVariant_OverrideOnRemoteAddress() {
 	mockFeature := Feature{
@@ -197,7 +208,7 @@ func (suite *VariantTestSuite) TestGetVariant_ShouldReturnVarD() {
 		Variants: suite.VariantWithoutOverride,
 	}
 	mockContext := &context.Context{
-		UserId:        "123",
+		UserId: "123",
 	}
 	suite.Equal("VarD", mockFeature.GetVariant(mockContext).Name, "Should return VarD")
 	suite.Equal(true, mockFeature.GetVariant(mockContext).Enabled, "Should be equal")
@@ -210,7 +221,7 @@ func (suite *VariantTestSuite) TestGetVariant_ShouldReturnVarE() {
 		Variants: suite.VariantWithoutOverride,
 	}
 	mockContext := &context.Context{
-		UserId:        "163",
+		UserId: "163",
 	}
 	suite.Equal("VarE", mockFeature.GetVariant(mockContext).Name, "Should return VarE")
 	suite.Equal(true, mockFeature.GetVariant(mockContext).Enabled, "Should be equal")
@@ -223,7 +234,7 @@ func (suite *VariantTestSuite) TestGetVariant_ShouldReturnVarF() {
 		Variants: suite.VariantWithoutOverride,
 	}
 	mockContext := &context.Context{
-		UserId:        "40",
+		UserId: "40",
 	}
 	suite.Equal("VarF", mockFeature.GetVariant(mockContext).Name, "Should return VarF")
 	suite.Equal(true, mockFeature.GetVariant(mockContext).Enabled, "Should be equal")

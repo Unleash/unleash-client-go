@@ -40,7 +40,7 @@ type Feature struct {
 	Parameters ParameterMap `json:"parameters"`
 
 	// Variants is a list of variants of the feature toggle.
-	Variants []Variant `json:"variants"`
+	Variants []VariantInternal `json:"variants"`
 }
 
 func (fr FeatureResponse) FeatureMap() map[string]interface{} {
@@ -54,9 +54,12 @@ func (fr FeatureResponse) FeatureMap() map[string]interface{} {
 // Get variant for a given feature which is considered as enabled
 func (f Feature) GetVariant(ctx *context.Context) *Variant {
 	if f.Enabled && len(f.Variants) > 0 {
-		variant := f.getOverrideVariant(ctx)
-		if variant == nil {
+		v := f.getOverrideVariant(ctx)
+		var variant *Variant
+		if v == nil {
 			variant = f.getVariantFromWeights(ctx)
+		} else {
+			variant = &v.Variant
 		}
 		variant.Enabled = true
 		return variant
@@ -79,13 +82,13 @@ func (f Feature) getVariantFromWeights(ctx *context.Context) *Variant {
 		counter += uint32(variant.Weight)
 
 		if counter >= target {
-			return &variant
+			return &variant.Variant
 		}
 	}
 	return DISABLED_VARIANT
 }
 
-func (f Feature) getOverrideVariant(ctx *context.Context) *Variant {
+func (f Feature) getOverrideVariant(ctx *context.Context) *VariantInternal {
 	for _, variant := range f.Variants {
 		for _, override := range variant.Overrides {
 			if override.matchValue(ctx) {
@@ -101,7 +104,7 @@ func getSeed(ctx *context.Context) string {
 	if ctx.UserId != "" {
 		return ctx.UserId
 	} else if ctx.SessionId != "" {
-		return  ctx.SessionId
+		return ctx.SessionId
 	} else if ctx.RemoteAddress != "" {
 		return ctx.RemoteAddress
 	}

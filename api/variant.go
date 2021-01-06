@@ -9,31 +9,35 @@ var DISABLED_VARIANT = &Variant{
 
 type Payload struct {
 	// Type is the type of the payload
-	Type  string `json:"type"`
+	Type string `json:"type"`
 	// Value is the value of the payload type
 	Value string `json:"value"`
 }
 
 type Override struct {
 	// ContextName is the value of attribute context name
-	ContextName string   `json:"contextName"`
+	ContextName string `json:"contextName"`
 	// Values is the value of attribute values
-	Values      []string `json:"values"`
+	Values []string `json:"values"`
 }
 
 type Variant struct {
-	// Name is the value of the variant name. 
-	Name       string     `json:"name"`
+	// Name is the value of the variant name.
+	Name string `json:"name"`
 	// Payload is the value of the variant payload
-	Payload    Payload    `json:"payload"`
-	// Weight is the traffic ratio for the request
-	Weight     int        `json:"weight"`
-	// WeightType can be fixed or variable
-	WeightType string     `json:"weightType"`
-	// Override is used to get a variant accoording to the Unleash context field
-	Overrides  []Override `json:"overrides"`
+	Payload Payload `json:"payload"`
 	// Enabled indicates whether the feature which is extend by this variant was enabled or not.
-	Enabled    bool       `json:"enabled"`
+	Enabled bool `json:"enabled"`
+}
+
+type VariantInternal struct {
+	Variant
+	// Weight is the traffic ratio for the request
+	Weight int `json:"weight"`
+	// WeightType can be fixed or variable
+	WeightType string `json:"weightType"`
+	// Override is used to get a variant accoording to the Unleash context field
+	Overrides []Override `json:"overrides"`
 }
 
 func (o Override) getIdentifier(ctx *context.Context) string {
