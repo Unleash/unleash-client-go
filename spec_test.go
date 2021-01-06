@@ -84,7 +84,7 @@ func (vtc VariantTestCase) RunWithClient(client *Client) func(*testing.T) {
 		result := client.IsEnabled(vtc.ToggleName, WithContext(vtc.Context))
 		wg.Wait()
 		assert.Equal(t, vtc.ExpectedResult.Enabled, result)
-		assert.Equal(t, vtc.ExpectedResult, client.GetVariant(vtc.ToggleName, nil))
+		assert.Equal(t, vtc.ExpectedResult, client.GetVariant(vtc.ToggleName))
 	}
 }
 

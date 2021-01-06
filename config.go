@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/Unleash/unleash-client-go/v3/api"
 	"github.com/Unleash/unleash-client-go/v3/context"
 	"github.com/Unleash/unleash-client-go/v3/strategy"
 )
@@ -162,6 +163,33 @@ func WithFallbackFunc(fallback FallbackFunc) FeatureOption {
 func WithContext(ctx context.Context) FeatureOption {
 	return func(opts *featureOption) {
 		opts.ctx = &ctx
+	}
+}
+
+// VariantFallbackFunc represents a function to be called if the variant is not found.
+type VariantFallbackFunc func(feature string, ctx *context.Context) *api.Variant
+
+type variantOption struct {
+	variantFallback     *api.Variant
+	variantFallbackFunc VariantFallbackFunc
+}
+
+// VariantOption provides options for querying if a variant is found or not.
+type VariantOption func(*variantOption)
+
+// WithVariantFallback specifies what the value should be if the variant is not found on the
+// unleash service.
+func WithVariantFallback(variantFallback *api.Variant) VariantOption {
+	return func(opts *variantOption) {
+		opts.variantFallback = variantFallback
+	}
+}
+
+// WithVariantFallbackFunc specifies a fallback function to evaluate a variant
+// is not found on the service.
+func WithVariantFallbackFunc(variantFallbackFunc VariantFallbackFunc) VariantOption {
+	return func(opts *variantOption) {
+		opts.variantFallbackFunc = variantFallbackFunc
 	}
 }
 
