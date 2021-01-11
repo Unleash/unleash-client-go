@@ -285,6 +285,46 @@ func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled b
 	return false
 }
 
+// GetVariant queries a variant as the specified feature is enabled.
+//
+// It is safe to call this method from multiple goroutines concurrently.
+func (uc *Client) GetVariant(feature string, options ...VariantOption) *api.Variant {
+	defaultVariant := api.GetDefaultVariant()
+	
+	f := uc.repository.getToggle(feature)
+
+	var opts variantOption
+	for _, o := range options {
+		o(&opts)
+	}
+
+	ctx := uc.staticContext
+
+	if f == nil {
+		if opts.variantFallbackFunc != nil {
+			return opts.variantFallbackFunc(feature, ctx)
+		} else if opts.variantFallback != nil {
+			return opts.variantFallback
+		}
+		return defaultVariant
+	}
+
+	if !f.Enabled {
+		return defaultVariant
+	}
+
+	if len(f.Variants) == 0 {
+		return defaultVariant
+	}
+
+	variant := f.GetVariant(ctx)
+
+	defer func() {
+		uc.metrics.countVariants(feature, variant.Name)
+	}()
+	return variant
+}
+
 // Close stops the client from syncing data from the server.
 func (uc *Client) Close() error {
 	uc.repository.Close()
