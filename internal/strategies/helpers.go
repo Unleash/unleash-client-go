@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/spaolacci/murmur3"
+	"github.com/twmb/murmur3"
 )
 
 func round(f float64) int {

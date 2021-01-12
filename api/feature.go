@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/Unleash/unleash-client-go/v3/context"
-	"github.com/spaolacci/murmur3"
+	"github.com/twmb/murmur3"
 )
 
 type ParameterMap map[string]interface{}
