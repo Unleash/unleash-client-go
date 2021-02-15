@@ -39,3 +39,6 @@ testdata/
 *.out
 
 .idea/
+
+#vs code
+.vscode

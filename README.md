@@ -1,7 +1,8 @@
 [![Build Status](https://travis-ci.org/Unleash/unleash-client-go.svg?branch=v3)](https://travis-ci.org/Unleash/unleash-client-go) [![GoDoc](https://godoc.org/github.com/Unleash/unleash-client-go?status.svg)](https://godoc.org/github.com/Unleash/unleash-client-go) [![Go Report Card](https://goreportcard.com/badge/github.com/Unleash/unleash-client-go)](https://goreportcard.com/report/github.com/Unleash/unleash-client-go)
 
 # unleash-client-go
-Unleash Client for Go.  Read more about the [Unleash project](https://github.com/Unleash/unleash)
+
+Unleash Client for Go. Read more about the [Unleash project](https://github.com/Unleash/unleash)
 
 **Version 3.x of the client requires `unleash-server` v3.x or higher.**
 
@@ -63,6 +64,7 @@ destroy-method. This is typically not required.
 unleash.Close()
 
 ### Built in activation strategies
+
 The Go client comes with implementations for the built-in activation strategies
 provided by unleash.
 
@@ -93,26 +95,45 @@ unleash.IsEnabled("someToggle", unleash.WithContext(ctx))
 ```
 
 ### Caveat
+
 This client uses go routines to report several events and doesn't drain the channel by default. So you need to either register a listener using `WithListener` or drain the channel "manually" (demonstrated in [this example](https://github.com/Unleash/unleash-client-go/blob/master/example_with_instance_test.go)).
 
 ## Development
 
+## Adding client specifications
+
+In order to make sure the unleash clients uphold their contract, we have defined a set of
+client specifications that define this contract. These are used to make sure that each unleash client
+at any time adhere to the contract, and define a set of functionality that is core to unleash. You can view
+the [client specifications here](https://github.com/Unleash/client-specification).
+
+In order to make the tests run please do the following steps.
+
+```
+// in repository root
+// testdata is gitignored
+mkdir testdata
+cd testdata
+git clone https://github.com/Unleash/client-specification.git
+```
+
 Requirements:
-* make
-* golint (go get -u golang.org/x/lint/golint)
+
+- make
+- golint (go get -u golang.org/x/lint/golint)
 
 Run tests:
 
-    make 
-    
+    make
+
 Run lint check:
 
     make lint
-    
+
 Run code-style checks:(currently failing)
-    
+
     make strict-check
-    
+
 Run race-tests:
- 
+
     make test-all
