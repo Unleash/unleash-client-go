@@ -158,6 +158,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 			backupPath:      uc.options.backupPath,
 			url:             *parsedUrl,
 			appName:         uc.options.appName,
+			projectName:     uc.options.projectName,
 			instanceId:      uc.options.instanceId,
 			refreshInterval: uc.options.refreshInterval,
 			storage:         uc.options.storage,
@@ -290,7 +291,7 @@ func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled b
 // It is safe to call this method from multiple goroutines concurrently.
 func (uc *Client) GetVariant(feature string, options ...VariantOption) *api.Variant {
 	defaultVariant := api.GetDefaultVariant()
-	
+
 	f := uc.repository.getToggle(feature)
 
 	var opts variantOption
