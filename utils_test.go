@@ -6,8 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestRepository_GetFeaturesFail tests that OnReady isn't fired unless
-// /client/features has returned successfully.
+// TestGetFetchURLPath verifies that getFetchURLPath returns the correct path
 func TestGetFetchURLPath(t *testing.T) {
 	assert := assert.New(t)
 	res := getFetchURLPath("")
