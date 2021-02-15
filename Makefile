@@ -16,7 +16,7 @@ fmt-check:
 vet:
 	go vet ./...
 
-check: fmt-check vet
+check: vet
 
 strict-check: check
 	golint ./...
