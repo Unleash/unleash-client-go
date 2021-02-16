@@ -15,6 +15,7 @@ type configOption struct {
 	environment     string
 	instanceId      string
 	url             string
+	projectName     string
 	refreshInterval time.Duration
 	metricsInterval time.Duration
 	disableMetrics  bool
@@ -130,6 +131,14 @@ func WithCustomHeaders(headers http.Header) ConfigOption {
 	}
 }
 
+// WithProjectName defines a projectName on the config object and is used to
+// filter toggles by project name.
+func WithProjectName(projectName string) ConfigOption {
+	return func(o *configOption) {
+		o.projectName = projectName
+	}
+}
+
 // FallbackFunc represents a function to be called if the feature is not found.
 type FallbackFunc func(feature string, ctx *context.Context) bool
 
@@ -196,6 +205,7 @@ func WithVariantFallbackFunc(variantFallbackFunc VariantFallbackFunc) VariantOpt
 type repositoryOptions struct {
 	appName         string
 	instanceId      string
+	projectName     string
 	url             url.URL
 	backupPath      string
 	refreshInterval time.Duration

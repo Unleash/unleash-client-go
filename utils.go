@@ -27,3 +27,10 @@ func generateInstanceId() string {
 	}
 	return prefix
 }
+
+func getFetchURLPath(projectName string) string {
+	if projectName != "" {
+		return fmt.Sprintf("./client/features?project=%s", projectName)
+	}
+	return "./client/features"
+}

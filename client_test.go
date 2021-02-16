@@ -156,3 +156,68 @@ func TestClient_ListFeatures(t *testing.T) {
 
 	require.Equal(t, features, client.ListFeatures())
 }
+
+func TestClientWithProjectName(t *testing.T) {
+	assert := assert.New(t)
+	projectName := "myProject"
+	defer gock.OffAll()
+
+	gock.New(mockerServer).
+		Post("/client/register").
+		Reply(200)
+
+	gock.New(mockerServer).
+		Get("/client/features").
+		MatchParam("project", projectName).
+		Reply(200).
+		JSON(api.FeatureResponse{})
+
+	mockListener := &MockedListener{}
+	mockListener.On("OnReady").Return()
+	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithProjectName(projectName),
+		WithListener(mockListener),
+	)
+
+	client.WaitForReady()
+
+	assert.NoError(err)
+	assert.Equal(client.options.projectName, projectName)
+	assert.True(gock.IsDone(), "there should be no more mocks")
+}
+
+func TestClientWithoutProjectName(t *testing.T) {
+	assert := assert.New(t)
+	defer gock.OffAll()
+
+	gock.New(mockerServer).
+		Post("/client/register").
+		Reply(200)
+
+	gock.New(mockerServer).
+		Get("/client/features").
+		Reply(200).
+		JSON(api.FeatureResponse{})
+
+	mockListener := &MockedListener{}
+	mockListener.On("OnReady").Return()
+	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithListener(mockListener),
+	)
+
+	client.WaitForReady()
+
+	assert.NoError(err)
+	assert.Equal(client.options.projectName, "")
+	assert.True(gock.IsDone(), "there should be no more mocks")
+}
