@@ -70,13 +70,14 @@ provided by unleash.
 
 - DefaultStrategy
 - UserIdStrategy
+- FlexibleRolloutStrategy
 - GradualRolloutUserIdStrategy
 - GradualRolloutSessionIdStrategy
 - GradualRolloutRandomStrategy
 - RemoteAddressStrategy
 - ApplicationHostnameStrategy
 
-Read more about the strategies in [activation-strategy.md](https://github.com/Unleash/unleash/blob/master/docs/activation-strategies.md).
+Read more about the strategies in [activation-strategy.md](/docs/user_guide/activation_strategy).
 
 ### Unleash context
 
