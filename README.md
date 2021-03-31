@@ -12,7 +12,7 @@ Unleash Client for Go. Read more about the [Unleash project](https://github.com/
 The client is currently tested against Go 1.10.x and 1.13.x. These versions will be updated
 as new versions of Go are released.
 
-The client may work on older versions of Go as well, but are not actively tested.
+The client may work on older versions of Go as well, but is not actively tested.
 
 ## Getting started
 
@@ -45,6 +45,103 @@ func init() {
 		unleash.WithAppName("my-application"),
 		unleash.WithUrl("http://unleash.herokuapp.com/api/"),
 		unleash.WithCustomHeaders(http.Header{"Authorization": {"<API token>"}}),
+	)
+}
+```
+#### Preloading feature toggles
+
+If you'd like to prebake your application with feature toggles (maybe you're working without persistent storage, so Unleash's backup isn't available), you can replace the defaultStorage implementation with a BootstrapStorage. This allows you to pass in a reader to where data in the format of `/api/client/features` can be found.
+
+#### Bootstrapping from file
+
+Bootstrapping from file on disk is then done using something similar to
+
+```go
+import (
+	"github.com/Unleash/unleash-client-go/v3"
+)
+
+func init() {
+    myBootstrap := os.Open("bootstrapfile.json") // or wherever your file is located at runtime
+    // BootstrapStorage handles the case where Reader is nil
+    unleash.Initialize(
+	    unleash.WithListener(&unleash.DebugListener{}),
+		unleash.WithAppName("my-application"),
+		unleash.WithUrl("http://unleash.herokuapp.com/api/"),
+        unleash.WithStorage(&BootstrapStorage{Reader: myBootstrap})
+	)
+}
+```
+
+#### Bootstrapping from S3
+
+Bootstrapping from S3 is then done by downloading the file using the aws library and then passing in a Reader to the just downloaded file
+
+```go
+import (
+	"github.com/Unleash/unleash-client-go/v3"
+    "github.com/aws/aws-sdk-go/service/s3"
+)
+
+func init() {
+    // The session the S3 Downloader will use
+    sess := session.Must(session.NewSession())
+
+    // Create a downloader with the session and default options
+    downloader := s3manager.NewDownloader(sess)
+
+    // Create a file to write the S3 Object contents to.
+    f, err := os.Create("bootstrap.json")
+    if err != nil {
+        return fmt.Errorf("failed to create file %q, %v", filename, err)
+    }
+
+    // Write the contents of S3 Object to the file
+    n, err := downloader.Download(f, &s3.GetObjectInput{
+        Bucket: aws.String(myBucket),
+        Key:    aws.String(myString),
+    })
+    if err != nil {
+        return fmt.Errorf("failed to download file, %v", err)
+    }
+
+
+    // BootstrapStorage handles the case where Reader is nil
+    unleash.Initialize(
+	    unleash.WithListener(&unleash.DebugListener{}),
+		unleash.WithAppName("my-application"),
+		unleash.WithUrl("http://unleash.herokuapp.com/api/"),
+        unleash.WithStorage(&BootstrapStorage{Reader: f})
+	)
+}
+```
+
+#### Bootstrapping from Google
+
+Since the google cloud storage API returns a Reader, implementing a Bootstrap from GCS is done using something similar to
+
+```go
+import (
+	"github.com/Unleash/unleash-client-go/v3"
+    "cloud.google.com/go/storage"
+)
+
+func init() {
+    ctx := context.Background() // Configure Google Cloud context
+    client, err := storage.NewClient(ctx) // Configure your client
+    if err != nil {
+        // TODO: Handle error.
+    }
+
+    // Fetch the bucket, then object and then create a reader
+    reader := client.Bucket(bucketName).Object("my-bootstrap.json").NewReader(ctx)
+
+    // BootstrapStorage handles the case where Reader is nil
+    unleash.Initialize(
+	    unleash.WithListener(&unleash.DebugListener{}),
+		unleash.WithAppName("my-application"),
+		unleash.WithUrl("http://unleash.herokuapp.com/api/"),
+        unleash.WithStorage(&unleash.BootstrapStorage{Reader: reader})
 	)
 }
 ```
