@@ -80,38 +80,40 @@ Bootstrapping from S3 is then done by downloading the file using the aws library
 ```go
 import (
 	"github.com/Unleash/unleash-client-go/v3"
-    "github.com/aws/aws-sdk-go/service/s3"
+    "github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 func init() {
-    // The session the S3 Downloader will use
-    sess := session.Must(session.NewSession())
+    	// Load the shared AWS config
+	cfg, err := config.LoadDefaultConfig(context.TODO())
+	if err != nil {
+		log.Fatal(err)
+	}
 
-    // Create a downloader with the session and default options
-    downloader := s3manager.NewDownloader(sess)
+	// Create an S3 client
+	client := s3.NewFromConfig(cfg)
 
-    // Create a file to write the S3 Object contents to.
-    f, err := os.Create("bootstrap.json")
-    if err != nil {
-        return fmt.Errorf("failed to create file %q, %v", filename, err)
-    }
+	obj, err := client.GetObject(context.TODO(), &s3.GetObjectInput{
+		Bucket: aws.String("YOURBUCKET"),
+		Key:    aws.String("YOURKEY"),
+	})
 
-    // Write the contents of S3 Object to the file
-    n, err := downloader.Download(f, &s3.GetObjectInput{
-        Bucket: aws.String(myBucket),
-        Key:    aws.String(myString),
-    })
-    if err != nil {
-        return fmt.Errorf("failed to download file, %v", err)
-    }
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	reader := obj.Body
+	defer reader.Close()
 
 
     // BootstrapStorage handles the case where Reader is nil
     unleash.Initialize(
 	    unleash.WithListener(&unleash.DebugListener{}),
-		unleash.WithAppName("my-application"),
-		unleash.WithUrl("http://unleash.herokuapp.com/api/"),
-        unleash.WithStorage(&BootstrapStorage{Reader: f})
+		unleash.WithAppName("YOURAPPNAME"),
+		unleash.WithUrl("YOURINSTANCE_URL"),
+        unleash.WithStorage(&BootstrapStorage{Reader: reader})
 	)
 }
 ```
@@ -132,10 +134,10 @@ func init() {
     if err != nil {
         // TODO: Handle error.
     }
+    defer client.Close()
 
     // Fetch the bucket, then object and then create a reader
     reader := client.Bucket(bucketName).Object("my-bootstrap.json").NewReader(ctx)
-
     // BootstrapStorage handles the case where Reader is nil
     unleash.Initialize(
 	    unleash.WithListener(&unleash.DebugListener{}),
