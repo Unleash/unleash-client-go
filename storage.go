@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/Unleash/unleash-client-go/v3/api"
 )
 
 // Storage is an interface that can be implemented in order to have control over how
@@ -60,8 +62,13 @@ func (ds *defaultStorage) Load() error {
 		return err
 	} else {
 		dec := json.NewDecoder(file)
-		if err := dec.Decode(&ds.data); err != nil {
+		var featuresFromFile map[string]api.Feature
+		if err := dec.Decode(&featuresFromFile); err != nil {
 			return err
+		}
+
+		for key, value := range featuresFromFile {
+			ds.data[key] = value
 		}
 	}
 	return nil
