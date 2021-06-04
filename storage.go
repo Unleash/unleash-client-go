@@ -36,20 +36,21 @@ type Storage interface {
 	List() []interface{}
 }
 
-type defaultStorage struct {
+// DefaultStorage is a default Storage implementation.
+type DefaultStorage struct {
 	appName string
 	path    string
 	data    map[string]interface{}
 }
 
-func (ds *defaultStorage) Init(backupPath, appName string) {
+func (ds *DefaultStorage) Init(backupPath, appName string) {
 	ds.appName = appName
 	ds.path = filepath.Join(backupPath, fmt.Sprintf("unleash-repo-schema-v1-%s.json", appName))
 	ds.data = map[string]interface{}{}
 	ds.Load()
 }
 
-func (ds *defaultStorage) Reset(data map[string]interface{}, persist bool) error {
+func (ds *DefaultStorage) Reset(data map[string]interface{}, persist bool) error {
 	ds.data = data
 	if persist {
 		return ds.Persist()
@@ -57,7 +58,7 @@ func (ds *defaultStorage) Reset(data map[string]interface{}, persist bool) error
 	return nil
 }
 
-func (ds *defaultStorage) Load() error {
+func (ds *DefaultStorage) Load() error {
 	if file, err := os.Open(ds.path); err != nil {
 		return err
 	} else {
@@ -74,7 +75,7 @@ func (ds *defaultStorage) Load() error {
 	return nil
 }
 
-func (ds *defaultStorage) Persist() error {
+func (ds *DefaultStorage) Persist() error {
 	if file, err := os.Create(ds.path); err != nil {
 		return err
 	} else {
@@ -87,12 +88,12 @@ func (ds *defaultStorage) Persist() error {
 	return nil
 }
 
-func (ds defaultStorage) Get(key string) (interface{}, bool) {
+func (ds DefaultStorage) Get(key string) (interface{}, bool) {
 	val, ok := ds.data[key]
 	return val, ok
 }
 
-func (ds *defaultStorage) List() []interface{} {
+func (ds *DefaultStorage) List() []interface{} {
 	var features []interface{}
 	for _, val := range ds.data {
 		features = append(features, val)
