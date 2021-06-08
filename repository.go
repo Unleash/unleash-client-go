@@ -42,7 +42,7 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 	}
 
 	if options.storage == nil {
-		repo.options.storage = &defaultStorage{}
+		repo.options.storage = &DefaultStorage{}
 	}
 
 	repo.options.storage.Init(options.backupPath, options.appName)
