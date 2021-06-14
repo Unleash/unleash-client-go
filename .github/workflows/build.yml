@@ -1,0 +1,29 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: [1.13, 1.15, 1.16]
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout code
+      - uses: actions/checkout@v2
+        name: Checkout client specifications
+        with:
+          repository: Unleash/client-specification
+          ref: refs/tags/v3.3.1
+          path: testdata
+      - uses: actions/setup-go@v2
+        name: Setup go
+        with:
+          go-version: ${{ matrix.version }}
+      - name: Run tests
+        run: make test
+      
