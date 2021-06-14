@@ -38,9 +38,11 @@ func TestClientWithoutListener(t *testing.T) {
 		for {
 			select {
 			case e := <-client.Errors():
-				t.Fatalf("Unexpected error: %v", e)
+				t.Errorf("Unexpected error: %v", e)
+				return
 			case w := <-client.Warnings():
-				t.Fatalf("Unexpected warning: %v", w)
+				t.Errorf("Unexpected warning: %v", w)
+				return
 			case <-client.Count():
 			case <-client.Sent():
 			}

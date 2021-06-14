@@ -1,5 +1,7 @@
 package unleash
 
+import "github.com/Unleash/unleash-client-go/v3/api"
+
 var defaultClient *Client
 
 // ErrorListener defines an interface that be implemented in order to receive
@@ -42,6 +44,10 @@ func IsEnabled(feature string, options ...FeatureOption) bool {
 func Initialize(options ...ConfigOption) (err error) {
 	defaultClient, err = NewClient(options...)
 	return
+}
+
+func GetVariant(feature string, options ...VariantOption) *api.Variant {
+	return defaultClient.GetVariant(feature, options...)
 }
 
 // Close will close the default client.
