@@ -24,6 +24,15 @@ jobs:
         name: Setup go
         with:
           go-version: ${{ matrix.version }}
-      - name: Run tests
-        run: make test
-      
+      - name: Get deps
+        run: go get -t -v ./...
+      - name: Go vet
+        run: go vet ./...
+      - name: Run all tests
+        run: go test -race -coverprofile=profile.cov -v ./...
+      - name: Send coverage
+        uses: shogo82148/actions-goveralls@v1
+        with:
+          path-to-profile: profile.cov
+          flag-name: Go-${{ matrix.version }}
+          parallel: true
