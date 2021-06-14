@@ -15,7 +15,7 @@ before_script:
   - ./cc-test-reporter before-build
 
 before_install:
-  - git clone https://github.com/Unleash/client-specification.git ./testdata/client-specification
+  - git clone -b v3.3.1 https://github.com/Unleash/client-specification.git ./testdata/client-specification
 
 script:
  - go get -t -v ./...
