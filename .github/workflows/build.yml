@@ -19,7 +19,7 @@ jobs:
         with:
           repository: Unleash/client-specification
           ref: refs/tags/v3.3.1
-          path: testdata
+          path: testdata/client-specification
       - uses: actions/setup-go@v2
         name: Setup go
         with:
