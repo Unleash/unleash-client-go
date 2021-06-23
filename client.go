@@ -300,6 +300,9 @@ func (uc *Client) GetVariant(feature string, options ...VariantOption) *api.Vari
 	}
 
 	ctx := uc.staticContext
+	if (opts.ctx != nil) {
+		ctx = ctx.Override(*opts.ctx)
+	}
 
 	if f == nil {
 		if opts.variantFallbackFunc != nil {

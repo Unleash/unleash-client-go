@@ -181,6 +181,7 @@ type VariantFallbackFunc func(feature string, ctx *context.Context) *api.Variant
 type variantOption struct {
 	variantFallback     *api.Variant
 	variantFallbackFunc VariantFallbackFunc
+	ctx          *context.Context
 }
 
 // VariantOption provides options for querying if a variant is found or not.
