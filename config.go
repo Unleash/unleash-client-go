@@ -175,6 +175,14 @@ func WithContext(ctx context.Context) FeatureOption {
 	}
 }
 
+// WithVariantContext specifies a context for the GetVariant 
+// call
+func WithVariantContext(ctx context.Context) VariantOption {
+	return func(opts *variantOption) {
+		opts.ctx = &ctx
+	}
+}
+
 // VariantFallbackFunc represents a function to be called if the variant is not found.
 type VariantFallbackFunc func(feature string, ctx *context.Context) *api.Variant
 
