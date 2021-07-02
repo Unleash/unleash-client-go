@@ -246,6 +246,8 @@ func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled b
 	return uc.isEnabled(feature, options...)
 }
 
+// isEnabled abstracts away the details of checking if a toggle is turned on or off
+// without metrics
 func (uc *Client) isEnabled(feature string, options ...FeatureOption) (enabled bool) {
 	f := uc.repository.getToggle(feature)
 
