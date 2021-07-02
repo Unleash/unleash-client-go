@@ -243,6 +243,10 @@ func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled b
 		uc.metrics.count(feature, enabled)
 	}()
 
+	return uc.isEnabled(feature, options...)
+}
+
+func (uc *Client) isEnabled(feature string, options ...FeatureOption) (enabled bool) {
 	f := uc.repository.getToggle(feature)
 
 	var opts featureOption
@@ -291,6 +295,10 @@ func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled b
 // It is safe to call this method from multiple goroutines concurrently.
 func (uc *Client) GetVariant(feature string, options ...VariantOption) *api.Variant {
 	defaultVariant := api.GetDefaultVariant()
+
+	if !uc.isEnabled(feature) {
+		return defaultVariant;
+	}
 
 	f := uc.repository.getToggle(feature)
 
