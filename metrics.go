@@ -210,7 +210,9 @@ func (m *metrics) add(name string, enabled bool, num int32) {
 	defer m.bucketMu.Unlock()
 	t, exists := m.bucket.Toggles[name]
 	if !exists {
-		t = api.ToggleCount{}
+		t = api.ToggleCount{
+			Variants: map[string]int32{},
+		}
 	}
 	if enabled {
 		t.Yes += num
