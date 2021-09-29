@@ -175,7 +175,7 @@ func WithContext(ctx context.Context) FeatureOption {
 	}
 }
 
-// WithVariantContext specifies a context for the GetVariant 
+// WithVariantContext specifies a context for the GetVariant
 // call
 func WithVariantContext(ctx context.Context) VariantOption {
 	return func(opts *variantOption) {
@@ -189,7 +189,7 @@ type VariantFallbackFunc func(feature string, ctx *context.Context) *api.Variant
 type variantOption struct {
 	variantFallback     *api.Variant
 	variantFallbackFunc VariantFallbackFunc
-	ctx          *context.Context
+	ctx                 *context.Context
 }
 
 // VariantOption provides options for querying if a variant is found or not.
