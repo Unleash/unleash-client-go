@@ -297,22 +297,21 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) (enabled b
 // It is safe to call this method from multiple goroutines concurrently.
 func (uc *Client) GetVariant(feature string, options ...VariantOption) *api.Variant {
 	defaultVariant := api.GetDefaultVariant()
-
-	if !uc.isEnabled(feature) {
-		return defaultVariant;
-	}
-
-	f := uc.repository.getToggle(feature)
-
 	var opts variantOption
 	for _, o := range options {
 		o(&opts)
 	}
 
 	ctx := uc.staticContext
-	if (opts.ctx != nil) {
+	if opts.ctx != nil {
 		ctx = ctx.Override(*opts.ctx)
 	}
+
+	if !uc.isEnabled(feature, WithContext(*ctx)) {
+		return defaultVariant
+	}
+
+	f := uc.repository.getToggle(feature)
 
 	if f == nil {
 		if opts.variantFallbackFunc != nil {
