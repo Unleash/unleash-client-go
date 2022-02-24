@@ -20,6 +20,12 @@ const specFolder = "./testdata/client-specification/specifications"
 
 var specIndex = filepath.Join(specFolder, "index.json")
 
+var specNotImplemented = []string{
+	"12-custom-stickiness",
+	"13-constraint-operators.json",
+	"14-constraint-semver-operators",
+}
+
 type TestState struct {
 	Version  int           `json:"version"`
 	Features []api.Feature `json:"features"`
@@ -148,6 +154,16 @@ func (td TestDefinition) Run(t *testing.T) {
 	}
 }
 
+func (td TestDefinition) IsImplemented() bool {
+	for _, name := range specNotImplemented {
+		if name == td.Name {
+			return false
+		}
+	}
+
+	return true
+}
+
 type ClientSpecificationSuite struct {
 	suite.Suite
 	definitions []TestDefinition
@@ -180,8 +196,10 @@ func (s *ClientSpecificationSuite) SetupTest() {
 }
 
 func (s ClientSpecificationSuite) TestClientSpecification() {
-	for _, def := range s.definitions {
-		s.T().Run(def.Name, def.Run)
+	for _, td := range s.definitions {
+		if td.IsImplemented() {
+			s.T().Run(td.Name, td.Run)
+		}
 	}
 }
 
