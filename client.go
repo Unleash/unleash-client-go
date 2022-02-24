@@ -285,10 +285,13 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) (enabled b
 			continue
 		}
 
-		if constraints.Check(ctx, s.Constraints) && foundStrategy.IsEnabled(s.Parameters, ctx) {
+		if ok, err := constraints.Check(ctx, s.Constraints); err != nil {
+			uc.errors <- err
+		} else if ok && foundStrategy.IsEnabled(s.Parameters, ctx) {
 			return true
 		}
 	}
+
 	return false
 }
 
