@@ -79,12 +79,12 @@ provided by unleash.
 - RemoteAddressStrategy
 - ApplicationHostnameStrategy
 
-Read more about the strategies in [activation-strategy.md](/docs/user_guide/activation_strategy).
+[Read more about activation strategies in the docs](https://docs.getunleash.io/user_guide/activation_strategy).
 
 ### Unleash context
 
-In order to use some of the common activation strategies you must provide a
-[unleash-context](https://github.com/Unleash/unleash/blob/master/docs/unleash-context.md).
+In order to use some of the common activation strategies you must provide an
+[unleash-context](https://docs.getunleash.io/user_guide/unleash_context).
 This client SDK allows you to send in the unleash context as part of the `isEnabled` call:
 
 ```go
