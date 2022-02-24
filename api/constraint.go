@@ -16,11 +16,11 @@ const (
 // Constraint represents a constraint on a particular context value.
 type Constraint struct {
 	// ContextName is the context name of the constraint.
-	ContextName string   `json:"contextName"`
+	ContextName string `json:"contextName"`
 
 	// Operator is the operator of the constraint.
-	Operator    Operator `json:"operator"`
+	Operator Operator `json:"operator"`
 
 	// Values is the values of the constraint.
-	Values      []string `json:"values"`
+	Values []string `json:"values"`
 }
