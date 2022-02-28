@@ -18,6 +18,9 @@ type Context struct {
 	// AppName is the application name.
 	AppName string
 
+	// CurrentTime is used for date constraints. Defaults to time.Now if not set.
+	CurrentTime string
+
 	// Properties is a map of additional properties.
 	Properties map[string]string
 }
@@ -40,6 +43,9 @@ func (ctx Context) Override(src Context) *Context {
 	if src.AppName != "" {
 		ctx.AppName = src.AppName
 	}
+	if src.CurrentTime != "" {
+		ctx.CurrentTime = src.CurrentTime
+	}
 	if src.Properties != nil {
 		ctx.Properties = src.Properties
 	}
@@ -61,6 +67,8 @@ func (ctx Context) Field(name string) string {
 		return ctx.Environment
 	case "appName":
 		return ctx.AppName
+	case "currentTime":
+		return ctx.CurrentTime
 	default:
 		return ctx.Properties[name]
 	}
