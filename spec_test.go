@@ -19,7 +19,7 @@ const mockHost = "http://unleash-apu"
 const specFolder = "./testdata/client-specification/specifications"
 
 var specIndex = filepath.Join(specFolder, "index.json")
-var specNotImplemented = []string{"12-custom-stickiness"}
+var specNotImplemented = []string{}
 
 type TestState struct {
 	Version  int           `json:"version"`

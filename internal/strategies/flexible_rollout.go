@@ -8,10 +8,8 @@ import (
 type stickiness string
 
 const (
-	defaultStickiness   stickiness = "default"
-	userIDStickiness    stickiness = "userId"
-	sessionIDStickiness stickiness = "sessionId"
-	randomStickiness    stickiness = "random"
+	defaultStickiness stickiness = "default"
+	randomStickiness  stickiness = "random"
 )
 
 type flexibleRolloutStrategy struct {
@@ -32,14 +30,12 @@ func (s flexibleRolloutStrategy) Name() string {
 
 func (s flexibleRolloutStrategy) resolveStickiness(st stickiness, ctx context.Context) string {
 	switch st {
-	case userIDStickiness:
-		return ctx.UserId
-	case sessionIDStickiness:
-		return ctx.SessionId
+	case defaultStickiness:
+		return coalesce(ctx.UserId, ctx.SessionId, s.random.string())
 	case randomStickiness:
 		return s.random.string()
 	default:
-		return coalesce(ctx.UserId, ctx.SessionId, s.random.string())
+		return ctx.Field(string(st))
 	}
 }
 
@@ -59,7 +55,7 @@ func (s flexibleRolloutStrategy) IsEnabled(params map[string]interface{}, ctx *c
 		return false
 	}
 
-	sticky := params[strategy.ParamStickiness].(string)
+	sticky := coalesce(params[strategy.ParamStickiness].(string), string(defaultStickiness))
 	stickinessID := s.resolveStickiness(stickiness(sticky), *ctx)
 
 	if stickinessID == "" {

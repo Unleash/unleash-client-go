@@ -36,6 +36,7 @@ type VariantInternal struct {
 	Weight int `json:"weight"`
 	// WeightType can be fixed or variable
 	WeightType string `json:"weightType"`
+	Stickiness string `json:"stickiness"`
 	// Override is used to get a variant accoording to the Unleash context field
 	Overrides []Override `json:"overrides"`
 }
