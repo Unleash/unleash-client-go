@@ -30,8 +30,8 @@ func operatorSemver(
 	check func(context *semver.Version, constraint *semver.Version) bool,
 ) (bool, error) {
 	contextValue := ctx.Field(constraint.ContextName)
-	contextParsed, contextErr := semver.NewVersion(contextValue)
-	constraintParsed, constraintErr := semver.NewVersion(constraint.Value)
+	contextParsed, contextErr := semver.StrictNewVersion(contextValue)
+	constraintParsed, constraintErr := semver.StrictNewVersion(constraint.Value)
 
 	if contextErr != nil {
 		return false, contextErr
