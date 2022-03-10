@@ -23,7 +23,7 @@ func (s userWithIdStrategy) IsEnabled(params map[string]interface{}, ctx *contex
 	}
 
 	userIds, ok := value.(string)
-	if !ok {
+	if !ok || userIds == "" {
 		return false
 	}
 
