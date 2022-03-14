@@ -1,7 +1,7 @@
 package constraints
 
 import (
-	"github.com/Masterminds/semver"
+	"github.com/Masterminds/semver/v3"
 	"github.com/Unleash/unleash-client-go/v3/api"
 	"github.com/Unleash/unleash-client-go/v3/context"
 )
@@ -30,8 +30,8 @@ func operatorSemver(
 	check func(context *semver.Version, constraint *semver.Version) bool,
 ) (bool, error) {
 	contextValue := ctx.Field(constraint.ContextName)
-	contextParsed, contextErr := semver.NewVersion(contextValue)
-	constraintParsed, constraintErr := semver.NewVersion(constraint.Value)
+	contextParsed, contextErr := semver.StrictNewVersion(contextValue)
+	constraintParsed, constraintErr := semver.StrictNewVersion(constraint.Value)
 
 	if contextErr != nil {
 		return false, contextErr

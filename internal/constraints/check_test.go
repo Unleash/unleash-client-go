@@ -12,6 +12,7 @@ type checkTestCase struct {
 	ctx         *context.Context
 	constraints []api.Constraint
 	expected    bool
+	error       string
 }
 
 func TestCheck(t *testing.T) {
