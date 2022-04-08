@@ -55,4 +55,11 @@ func TestUserWithIdStrategy_IsEnabled(t *testing.T) {
 		}
 		assert.True(s.IsEnabled(params, ctx), "user-with-id-strategy should be enabled for userId in list")
 	})
+	t.Run("u=empty", func(t *testing.T) {
+		params := map[string]interface{}{
+			strategy.ParamUserIds: "",
+		}
+		ctx := &context.Context{}
+		assert.False(s.IsEnabled(params, ctx), "user-with-id-strategy should not be enabled for empty strategy")
+	})
 }
