@@ -1,9 +1,8 @@
+# @format
+
 name: Build
 
-on:
-  push:
-    branches:
-      - v3
+on: [push, pull_request]
 
 jobs:
   build:
