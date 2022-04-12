@@ -30,7 +30,7 @@ func (bs *BootstrapStorage) Init(backupPath string, appName string) {
 	err := bs.Load()
 
 	if err != nil {
-		fmt.Print(fmt.Sprintf("Could not load bootstrap storage, because: %s", err.Error()))
+		fmt.Printf("Could not load bootstrap storage, because: %s", err.Error())
 		return;
 	}
 }
