@@ -2,6 +2,7 @@ package unleash
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 
 	"github.com/Unleash/unleash-client-go/v3/api"
@@ -26,7 +27,12 @@ func (bs *BootstrapStorage) Load() error {
 
 func (bs *BootstrapStorage) Init(backupPath string, appName string) {
 	bs.backingStore.Init(backupPath, appName)
-	bs.Load()
+	err := bs.Load()
+
+	if err != nil {
+		fmt.Print(fmt.Sprintf("Could not load bootstrap storage, because: %s", err.Error()))
+		return;
+	}
 }
 
 func (bs *BootstrapStorage) Reset(data map[string]interface{}, persist bool) error {
