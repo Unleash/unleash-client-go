@@ -9,7 +9,7 @@ import (
 )
 
 type BootstrapStorage struct {
-	backingStore defaultStorage
+	backingStore DefaultStorage
 	Reader       io.Reader
 }
 
