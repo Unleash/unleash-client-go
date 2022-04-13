@@ -1,1 +1,4509 @@
-{"version":1,"features":[{"name":"083db41c-c6c8-427b-815b-f735c3c6da60","type":"experiment","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{},"constraints":[]},{"name":"flexibleRollout","parameters":{"rollout":49,"stickiness":"default","groupId":"083db41c-c6c8-427b-815b-f735c3c6da60"},"constraints":[]},{"name":"flexibleRollout","parameters":{"rollout":50,"stickiness":"default","groupId":"083db41c-6c8-427b-815b-f735c3c6da60"},"constraints":[]}],"variants":[{"name":"asdfasdf","weight":500,"weightType":"variable","overrides":[],"stickiness":"default"},{"name":"agasdgaegagse","weight":500,"overrides":[],"weightType":"variable","stickiness":"default"}]},{"name":"21","type":"permission","enabled":true,"stale":true,"strategies":[{"name":"userWithId","parameters":{"userIds":"asd,asda,1223"},"constraints":[]},{"name":"as","parameters":{"asd":"123","asdasd":45,"isProd":"true"},"constraints":[]}],"variants":[{"name":"v1","weight":1000,"weightType":"variable","overrides":[],"stickiness":"default"}]},{"name":"2afc3854-6157-4abf-a87b-e59510bc96e9","type":"release","enabled":false,"stale":false,"strategies":[{"name":"OPR_CODE","parameters":{"OPR_CODE":""},"constraints":[]}],"variants":[]},{"name":"A123","type":"release","enabled":true,"stale":false,"strategies":[{"name":"CustomId","parameters":{"CustomerId":"a,b,c,e"},"constraints":[]}],"variants":[]},{"name":"aaa","type":"experiment","enabled":false,"stale":false,"strategies":[{"name":"foobar","parameters":{"bar_p":"100","ENVIRONMENT":"DEV"},"constraints":[]}],"variants":[]},{"name":"aaaasdw","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"aasas","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"abc","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"applicationHostname","parameters":{"hostNames":""}}],"variants":[]},{"name":"abca","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"userWithId","parameters":{"userIds":""}}],"variants":[]},{"name":"accounts.reset-password.random.rollout","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"ActivityLog","type":"release","enabled":true,"stale":false,"strategies":[{"name":"Environment","parameters":{"Dev":"","QA":"","Test":"","Training":"","Prod":""},"constraints":[]}],"variants":[{"name":"type_1","weight":500,"payload":{"type":"string","value":"opt_1"},"overrides":[],"weightType":"variable","stickiness":"default"},{"name":"type_2","weight":500,"payload":{"type":"string","value":"opt_2"},"overrides":[],"weightType":"variable","stickiness":"default"}]},{"name":"ActivityLogTesting","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"gradualRolloutSessionId","parameters":{"percentage":50,"groupId":"ActivityLogTesting"},"constraints":[]},{"name":"flexibleRollout","parameters":{"rollout":75,"stickiness":"default","groupId":"ActivityLogTesting"},"constraints":[]}],"variants":[]},{"name":"a-demo","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"82","stickiness":"default","groupId":"a-demo"},"constraints":[]}],"variants":[]},{"name":"adsda","type":"release","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"50","stickiness":"random","groupId":"adsda"},"constraints":[]},{"name":"forClient","parameters":{"clientName":"Android,IOS"},"constraints":[]}],"variants":[]},{"name":"aerronpro","type":"experiment","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"agasdfasdf","type":"release","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"34","stickiness":"default","groupId":"agasdfasdf"},"constraints":[]},{"name":"default","parameters":{},"constraints":[]},{"name":"foobar","parameters":{"ENVIRONMENT":""},"constraints":[]},{"name":"default","parameters":{},"constraints":[]},{"name":"userWithId","parameters":{"userIds":""},"constraints":[]}],"variants":[]},{"name":"alloe","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"Aname","type":"permission","enabled":true,"stale":false,"strategies":[{"name":"userWithId","parameters":{"userIds":"de"},"constraints":[]},{"name":"userWithId","parameters":{"userIds":"de_23456,fr_5667789"},"constraints":[]}],"variants":[{"name":"v1","weight":1000,"payload":{"type":"string","value":"test"},"overrides":[],"weightType":"variable","stickiness":"default"}]},{"name":"A-new.one","type":"experiment","enabled":false,"stale":false,"strategies":[{"name":"Environment","parameters":{"Dev":"true","QA":"","Test":"","Training":"","Prod":""}},{"name":"default","parameters":{},"constraints":[]}],"variants":[{"name":"foobar","weight":1000,"overrides":[],"weightType":"variable","stickiness":"default"}]},{"name":"another-toggle","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"anotta-toggle","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"aoeu","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"app","type":"kill-switch","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"46","stickiness":"default","groupId":"app"}}],"variants":[]},{"name":"app.main","type":"release","enabled":true,"stale":false,"strategies":[{"name":"userWithId","parameters":{"userIds":"laci"}}],"variants":[]},{"name":"app.ToggleX","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"Aruba-Switch","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"asasas","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"test1","parameters":{"codes":"sas,{sas: \"\"sa sasasas\" }"},"constraints":[]}],"variants":[]},{"name":"ASASASAS","type":"release","enabled":false,"stale":false,"strategies":[{"name":"OPR_CODE","parameters":{"OPR_CODE":"CUST"},"constraints":[]},{"name":"userWithId","parameters":{"userIds":""},"constraints":[]},{"name":"userWithId","parameters":{"userIds":"123,4,5"},"constraints":[]},{"name":"flexibleRollout","parameters":{"rollout":"41","stickiness":"default","groupId":"ASASASAS"},"constraints":[]}],"variants":[{"name":"v1","weight":1000,"overrides":[],"weightType":"variable","stickiness":"default"}]},{"name":"asd","type":"release","enabled":false,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"100","stickiness":"default","groupId":"asd"},"constraints":[]}],"variants":[]},{"name":"asd22","type":"release","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"50","stickiness":"default","groupId":"asd22"},"constraints":[]}],"variants":[]},{"name":"asd22dsf","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"asd2asd","type":"release","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":33,"stickiness":"default","groupId":"asd2asd"},"constraints":[]},{"name":"flexibleRollout","parameters":{"rollout":46,"stickiness":"default","groupId":"asd2asd"},"constraints":[]}],"variants":[]},{"name":"asdasd","type":"release","enabled":false,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"100","stickiness":"default","groupId":"asdasd"}}],"variants":[]},{"name":"asdasd2","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"asdf","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"asdfasdfasdf","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"asdqddq","type":"permission","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"rollout_schemas","parameters":{"schemas":"let"},"constraints":[]}],"variants":[]},{"name":"Asdqwe1we","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[{"name":"aaaa","weight":1000,"payload":{"type":"json","value":"{ a: 1 }"},"overrides":[],"weightType":"variable","stickiness":"default"}]},{"name":"asmallname","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"version","parameters":{"version code":"15"}}],"variants":[{"name":"apilevel","weight":1000,"payload":{"type":"string","value":"100"},"overrides":[],"weightType":"variable","stickiness":"default"}]},{"name":"auto-grading","type":"release","enabled":false,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"50","stickiness":"default","groupId":"auto-grading"},"constraints":[]},{"name":"userWithId","parameters":{"userIds":"123,1234,4441"},"constraints":[]}],"variants":[]},{"name":"AwesomeFeature","type":"permission","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{},"constraints":[]}],"variants":[]},{"name":"AwesomeFF","type":"operational","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"47","stickiness":"userId","groupId":"AwesomeFF"},"constraints":[]}],"variants":[]},{"name":"bbbbb","type":"kill-switch","enabled":true,"stale":false,"strategies":[{"name":"hhhhh","parameters":{"8":"58"}}],"variants":[]},{"name":"bbbbbbb","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"bccnj","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"bfg_feature","type":"permission","enabled":true,"stale":false,"strategies":[{"name":"userParam","parameters":{"userType":"basic"}}],"variants":[]},{"name":"bla","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"demo","parameters":{"demoGroup":""}}],"variants":[]},{"name":"bnmbmnb","type":"release","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":75,"stickiness":"default","groupId":""},"constraints":[]}],"variants":[]},{"name":"bookable_authorized","type":"release","enabled":true,"stale":false,"strategies":[{"name":"userWithId","parameters":{"userIds":"20"}}],"variants":[]},{"name":"Booyeah-Who-Is-The-King","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[{"name":"v1","weight":1000,"overrides":[],"weightType":"variable","stickiness":"default"}]},{"name":"by-users","type":"release","enabled":true,"stale":false,"strategies":[{"name":"userWithId","parameters":{"userIds":"111,234"}}],"variants":[]},{"name":"c79422b2-5c8e-407a-a389-77bdb5b6ad0a","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"cf","type":"kill-switch","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"CID-SFDC","type":"operational","enabled":false,"stale":false,"strategies":[{"name":"cid-strategy","parameters":{"solution":"VCF,SYN"},"constraints":[]}],"variants":[]},{"name":"CoffeeShop","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"covid-19","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"create","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"cross_featrure","type":"operational","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"dark-theme","type":"kill-switch","enabled":true,"stale":false,"strategies":[{"name":"userWithId","parameters":{"userIds":"1,2,3"},"constraints":[]},{"name":"applicationHostname","parameters":{"hostNames":""},"constraints":[]},{"name":"remoteAddress","parameters":{"IPs":""}}],"variants":[]},{"name":"dashboard_enabled","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"DateExample","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"Demo","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"52","stickiness":"default","groupId":"Demo"},"constraints":[]},{"name":"default","parameters":{},"constraints":[]}],"variants":[{"name":"small","weight":500,"weightType":"variable","payload":{"type":"string","value":"35"},"overrides":[],"stickiness":"default"},{"name":"medium","weight":500,"payload":{"type":"string","value":"55"},"overrides":[],"weightType":"variable","stickiness":"default"}]},{"name":"Demo123","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"Demo22","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"Demo33","type":"release","enabled":false,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"24","stickiness":"default","groupId":"Demo33"},"constraints":[]},{"name":"flexibleRollout","parameters":{"rollout":"25","stickiness":"default","groupId":"Demo33"},"constraints":[]},{"name":"default","parameters":{},"constraints":[]}],"variants":[{"name":"dfsd","weight":500,"overrides":[],"weightType":"variable","stickiness":"default"},{"name":"asdasd","weight":500,"overrides":[],"weightType":"variable","stickiness":"default"}]},{"name":"Demo43","type":"release","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":56,"stickiness":"default","groupId":""},"constraints":[]},{"name":"flexibleRollout","parameters":{"rollout":49,"stickiness":"default","groupId":"Demo43"},"constraints":[]}],"variants":[]},{"name":"Demo44","type":"release","enabled":true,"stale":false,"strategies":[{"name":"applicationHostname","parameters":{"hostNames":"de_sro"},"constraints":[]},{"name":"default","parameters":{},"constraints":[]},{"name":"flexibleRollout","parameters":{"rollout":"47","stickiness":"default","groupId":"Demo44"},"constraints":[]},{"name":"flexibleRollout","parameters":{"rollout":"50","stickiness":"default","groupId":"Demo44"},"constraints":[]}],"variants":[]},{"name":"Demo.Slack","type":"operational","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"Demossss","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"test1","parameters":{"services":"","solutions":""}}],"variants":[]},{"name":"Devtools","type":"permission","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"dfgfdg","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"applicationHostname","parameters":{"hostNames":""},"constraints":[]},{"name":"remoteAddress","parameters":{"IPs":"tyhtyh"},"constraints":[]}],"variants":[]},{"name":"dghjm","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"dinesh-t","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"userWithId","parameters":{"userIds":"1234"}}],"variants":[]},{"name":"Doemaariets","type":"kill-switch","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"Domain","type":"release","enabled":false,"stale":false,"strategies":[{"name":"Environment","parameters":{"Dev":"true","QA":"true","Test":"","Training":"","Prod":""}},{"name":"customerWithId","parameters":{"CustomerId":"123,321,123321"}}],"variants":[]},{"name":"eee","type":"permission","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"TestGroup","parameters":{"Group":"kjherkjqwehrkew"},"constraints":[]}],"variants":[]},{"name":"eeee","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"example-experiment","type":"experiment","enabled":false,"stale":false,"strategies":[{"name":"applicationHostname","parameters":{"hostNames":"domain.com"}}],"variants":[]},{"name":"ExampleFeature","type":"release","enabled":true,"stale":false,"strategies":[{"name":"userWithId","parameters":{"userIds":"nishtha.kakkar.8@gmail.com"},"constraints":[]}],"variants":[]},{"name":"Experiment","type":"experiment","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"forClient","parameters":{"clientName":"bob,yay"},"constraints":[]}],"variants":[]},{"name":"Experiment-","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"Experiment-Test","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[{"name":"blue","weight":800,"weightType":"variable","payload":{"type":"string","value":"blueblue"},"overrides":[]},{"name":"red","weight":200,"weightType":"fix","overrides":[]}]},{"name":"experiment-toggle","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"userWithId","parameters":{"userIds":"123456"},"constraints":[]},{"name":"flexibleRollout","parameters":{"rollout":"100","stickiness":"userId","groupId":"experiment-toggle"}}],"variants":[]},{"name":"fadfafaf","type":"kill-switch","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"Feature12","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{},"constraints":[]}],"variants":[]},{"name":"feature1.subfeature1","type":"permission","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[{"name":"var1","weight":1000,"payload":{"type":"json","value":"test"},"overrides":[{"contextName":"userId","values":["test2"]}],"weightType":"variable"}]},{"name":"feature-2","type":"experiment","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"Environment","parameters":{"Dev":"true","QA":"","Test":"","Training":"","Prod":""},"constraints":[]}],"variants":[]},{"name":"featureFlagYeah","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"FeatureToggle","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"featureX","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"flexibleRollout","parameters":{"rollout":"23","stickiness":"default","groupId":"featureX"},"constraints":[]}],"variants":[]},{"name":"fetch-2-feature","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"fetch-2-feature-2","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"fetch-toggle","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"fe-test-1","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"FF","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"fff","type":"release","enabled":true,"stale":false,"strategies":[{"name":"remoteAddress","parameters":{"IPs":"ffff,fff"}}],"variants":[]},{"name":"Fffff","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"finish-him","type":"kill-switch","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"15","stickiness":"random","groupId":"finish-him"},"constraints":[]}],"variants":[]},{"name":"first","type":"kill-switch","enabled":false,"stale":true,"strategies":[{"name":"default","parameters":{}},{"name":"flexibleRollout","parameters":{"rollout":"100","stickiness":"default","groupId":"first"},"constraints":[]}],"variants":[{"name":"Demo","weight":1000,"overrides":[],"weightType":"variable","stickiness":"default"}]},{"name":"fix-invalid-date","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"foo2","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"foobar","type":"release","enabled":true,"stale":false,"strategies":[{"name":"applicationHostname","parameters":{"hostNames":""}}],"variants":[]},{"name":"foobar2","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"foobar-shazam","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{},"constraints":[]},{"name":"applicationHostname","parameters":{"hostNames":"foobar"},"constraints":[]}],"variants":[]},{"name":"foobar-toogle","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"foobar","parameters":{"bar_p":"47"}}],"variants":[]},{"name":"for-min-egen-del","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"applicationHostname","parameters":{"hostNames":""},"constraints":[]},{"name":"demo","parameters":{"demoGroup":"test"},"constraints":[]}],"variants":[{"name":"myvariant","weight":1000,"payload":{"type":"string","value":"test"},"overrides":[],"weightType":"variable","stickiness":"default"}]},{"name":"fvjnfgjh","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":61,"stickiness":"userId","groupId":"fvjnfgjh"},"constraints":[]}],"variants":[]},{"name":"gdgfd","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"gerg","type":"permission","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"gjhbjhb","type":"kill-switch","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"GoPower","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"hack","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"hackweek-22-test-feature","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{},"constraints":[]}],"variants":[]},{"name":"hc-testing","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"hello","type":"release","enabled":true,"stale":false,"strategies":[{"name":"cooks","parameters":{"Ttt":""}}],"variants":[]},{"name":"Hello","type":"kill-switch","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"hello_there","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"11","stickiness":"default","groupId":"hello_there"},"constraints":[]}],"variants":[{"name":"blue","weight":500,"payload":{"type":"string","value":"blue"},"overrides":[],"weightType":"variable","stickiness":"default"},{"name":"green","weight":500,"payload":{"type":"string","value":"xx"},"overrides":[],"weightType":"variable","stickiness":"default"}]},{"name":"hello-world","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"HelloWorld","type":"release","enabled":true,"stale":false,"strategies":[{"name":"applicationHostname","parameters":{"hostNames":""}}],"variants":[]},{"name":"helloworldtoggle","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"hello-world-two-toggle","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"hgfhgf","type":"release","enabled":true,"stale":false,"strategies":[{"name":"Environment","parameters":{"Dev":"","QA":"","Test":"","Training":"","Prod":"true"}}],"variants":[]},{"name":"hggfhf","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"MyStrategy","parameters":{"param1":"jhghf","param2":"kjlhkgjfhf"},"constraints":[]}],"variants":[]},{"name":"hjfghgfhf","type":"release","enabled":true,"stale":false,"strategies":[{"name":"Environment","parameters":{"Dev":"","QA":"","Test":"","Training":"","Prod":""}}],"variants":[]},{"name":"hjkhjkhjkhjk","type":"release","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"50","stickiness":"default","groupId":"hjkhjkhjkhjk"}}],"variants":[]},{"name":"hjklhghj","type":"permission","enabled":true,"stale":false,"strategies":[{"name":"Environment","parameters":{"Dev":"true","QA":"jhkjhkj","Test":"hjkhjkhkj","Training":"jkhjkhjk","Prod":"hjkhkj"},"constraints":[]}],"variants":[]},{"name":"hock","type":"operational","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"Hola","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"HookbasedSytem","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"hot-instead-of-cold-salad","type":"operational","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"Httgghghg","type":"release","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"100","stickiness":"default","groupId":"H"},"constraints":[]}],"variants":[{"name":"Hghg","weight":500,"weightType":"fix","payload":{"type":"string","value":"Red"},"overrides":[],"stickiness":"default"},{"name":"Blue","weight":500,"weightType":"variable","payload":{"type":"string","value":"blue"},"overrides":[],"stickiness":"default"}]},{"name":"InativarProdutos","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"jeroku.test","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"jjjjjjj","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"MyStrategy","parameters":{"param1":"8","param2":"9"}}],"variants":[]},{"name":"jknkjbhkjvjhk","type":"permission","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"100","stickiness":"default","groupId":"jknkjbhkjvjhk"}},{"name":"cid-strategy","parameters":{"solution":"kjn"}}],"variants":[]},{"name":"Jorge","type":"permission","enabled":false,"stale":false,"strategies":[{"name":"remoteAddress","parameters":{"IPs":"tttt"},"constraints":[]}],"variants":[]},{"name":"josh-unique-flag","type":"experiment","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"killswitch","type":"kill-switch","enabled":true,"stale":false,"strategies":[{"name":"applicationHostname","parameters":{"hostNames":"1234"}},{"name":"applicationHostname","parameters":{"hostNames":"12345"}}],"variants":[]},{"name":"KillWiFi","type":"kill-switch","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"13","stickiness":"random","groupId":"KillWiFi"}}],"variants":[]},{"name":"KS","type":"kill-switch","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"lala","type":"experiment","enabled":true,"stale":true,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"liroy","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[{"name":"variant1","weight":550,"weightType":"fix","payload":{"type":"string","value":"value1"},"overrides":[],"stickiness":"default"},{"name":"variant2","weight":150,"payload":{"type":"string","value":"value2"},"overrides":[],"weightType":"variable","stickiness":"default"},{"name":"variant3","weight":300,"weightType":"fix","payload":{"type":"string","value":"value3"},"overrides":[],"stickiness":"default"}]},{"name":"lkmasd","type":"release","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"100","stickiness":"default","groupId":"lkmasd"}},{"name":"flexibleRollout","parameters":{"rollout":"100","stickiness":"default","groupId":"lkmasd"}}],"variants":[]},{"name":"LLCampaign","type":"operational","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"location","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"LocationTags","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"awsomeUserStategy","parameters":{"userId":"23"},"constraints":[]}],"variants":[{"name":"color","weight":500,"weightType":"variable","payload":{"type":"string","value":"red"},"overrides":[{"contextName":"appName","values":["appppp"]}],"stickiness":"default"},{"name":"color2","weight":500,"payload":{"type":"string","value":"123"},"overrides":[],"weightType":"variable","stickiness":"default"}]},{"name":"LodeKaSarKaarHai","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"lof","type":"kill-switch","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"ly_test","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"mahshad-pyladies","type":"release","enabled":true,"stale":false,"strategies":[{"name":"userWithId","parameters":{"userIds":"123456"}}],"variants":[]},{"name":"mahshad-second-test","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"flexibleRollout","parameters":{"rollout":"0","stickiness":"default","groupId":"mahshad-second-test"},"constraints":[]},{"name":"userWithId","parameters":{"userIds":"1,2,3,sss,sssss"},"constraints":[]}],"variants":[]},{"name":"mahshad-unleash-test","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"flexibleRollout","parameters":{"rollout":"100","stickiness":"default","groupId":"mahshad-unleash-test"}},{"name":"userWithId","parameters":{"userIds":""}}],"variants":[]},{"name":"max-feature","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"mcast","type":"release","enabled":true,"stale":false,"strategies":[{"name":"roleBasedStrategy","parameters":{"roleId":"admin"},"constraints":[]},{"name":"flexibleRollout","parameters":{"rollout":14,"stickiness":"random","groupId":"mcast"},"constraints":[]}],"variants":[]},{"name":"mklasdm","type":"release","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":30,"stickiness":"default","groupId":"mklasdm"},"constraints":[]},{"name":"applicationHostname","parameters":{"hostNames":"mehome"},"constraints":[]},{"name":"flexibleRollout","parameters":{"rollout":30,"stickiness":"default","groupId":"mklasdm"},"constraints":[]},{"name":"gradualRolloutRandom","parameters":{"percentage":46},"constraints":[]}],"variants":[]},{"name":"mmmm","type":"kill-switch","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"userWithId","parameters":{"userIds":"1"},"constraints":[]}],"variants":[]},{"name":"mobile","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"mockTimeRecordingData","type":"release","enabled":true,"stale":false,"strategies":[{"name":"RuntimeEnvironmentBased","parameters":{"runtimeEnvironmentId":"TEST"},"constraints":[]}],"variants":[]},{"name":"my-application.hack","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"my-debug-feature","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"My_feature","type":"permission","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[{"name":"home","weight":500,"weightType":"variable","overrides":[],"stickiness":"default"},{"name":"type","weight":500,"payload":{"type":"string","value":"abc"},"overrides":[{"contextName":"userId","values":["1"]},{"contextName":"userId","values":["2"]}],"weightType":"variable","stickiness":"default"}]},{"name":"myFeatureToggle","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"MyGreatAlgorithm","type":"permission","enabled":false,"stale":true,"strategies":[{"name":"default","parameters":{}},{"name":"flexibleRollout","parameters":{"rollout":"100","stickiness":"default","groupId":"MyGreatAlgorithm"},"constraints":[]},{"name":"flexibleRollout","parameters":{"rollout":"56","stickiness":"default","groupId":"MyGreatAlgorithm"},"constraints":[]},{"name":"default","parameters":{},"constraints":[]}],"variants":[]},{"name":"my-hero-comp","type":"release","enabled":true,"stale":false,"strategies":[{"name":"applicationHostname","parameters":{"hostNames":"shan.dev.com"}}],"variants":[]},{"name":"mykey","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"flexibleRollout","parameters":{"rollout":"50","stickiness":"default","groupId":"mykey"},"constraints":[]}],"variants":[]},{"name":"my-new-feature","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"my-new-feature-1","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"my-new-toggle","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"mynew-toggle","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"mytest","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"my-test-boyz","type":"experiment","enabled":false,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"9","stickiness":"sessionId","groupId":"my-test-boyz"},"constraints":[]},{"name":"Specialgroup","parameters":{"mail":"ciao"},"constraints":[]}],"variants":[]},{"name":"my-test-feature","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"userWithId","parameters":{"userIds":"123"}}],"variants":[]},{"name":"my-testing-toggle","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"my-test-toggle","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"my-test-toggle2","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"my-test-toggle-2","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"My-toggle","type":"release","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":48,"stickiness":"sessionId","groupId":"My-toggle"},"constraints":[]}],"variants":[]},{"name":"my-unique-test-name","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"flexibleRollout","parameters":{"rollout":"100","stickiness":"random","groupId":"my-unique-test-name"},"constraints":[]}],"variants":[]},{"name":"my-unique-toggel","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"my-very-unique-toggle","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{},"constraints":[]},{"name":"flexibleRollout","parameters":{"rollout":84,"stickiness":"default","groupId":"my-very-unique-toggle"},"constraints":[]}],"variants":[{"name":"asdfasdf","weight":500,"weightType":"variable","overrides":[],"stickiness":"default"},{"name":"agasdgaegagse","weight":500,"overrides":[],"weightType":"variable","stickiness":"default"}]},{"name":"name-tester","type":"release","enabled":true,"stale":false,"strategies":[{"name":"userWithId","parameters":{"userIds":"ok"}}],"variants":[{"name":"T1","weight":500,"weightType":"variable","payload":{"type":"string","value":"T1"},"overrides":[],"stickiness":"default"},{"name":"CC","weight":500,"weightType":"variable","payload":{"type":"string","value":"C"},"overrides":[],"stickiness":"default"}]},{"name":"NarendraPatil","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"remoteAddress","parameters":{"IPs":""}},{"name":"default","parameters":{}},{"name":"applicationHostname","parameters":{"hostNames":""}},{"name":"demo","parameters":{"demoGroup":""}},{"name":"userWithId","parameters":{"userIds":""}}],"variants":[]},{"name":"NarendraTesting","type":"operational","enabled":true,"stale":false,"strategies":[{"name":"userWithId","parameters":{"userIds":"nar,rus"}}],"variants":[]},{"name":"needs-improvement","type":"operational","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"new-api","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{},"constraints":[]}],"variants":[{"name":"v1","weight":1000,"weightType":"fix","payload":{"type":"string","value":"v1"},"overrides":[],"stickiness":"default"},{"name":"v2","weight":0,"weightType":"variable","payload":{"type":"string","value":"v2"},"overrides":[{"contextName":"userId","values":["me"]}],"stickiness":"default"}]},{"name":"new-feature-815","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"newFeatureCustomerId","type":"release","enabled":false,"stale":false,"strategies":[{"name":"customerWithId","parameters":{"CustomerId":"104057243,104067509"},"constraints":[]},{"name":"Environment","parameters":{"Dev":"true","QA":"true","Test":"false","Training":"true","Prod":""},"constraints":[]}],"variants":[]},{"name":"newFeatureDiscount","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[{"name":"HugeDiscount","weight":500,"weightType":"variable","payload":{"type":"string","value":"50"},"overrides":[{"contextName":"userId","values":["kvajars"]}],"stickiness":"default"},{"name":"SmallDiscount","weight":500,"weightType":"variable","payload":{"type":"string","value":"5"},"overrides":[{"contextName":"userId","values":["aksoles"]}],"stickiness":"default"}]},{"name":"newFeatureToggle","type":"release","enabled":true,"stale":false,"strategies":[{"name":"applicationHostname","parameters":{"hostNames":"server1"},"constraints":[]},{"name":"remoteAddress","parameters":{"IPs":"172.10.0.0"},"constraints":[]}],"variants":[]},{"name":"newFeatureUserId","type":"release","enabled":false,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"50","stickiness":"userId","groupId":"newFeatureUserId"},"constraints":[]}],"variants":[]},{"name":"NewFet","type":"kill-switch","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"newKillSwitch","type":"kill-switch","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[{"name":"PayloadVariant","weight":1000,"weightType":"variable","payload":{"type":"string","value":"TFF er for tiden utilgjengelig. Det jobbes med saken og vi forventer at det vil være løst innen 15:00."},"overrides":[],"stickiness":"default"}]},{"name":"OW","type":"operational","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"permissiontoggle","type":"permission","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"plannified-down-time","type":"operational","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"poc-forms-hub","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{},"constraints":[]}],"variants":[]},{"name":"qweqweawe","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{},"constraints":[]},{"name":"Environment","parameters":{"Dev":"true","QA":"","Test":"","Training":"true","Prod":""},"constraints":[]},{"name":"generaltest","parameters":{"rollout":49,"userIds":"TH,ERT","On/off":"true"},"constraints":[]}],"variants":[]},{"name":"RC","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"Reallycoolfeature","type":"release","enabled":false,"stale":false,"strategies":[{"name":"cid-strategy","parameters":{"solution":""}}],"variants":[]},{"name":"RecruiterPortalFeedback","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"RecruiterPortalFeedbackswsss","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"regra","type":"release","enabled":true,"stale":false,"strategies":[{"name":"applicationHostname","parameters":{"hostNames":""}}],"variants":[]},{"name":"relaseWhenReady","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"ResponseFeature","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[{"name":"ResponseFeature2","weight":1000,"overrides":[],"weightType":"variable","stickiness":"default"}]},{"name":"RiccardoTest","type":"experiment","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"flexibleRollout","parameters":{"rollout":"100","stickiness":"default","groupId":"RiccardoTest"}}],"variants":[]},{"name":"robert","type":"release","enabled":true,"stale":false,"strategies":[{"name":"Environment","parameters":{"Dev":"","QA":"","Test":"","Training":"","Prod":""}}],"variants":[]},{"name":"Roman","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{},"constraints":[]}],"variants":[]},{"name":"rs-fs-1929","type":"release","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"10","stickiness":"userId","groupId":"rs-fs-1929"},"constraints":[]}],"variants":[]},{"name":"S3Conversion","type":"release","enabled":true,"stale":false,"strategies":[{"name":"CustomId","parameters":{"CustomerId":"123"}},{"name":"CustomId","parameters":{"CustomerId":"321"},"constraints":[]}],"variants":[]},{"name":"sad","type":"permission","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"sadasd","type":"release","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"100","stickiness":"default","groupId":"sadasd"},"constraints":[]},{"name":"default","parameters":{},"constraints":[]},{"name":"flexibleRollout","parameters":{"rollout":"100","stickiness":"default","groupId":"sadasd"},"constraints":[]}],"variants":[]},{"name":"sadasdsa","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"applicationHostname","parameters":{"hostNames":"dasda"}}],"variants":[]},{"name":"SCID","type":"release","enabled":false,"stale":false,"strategies":[{"name":"foobar","parameters":{"ENVIRONMENT":"DEV"},"constraints":[]}],"variants":[]},{"name":"ScreeningQ","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"sdasd","type":"release","enabled":true,"stale":false,"strategies":[{"name":"applicationHostname","parameters":{"hostNames":""}},{"name":"default","parameters":{}}],"variants":[]},{"name":"sdasdasd","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"flexibleRollout","parameters":{"rollout":"100","stickiness":"default","groupId":"sdasdasd"}}],"variants":[]},{"name":"sdfgsdfg","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"sdfsdf","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"sdfsdfdfdfd","type":"release","enabled":true,"stale":false,"strategies":[{"name":"gradualRolloutRandom","parameters":{"percentage":41},"constraints":[]}],"variants":[]},{"name":"sdfsdfsdf","type":"release","enabled":true,"stale":false,"strategies":[{"name":"userWithId","parameters":{"userIds":"sadasd,sad"},"constraints":[]},{"name":"flexibleRollout","parameters":{"rollout":"63","stickiness":"default","groupId":"sdfsdfsdf"},"constraints":[]},{"name":"flexibleRollout","parameters":{"rollout":"68","stickiness":"default","groupId":"sdfsdfsdf"},"constraints":[]}],"variants":[]},{"name":"sdsf","type":"kill-switch","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[{"name":"sdfbbbbb","weight":1000,"weightType":"variable","payload":{"type":"string","value":"ffff"},"overrides":[{"contextName":"userId","values":["gggg"]},{"contextName":"userId","values":["v1"]}]}]},{"name":"secure-installation","type":"release","enabled":true,"stale":false,"strategies":[{"name":"userWithId","parameters":{"userIds":"1,2"}}],"variants":[]},{"name":"Shop","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"shutdown","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"Some-new-toggle","type":"release","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"41","stickiness":"default","groupId":"Some-new-toggle"}}],"variants":[]},{"name":"Something","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"Somethingcool","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"spring-variants","type":"release","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"75","stickiness":"default","groupId":"spring-variants"},"constraints":[]}],"variants":[{"name":"test","weight":800,"overrides":[],"weightType":"variable","stickiness":"default"},{"name":"this-is-fun","weight":200,"weightType":"fix","overrides":[],"stickiness":"default"}]},{"name":"sss","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"SuperAwesomeFeature","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"superfeature","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"super-truper","type":"release","enabled":false,"stale":false,"strategies":[{"name":"Implicit","parameters":{"macro":"6"}}],"variants":[]},{"name":"sweetness","type":"release","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"75","stickiness":"default","groupId":"sweetness"}}],"variants":[]},{"name":"SwitchFeature","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"SwitchOnline","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"Taco","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"test","type":"release","enabled":true,"stale":false,"strategies":[{"name":"userWithId","parameters":{"userIds":"123,1"},"constraints":[]}],"variants":[]},{"name":"Test","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"TEST","type":"experiment","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"test-01","type":"experiment","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[{"name":"foruser","weight":1000,"overrides":[{"contextName":"userId","values":["1"]}],"weightType":"variable"}]},{"name":"test1","type":"release","enabled":true,"stale":false,"strategies":[{"name":"test1","parameters":{"codes":""},"constraints":[]}],"variants":[]},{"name":"test-11111-kill-feature-ever-released","type":"release","enabled":false,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"70","stickiness":"default","groupId":"test-11111-kill-feature-ever-released"}}],"variants":[]},{"name":"test123","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"test-123","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"RuntimeEnvironmentBased","parameters":{"runtimeEnvironmentId":""}},{"name":"test1","parameters":{"codes":""}}],"variants":[]},{"name":"Test-123","type":"release","enabled":true,"stale":true,"strategies":[{"name":"userWithId","parameters":{"userIds":"jjjjjjj"},"constraints":[]}],"variants":[]},{"name":"test1231231","type":"permission","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"test1234214","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"Test234","type":"release","enabled":false,"stale":false,"strategies":[{"name":"Environment","parameters":{"Dev":"true","QA":"true","Test":"","Training":"","Prod":"false"}}],"variants":[]},{"name":"test2345","type":"permission","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"flexibleRollout","parameters":{"rollout":"32","stickiness":"default","groupId":"test2345"},"constraints":[]}],"variants":[]},{"name":"test256","type":"release","enabled":true,"stale":false,"strategies":[{"name":"userWithId","parameters":{"userIds":"sdzxfsdf"},"constraints":[]},{"name":"flexibleRollout","parameters":{"rollout":38,"stickiness":"default","groupId":"test256"},"constraints":[]}],"variants":[]},{"name":"test.3.12.0","type":"experiment","enabled":true,"stale":true,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"47","stickiness":"default","groupId":"test.3.12.0"},"constraints":[]},{"name":"test-env","parameters":{"prod":"true","dev":"true"},"constraints":[]}],"variants":[]},{"name":"Test33","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"50","stickiness":"userId","groupId":"Test33"},"constraints":[]}],"variants":[]},{"name":"test777","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"test8878687","type":"experiment","enabled":false,"stale":false,"strategies":[{"name":"test","parameters":{"users":"tttt,hhjgj"}}],"variants":[]},{"name":"test-cid","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"cid-strategy","parameters":{"solution":"VCF,SYN,VCF_4.10"},"constraints":[]}],"variants":[]},{"name":"test.create","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"Test.create","type":"release","enabled":false,"stale":false,"strategies":[{"name":"demo","parameters":{"demoGroup":""},"constraints":[]}],"variants":[]},{"name":"test.create.adddon","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"teste","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"teste1","type":"release","enabled":true,"stale":false,"strategies":[{"name":"test1","parameters":{},"constraints":[]}],"variants":[]},{"name":"teste123123","type":"kill-switch","enabled":false,"stale":false,"strategies":[{"name":"applicationHostname","parameters":{"hostNames":"asd,teste,tesasd"}}],"variants":[]},{"name":"Tester","type":"kill-switch","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"test-feature","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"userWithId","parameters":{"userIds":""}}],"variants":[]},{"name":"testFeature","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"test-feature-1","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"selected-schools","parameters":{"schoolId":"bla"},"constraints":[]}],"variants":[]},{"name":"test-feature-99999","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"Test-FF","type":"experiment","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"demo","parameters":{"demoGroup":"abc"},"constraints":[]}],"variants":[]},{"name":"test-for-me","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"TestGroup","type":"permission","enabled":true,"stale":false,"strategies":[{"name":"TestGroup","parameters":{"Group":"Foo"}},{"name":"TestGroup","parameters":{"Group":"Bar"}}],"variants":[]},{"name":"testgtasdas","type":"kill-switch","enabled":true,"stale":false,"strategies":[{"name":"applicationHostname","parameters":{"hostNames":""}}],"variants":[]},{"name":"Testing","type":"permission","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"applicationHostname","parameters":{"hostNames":""}}],"variants":[]},{"name":"testing123","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"testing-toggle-12","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"testlog","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"test-new-feature","type":"release","enabled":false,"stale":false,"strategies":[{"name":"userWithId","parameters":{"userIds":"5"}}],"variants":[]},{"name":"Test_Permission1","type":"permission","enabled":true,"stale":false,"strategies":[{"name":"test1","parameters":{"codes":"code1,code2"},"constraints":[]}],"variants":[]},{"name":"test.ping","type":"kill-switch","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"testproduct","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"test-raf","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"test-release-flag","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[{"name":"endpoint","weight":1000,"payload":{"type":"string","value":"this_is_the_endpoint"},"overrides":[],"weightType":"variable"}]},{"name":"TestSwitch1","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"test-t","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"testtertogle","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"testtest","type":"experiment","enabled":false,"stale":false,"strategies":[{"name":"dfazza","parameters":{"asdfasdf":"afasd"}}],"variants":[]},{"name":"test-test","type":"release","enabled":true,"stale":false,"strategies":[{"name":"userWithId","parameters":{"userIds":"test,test1,test2"},"constraints":[]},{"name":"default","parameters":{},"constraints":[]}],"variants":[{"name":"t1","weight":750,"weightType":"fix","payload":{"type":"string","value":"t1"},"overrides":[{"contextName":"userId","values":["abcdef"]}],"stickiness":"default"},{"name":"t2","weight":250,"payload":{"type":"string","value":"t2"},"overrides":[],"weightType":"variable","stickiness":"default"}]},{"name":"test-test-and-some-more-test","type":"release","enabled":true,"stale":false,"strategies":[{"name":"Environment","parameters":{"Dev":"","QA":"","Test":"","Training":"","Prod":"true"}}],"variants":[]},{"name":"TestTesting","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}},{"name":"asd","parameters":{"asd":"asd","sdf":""},"constraints":[]}],"variants":[]},{"name":"testtoggle","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"test-toggle","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"testtt","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"test_variant","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[{"name":"version","weight":1000,"payload":{"type":"string","value":"v1"},"overrides":[],"weightType":"variable","stickiness":"default"}]},{"name":"test-w","type":"operational","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"Testymctestface","type":"release","enabled":true,"stale":false,"strategies":[{"name":"Environment","parameters":{"Dev":"true","QA":"true","Test":"","Training":"","Prod":"true"}}],"variants":[]},{"name":"tgtg","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"the-awesome-feature","type":"experiment","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"Theone","type":"operational","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"ticket","type":"release","enabled":true,"stale":false,"strategies":[{"name":"demo","parameters":{"demoGroup":"dsfasfd"}}],"variants":[{"name":"bool","weight":1000,"weightType":"variable","payload":{"type":"string","value":"valuess"},"overrides":[],"stickiness":"default"}]},{"name":"TotesMcGoats","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"trololo","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"tryion.dev.auth","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"Ttt","type":"operational","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"uname","type":"experiment","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"unique","type":"kill-switch","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"UniqueCreateContractFeature","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"unleaseh-my-mama","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"demo","parameters":{"demoGroup":"you"}}],"variants":[]},{"name":"unleash_aws_s3","type":"release","enabled":true,"stale":false,"strategies":[{"name":"gradualRolloutRandom","parameters":{"percentage":"60"}}],"variants":[{"name":"s3","weight":333,"overrides":[],"weightType":"variable","stickiness":"default"},{"name":"gcp","weight":333,"overrides":[],"weightType":"variable","stickiness":"default"},{"name":"azure","weight":333,"overrides":[],"weightType":"variable","stickiness":"default"}]},{"name":"unleash-demo.avansert","type":"release","enabled":false,"stale":false,"strategies":[{"name":"userWithId","parameters":{"userIds":"testbruker"},"constraints":[]},{"name":"flexibleRollout","parameters":{"rollout":"47","stickiness":"default","groupId":"unleash-demo.avansert"},"constraints":[]}],"variants":[]},{"name":"unleash-demo.hjemmelagd","type":"release","enabled":true,"stale":false,"strategies":[{"name":"byEnhet","parameters":{"valgtEnhet":"456"},"constraints":[]}],"variants":[]},{"name":"unleash-demo.scheduler","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"unleash-demo.scheduler.default-pa","type":"release","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"user.pornFilter","type":"release","enabled":true,"stale":false,"strategies":[{"name":"UserID","parameters":{"AD_GRP_1, AD_GRP_2":"asdf,asdf2,asdf3,asdf4"}}],"variants":[]},{"name":"vartest","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[{"name":"v1","weight":333,"payload":{"type":"string","value":"v1"},"overrides":[],"weightType":"variable"},{"name":"v2","weight":333,"payload":{"type":"string","value":"v2"},"overrides":[],"weightType":"variable"},{"name":"v3","weight":333,"payload":{"type":"string","value":"v3"},"overrides":[],"weightType":"variable"}]},{"name":"vcvcvc-test-feature","type":"release","enabled":true,"stale":false,"strategies":[{"name":"foobar","parameters":{"ENVIRONMENT":"DEV"}},{"name":"applicationHostname","parameters":{"hostNames":"test"},"constraints":[]},{"name":"flexibleRollout","parameters":{"rollout":"49","stickiness":"default","groupId":"vcvcvc-test-feature"},"constraints":[]},{"name":"remoteAddress","parameters":{"IPs":"1.1.1.1"},"constraints":[]},{"name":"Environment","parameters":{"Dev":"true","QA":"","Test":"","Training":"","Prod":""},"constraints":[]}],"variants":[]},{"name":"Very.cool.toggle","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"49","stickiness":"default","groupId":"Very.cool.toggle"}},{"name":"flexibleRollout","parameters":{"rollout":"25","stickiness":"default","groupId":"Very.cool.toggle"},"constraints":[]}],"variants":[{"name":"xc","weight":500,"payload":{"type":"string","value":"sdf"},"overrides":[],"weightType":"variable","stickiness":"default"},{"name":"dsfsdf","weight":500,"payload":{"type":"string","value":"sdf"},"overrides":[],"weightType":"variable","stickiness":"default"}]},{"name":"vlad","type":"experiment","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"wasd","type":"experiment","enabled":false,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"51","stickiness":"default","groupId":"wasd"},"constraints":[]}],"variants":[]},{"name":"whitelabel","type":"release","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"whitelist","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"userWithId","parameters":{"userIds":"juan@gmail.com"},"constraints":[]}],"variants":[]},{"name":"wwwwwwww","type":"release","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"39","stickiness":"default","groupId":"wwwwwwww"},"constraints":[]}],"variants":[]},{"name":"xcvh","type":"kill-switch","enabled":false,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"xxx","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"flexibleRollout","parameters":{"rollout":"100","stickiness":"userId","groupId":"xxx"}}],"variants":[]},{"name":"yest","type":"experiment","enabled":true,"stale":false,"strategies":[{"name":"default","parameters":{}}],"variants":[]},{"name":"zxc","type":"operational","enabled":true,"stale":false,"strategies":[{"name":"applicationHostname","parameters":{"hostNames":"trunk,testing"},"constraints":[]}],"variants":[]},{"name":"zXVa","type":"release","enabled":true,"stale":false,"strategies":[{"name":"applicationHostname","parameters":{"hostNames":"dsagfa,asdfadf"},"constraints":[]}],"variants":[]}]}
+{
+  "version": 1,
+  "features": [
+    {
+      "name": "083db41c-c6c8-427b-815b-f735c3c6da60",
+      "type": "experiment",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {}, "constraints": [] },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": 49,
+            "stickiness": "default",
+            "groupId": "083db41c-c6c8-427b-815b-f735c3c6da60"
+          },
+          "constraints": []
+        },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": 50,
+            "stickiness": "default",
+            "groupId": "083db41c-6c8-427b-815b-f735c3c6da60"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": [
+        {
+          "name": "asdfasdf",
+          "weight": 500,
+          "weightType": "variable",
+          "overrides": [],
+          "stickiness": "default"
+        },
+        {
+          "name": "agasdgaegagse",
+          "weight": 500,
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "21",
+      "type": "permission",
+      "enabled": true,
+      "stale": true,
+      "strategies": [
+        {
+          "name": "userWithId",
+          "parameters": { "userIds": "asd,asda,1223" },
+          "constraints": []
+        },
+        {
+          "name": "as",
+          "parameters": { "asd": "123", "asdasd": 45, "isProd": "true" },
+          "constraints": []
+        }
+      ],
+      "variants": [
+        {
+          "name": "v1",
+          "weight": 1000,
+          "weightType": "variable",
+          "overrides": [],
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "2afc3854-6157-4abf-a87b-e59510bc96e9",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "OPR_CODE",
+          "parameters": { "OPR_CODE": "" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "A123",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "CustomId",
+          "parameters": { "CustomerId": "a,b,c,e" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "aaa",
+      "type": "experiment",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "foobar",
+          "parameters": { "bar_p": "100", "ENVIRONMENT": "DEV" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "aaaasdw",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "aasas",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "abc",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "applicationHostname",
+          "parameters": { "hostNames": "" }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "abca",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "userWithId", "parameters": { "userIds": "" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "accounts.reset-password.random.rollout",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "ActivityLog",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "Environment",
+          "parameters": {
+            "Dev": "",
+            "QA": "",
+            "Test": "",
+            "Training": "",
+            "Prod": ""
+          },
+          "constraints": []
+        }
+      ],
+      "variants": [
+        {
+          "name": "type_1",
+          "weight": 500,
+          "payload": { "type": "string", "value": "opt_1" },
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        },
+        {
+          "name": "type_2",
+          "weight": 500,
+          "payload": { "type": "string", "value": "opt_2" },
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "ActivityLogTesting",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "gradualRolloutSessionId",
+          "parameters": {
+            "percentage": 50,
+            "groupId": "ActivityLogTesting"
+          },
+          "constraints": []
+        },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": 75,
+            "stickiness": "default",
+            "groupId": "ActivityLogTesting"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "a-demo",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "82",
+            "stickiness": "default",
+            "groupId": "a-demo"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "adsda",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "50",
+            "stickiness": "random",
+            "groupId": "adsda"
+          },
+          "constraints": []
+        },
+        {
+          "name": "forClient",
+          "parameters": { "clientName": "Android,IOS" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "aerronpro",
+      "type": "experiment",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "agasdfasdf",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "34",
+            "stickiness": "default",
+            "groupId": "agasdfasdf"
+          },
+          "constraints": []
+        },
+        { "name": "default", "parameters": {}, "constraints": [] },
+        {
+          "name": "foobar",
+          "parameters": { "ENVIRONMENT": "" },
+          "constraints": []
+        },
+        { "name": "default", "parameters": {}, "constraints": [] },
+        {
+          "name": "userWithId",
+          "parameters": { "userIds": "" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "alloe",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "Aname",
+      "type": "permission",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "userWithId",
+          "parameters": { "userIds": "de" },
+          "constraints": []
+        },
+        {
+          "name": "userWithId",
+          "parameters": { "userIds": "de_23456,fr_5667789" },
+          "constraints": []
+        }
+      ],
+      "variants": [
+        {
+          "name": "v1",
+          "weight": 1000,
+          "payload": { "type": "string", "value": "test" },
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "A-new.one",
+      "type": "experiment",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "Environment",
+          "parameters": {
+            "Dev": "true",
+            "QA": "",
+            "Test": "",
+            "Training": "",
+            "Prod": ""
+          }
+        },
+        { "name": "default", "parameters": {}, "constraints": [] }
+      ],
+      "variants": [
+        {
+          "name": "foobar",
+          "weight": 1000,
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "another-toggle",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "anotta-toggle",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "aoeu",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "app",
+      "type": "kill-switch",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "46",
+            "stickiness": "default",
+            "groupId": "app"
+          }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "app.main",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "userWithId", "parameters": { "userIds": "laci" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "app.ToggleX",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "Aruba-Switch",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "asasas",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "test1",
+          "parameters": { "codes": "sas,{sas: \"\"sa sasasas\" }" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "ASASASAS",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "OPR_CODE",
+          "parameters": { "OPR_CODE": "CUST" },
+          "constraints": []
+        },
+        {
+          "name": "userWithId",
+          "parameters": { "userIds": "" },
+          "constraints": []
+        },
+        {
+          "name": "userWithId",
+          "parameters": { "userIds": "123,4,5" },
+          "constraints": []
+        },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "41",
+            "stickiness": "default",
+            "groupId": "ASASASAS"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": [
+        {
+          "name": "v1",
+          "weight": 1000,
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "asd",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "100",
+            "stickiness": "default",
+            "groupId": "asd"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "asd22",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "50",
+            "stickiness": "default",
+            "groupId": "asd22"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "asd22dsf",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "asd2asd",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": 33,
+            "stickiness": "default",
+            "groupId": "asd2asd"
+          },
+          "constraints": []
+        },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": 46,
+            "stickiness": "default",
+            "groupId": "asd2asd"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "asdasd",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "100",
+            "stickiness": "default",
+            "groupId": "asdasd"
+          }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "asdasd2",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "asdf",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "asdfasdfasdf",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "asdqddq",
+      "type": "permission",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "rollout_schemas",
+          "parameters": { "schemas": "let" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "Asdqwe1we",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": [
+        {
+          "name": "aaaa",
+          "weight": 1000,
+          "payload": { "type": "json", "value": "{ a: 1 }" },
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "asmallname",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "version", "parameters": { "version code": "15" } }
+      ],
+      "variants": [
+        {
+          "name": "apilevel",
+          "weight": 1000,
+          "payload": { "type": "string", "value": "100" },
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "auto-grading",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "50",
+            "stickiness": "default",
+            "groupId": "auto-grading"
+          },
+          "constraints": []
+        },
+        {
+          "name": "userWithId",
+          "parameters": { "userIds": "123,1234,4441" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "AwesomeFeature",
+      "type": "permission",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {}, "constraints": [] }
+      ],
+      "variants": []
+    },
+    {
+      "name": "AwesomeFF",
+      "type": "operational",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "47",
+            "stickiness": "userId",
+            "groupId": "AwesomeFF"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "bbbbb",
+      "type": "kill-switch",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "hhhhh", "parameters": { "8": "58" } }],
+      "variants": []
+    },
+    {
+      "name": "bbbbbbb",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "bccnj",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "bfg_feature",
+      "type": "permission",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "userParam", "parameters": { "userType": "basic" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "bla",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "demo", "parameters": { "demoGroup": "" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "bnmbmnb",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": 75,
+            "stickiness": "default",
+            "groupId": ""
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "bookable_authorized",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "userWithId", "parameters": { "userIds": "20" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "Booyeah-Who-Is-The-King",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": [
+        {
+          "name": "v1",
+          "weight": 1000,
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "by-users",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "userWithId", "parameters": { "userIds": "111,234" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "c79422b2-5c8e-407a-a389-77bdb5b6ad0a",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "cf",
+      "type": "kill-switch",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "CID-SFDC",
+      "type": "operational",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "cid-strategy",
+          "parameters": { "solution": "VCF,SYN" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "CoffeeShop",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "covid-19",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "create",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "cross_featrure",
+      "type": "operational",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "dark-theme",
+      "type": "kill-switch",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "userWithId",
+          "parameters": { "userIds": "1,2,3" },
+          "constraints": []
+        },
+        {
+          "name": "applicationHostname",
+          "parameters": { "hostNames": "" },
+          "constraints": []
+        },
+        { "name": "remoteAddress", "parameters": { "IPs": "" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "dashboard_enabled",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "DateExample",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "Demo",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "52",
+            "stickiness": "default",
+            "groupId": "Demo"
+          },
+          "constraints": []
+        },
+        { "name": "default", "parameters": {}, "constraints": [] }
+      ],
+      "variants": [
+        {
+          "name": "small",
+          "weight": 500,
+          "weightType": "variable",
+          "payload": { "type": "string", "value": "35" },
+          "overrides": [],
+          "stickiness": "default"
+        },
+        {
+          "name": "medium",
+          "weight": 500,
+          "payload": { "type": "string", "value": "55" },
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "Demo123",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "Demo22",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "Demo33",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "24",
+            "stickiness": "default",
+            "groupId": "Demo33"
+          },
+          "constraints": []
+        },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "25",
+            "stickiness": "default",
+            "groupId": "Demo33"
+          },
+          "constraints": []
+        },
+        { "name": "default", "parameters": {}, "constraints": [] }
+      ],
+      "variants": [
+        {
+          "name": "dfsd",
+          "weight": 500,
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        },
+        {
+          "name": "asdasd",
+          "weight": 500,
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "Demo43",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": 56,
+            "stickiness": "default",
+            "groupId": ""
+          },
+          "constraints": []
+        },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": 49,
+            "stickiness": "default",
+            "groupId": "Demo43"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "Demo44",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "applicationHostname",
+          "parameters": { "hostNames": "de_sro" },
+          "constraints": []
+        },
+        { "name": "default", "parameters": {}, "constraints": [] },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "47",
+            "stickiness": "default",
+            "groupId": "Demo44"
+          },
+          "constraints": []
+        },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "50",
+            "stickiness": "default",
+            "groupId": "Demo44"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "Demo.Slack",
+      "type": "operational",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "Demossss",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "test1",
+          "parameters": { "services": "", "solutions": "" }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "Devtools",
+      "type": "permission",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "dfgfdg",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "applicationHostname",
+          "parameters": { "hostNames": "" },
+          "constraints": []
+        },
+        {
+          "name": "remoteAddress",
+          "parameters": { "IPs": "tyhtyh" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "dghjm",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "dinesh-t",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "userWithId", "parameters": { "userIds": "1234" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "Doemaariets",
+      "type": "kill-switch",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "Domain",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "Environment",
+          "parameters": {
+            "Dev": "true",
+            "QA": "true",
+            "Test": "",
+            "Training": "",
+            "Prod": ""
+          }
+        },
+        {
+          "name": "customerWithId",
+          "parameters": { "CustomerId": "123,321,123321" }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "eee",
+      "type": "permission",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "TestGroup",
+          "parameters": { "Group": "kjherkjqwehrkew" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "eeee",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "example-experiment",
+      "type": "experiment",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "applicationHostname",
+          "parameters": { "hostNames": "domain.com" }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "ExampleFeature",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "userWithId",
+          "parameters": { "userIds": "nishtha.kakkar.8@gmail.com" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "Experiment",
+      "type": "experiment",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "forClient",
+          "parameters": { "clientName": "bob,yay" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "Experiment-",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "Experiment-Test",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": [
+        {
+          "name": "blue",
+          "weight": 800,
+          "weightType": "variable",
+          "payload": { "type": "string", "value": "blueblue" },
+          "overrides": []
+        },
+        {
+          "name": "red",
+          "weight": 200,
+          "weightType": "fix",
+          "overrides": []
+        }
+      ]
+    },
+    {
+      "name": "experiment-toggle",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "userWithId",
+          "parameters": { "userIds": "123456" },
+          "constraints": []
+        },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "100",
+            "stickiness": "userId",
+            "groupId": "experiment-toggle"
+          }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "fadfafaf",
+      "type": "kill-switch",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "Feature12",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {}, "constraints": [] }
+      ],
+      "variants": []
+    },
+    {
+      "name": "feature1.subfeature1",
+      "type": "permission",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": [
+        {
+          "name": "var1",
+          "weight": 1000,
+          "payload": { "type": "json", "value": "test" },
+          "overrides": [{ "contextName": "userId", "values": ["test2"] }],
+          "weightType": "variable"
+        }
+      ]
+    },
+    {
+      "name": "feature-2",
+      "type": "experiment",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "Environment",
+          "parameters": {
+            "Dev": "true",
+            "QA": "",
+            "Test": "",
+            "Training": "",
+            "Prod": ""
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "featureFlagYeah",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "FeatureToggle",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "featureX",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "23",
+            "stickiness": "default",
+            "groupId": "featureX"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "fetch-2-feature",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "fetch-2-feature-2",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "fetch-toggle",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "fe-test-1",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "FF",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "fff",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "remoteAddress", "parameters": { "IPs": "ffff,fff" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "Fffff",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "finish-him",
+      "type": "kill-switch",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "15",
+            "stickiness": "random",
+            "groupId": "finish-him"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "first",
+      "type": "kill-switch",
+      "enabled": false,
+      "stale": true,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "100",
+            "stickiness": "default",
+            "groupId": "first"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": [
+        {
+          "name": "Demo",
+          "weight": 1000,
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "fix-invalid-date",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "foo2",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "foobar",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "applicationHostname",
+          "parameters": { "hostNames": "" }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "foobar2",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "foobar-shazam",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {}, "constraints": [] },
+        {
+          "name": "applicationHostname",
+          "parameters": { "hostNames": "foobar" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "foobar-toogle",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "foobar", "parameters": { "bar_p": "47" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "for-min-egen-del",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "applicationHostname",
+          "parameters": { "hostNames": "" },
+          "constraints": []
+        },
+        {
+          "name": "demo",
+          "parameters": { "demoGroup": "test" },
+          "constraints": []
+        }
+      ],
+      "variants": [
+        {
+          "name": "myvariant",
+          "weight": 1000,
+          "payload": { "type": "string", "value": "test" },
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "fvjnfgjh",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": 61,
+            "stickiness": "userId",
+            "groupId": "fvjnfgjh"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "gdgfd",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "gerg",
+      "type": "permission",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "gjhbjhb",
+      "type": "kill-switch",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "GoPower",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "hack",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "hackweek-22-test-feature",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {}, "constraints": [] }
+      ],
+      "variants": []
+    },
+    {
+      "name": "hc-testing",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "hello",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "cooks", "parameters": { "Ttt": "" } }],
+      "variants": []
+    },
+    {
+      "name": "Hello",
+      "type": "kill-switch",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "hello_there",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "11",
+            "stickiness": "default",
+            "groupId": "hello_there"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": [
+        {
+          "name": "blue",
+          "weight": 500,
+          "payload": { "type": "string", "value": "blue" },
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        },
+        {
+          "name": "green",
+          "weight": 500,
+          "payload": { "type": "string", "value": "xx" },
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "hello-world",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "HelloWorld",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "applicationHostname",
+          "parameters": { "hostNames": "" }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "helloworldtoggle",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "hello-world-two-toggle",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "hgfhgf",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "Environment",
+          "parameters": {
+            "Dev": "",
+            "QA": "",
+            "Test": "",
+            "Training": "",
+            "Prod": "true"
+          }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "hggfhf",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "MyStrategy",
+          "parameters": { "param1": "jhghf", "param2": "kjlhkgjfhf" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "hjfghgfhf",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "Environment",
+          "parameters": {
+            "Dev": "",
+            "QA": "",
+            "Test": "",
+            "Training": "",
+            "Prod": ""
+          }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "hjkhjkhjkhjk",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "50",
+            "stickiness": "default",
+            "groupId": "hjkhjkhjkhjk"
+          }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "hjklhghj",
+      "type": "permission",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "Environment",
+          "parameters": {
+            "Dev": "true",
+            "QA": "jhkjhkj",
+            "Test": "hjkhjkhkj",
+            "Training": "jkhjkhjk",
+            "Prod": "hjkhkj"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "hock",
+      "type": "operational",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "Hola",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "HookbasedSytem",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "hot-instead-of-cold-salad",
+      "type": "operational",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "Httgghghg",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "100",
+            "stickiness": "default",
+            "groupId": "H"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": [
+        {
+          "name": "Hghg",
+          "weight": 500,
+          "weightType": "fix",
+          "payload": { "type": "string", "value": "Red" },
+          "overrides": [],
+          "stickiness": "default"
+        },
+        {
+          "name": "Blue",
+          "weight": 500,
+          "weightType": "variable",
+          "payload": { "type": "string", "value": "blue" },
+          "overrides": [],
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "InativarProdutos",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "jeroku.test",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "jjjjjjj",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "MyStrategy",
+          "parameters": { "param1": "8", "param2": "9" }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "jknkjbhkjvjhk",
+      "type": "permission",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "100",
+            "stickiness": "default",
+            "groupId": "jknkjbhkjvjhk"
+          }
+        },
+        { "name": "cid-strategy", "parameters": { "solution": "kjn" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "Jorge",
+      "type": "permission",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "remoteAddress",
+          "parameters": { "IPs": "tttt" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "josh-unique-flag",
+      "type": "experiment",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "killswitch",
+      "type": "kill-switch",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "applicationHostname",
+          "parameters": { "hostNames": "1234" }
+        },
+        {
+          "name": "applicationHostname",
+          "parameters": { "hostNames": "12345" }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "KillWiFi",
+      "type": "kill-switch",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "13",
+            "stickiness": "random",
+            "groupId": "KillWiFi"
+          }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "KS",
+      "type": "kill-switch",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "lala",
+      "type": "experiment",
+      "enabled": true,
+      "stale": true,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "liroy",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": [
+        {
+          "name": "variant1",
+          "weight": 550,
+          "weightType": "fix",
+          "payload": { "type": "string", "value": "value1" },
+          "overrides": [],
+          "stickiness": "default"
+        },
+        {
+          "name": "variant2",
+          "weight": 150,
+          "payload": { "type": "string", "value": "value2" },
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        },
+        {
+          "name": "variant3",
+          "weight": 300,
+          "weightType": "fix",
+          "payload": { "type": "string", "value": "value3" },
+          "overrides": [],
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "lkmasd",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "100",
+            "stickiness": "default",
+            "groupId": "lkmasd"
+          }
+        },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "100",
+            "stickiness": "default",
+            "groupId": "lkmasd"
+          }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "LLCampaign",
+      "type": "operational",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "location",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "LocationTags",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "awsomeUserStategy",
+          "parameters": { "userId": "23" },
+          "constraints": []
+        }
+      ],
+      "variants": [
+        {
+          "name": "color",
+          "weight": 500,
+          "weightType": "variable",
+          "payload": { "type": "string", "value": "red" },
+          "overrides": [
+            { "contextName": "appName", "values": ["appppp"] }
+          ],
+          "stickiness": "default"
+        },
+        {
+          "name": "color2",
+          "weight": 500,
+          "payload": { "type": "string", "value": "123" },
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "LodeKaSarKaarHai",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "lof",
+      "type": "kill-switch",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "ly_test",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "mahshad-pyladies",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "userWithId", "parameters": { "userIds": "123456" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "mahshad-second-test",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "0",
+            "stickiness": "default",
+            "groupId": "mahshad-second-test"
+          },
+          "constraints": []
+        },
+        {
+          "name": "userWithId",
+          "parameters": { "userIds": "1,2,3,sss,sssss" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "mahshad-unleash-test",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "100",
+            "stickiness": "default",
+            "groupId": "mahshad-unleash-test"
+          }
+        },
+        { "name": "userWithId", "parameters": { "userIds": "" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "max-feature",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "mcast",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "roleBasedStrategy",
+          "parameters": { "roleId": "admin" },
+          "constraints": []
+        },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": 14,
+            "stickiness": "random",
+            "groupId": "mcast"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "mklasdm",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": 30,
+            "stickiness": "default",
+            "groupId": "mklasdm"
+          },
+          "constraints": []
+        },
+        {
+          "name": "applicationHostname",
+          "parameters": { "hostNames": "mehome" },
+          "constraints": []
+        },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": 30,
+            "stickiness": "default",
+            "groupId": "mklasdm"
+          },
+          "constraints": []
+        },
+        {
+          "name": "gradualRolloutRandom",
+          "parameters": { "percentage": 46 },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "mmmm",
+      "type": "kill-switch",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "userWithId",
+          "parameters": { "userIds": "1" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "mobile",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "mockTimeRecordingData",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "RuntimeEnvironmentBased",
+          "parameters": { "runtimeEnvironmentId": "TEST" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "my-application.hack",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "my-debug-feature",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "My_feature",
+      "type": "permission",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": [
+        {
+          "name": "home",
+          "weight": 500,
+          "weightType": "variable",
+          "overrides": [],
+          "stickiness": "default"
+        },
+        {
+          "name": "type",
+          "weight": 500,
+          "payload": { "type": "string", "value": "abc" },
+          "overrides": [
+            { "contextName": "userId", "values": ["1"] },
+            { "contextName": "userId", "values": ["2"] }
+          ],
+          "weightType": "variable",
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "myFeatureToggle",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "MyGreatAlgorithm",
+      "type": "permission",
+      "enabled": false,
+      "stale": true,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "100",
+            "stickiness": "default",
+            "groupId": "MyGreatAlgorithm"
+          },
+          "constraints": []
+        },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "56",
+            "stickiness": "default",
+            "groupId": "MyGreatAlgorithm"
+          },
+          "constraints": []
+        },
+        { "name": "default", "parameters": {}, "constraints": [] }
+      ],
+      "variants": []
+    },
+    {
+      "name": "my-hero-comp",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "applicationHostname",
+          "parameters": { "hostNames": "shan.dev.com" }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "mykey",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "50",
+            "stickiness": "default",
+            "groupId": "mykey"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "my-new-feature",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "my-new-feature-1",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "my-new-toggle",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "mynew-toggle",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "mytest",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "my-test-boyz",
+      "type": "experiment",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "9",
+            "stickiness": "sessionId",
+            "groupId": "my-test-boyz"
+          },
+          "constraints": []
+        },
+        {
+          "name": "Specialgroup",
+          "parameters": { "mail": "ciao" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "my-test-feature",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "userWithId", "parameters": { "userIds": "123" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "my-testing-toggle",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "my-test-toggle",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "my-test-toggle2",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "my-test-toggle-2",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "My-toggle",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": 48,
+            "stickiness": "sessionId",
+            "groupId": "My-toggle"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "my-unique-test-name",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "100",
+            "stickiness": "random",
+            "groupId": "my-unique-test-name"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "my-unique-toggel",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "my-very-unique-toggle",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {}, "constraints": [] },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": 84,
+            "stickiness": "default",
+            "groupId": "my-very-unique-toggle"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": [
+        {
+          "name": "asdfasdf",
+          "weight": 500,
+          "weightType": "variable",
+          "overrides": [],
+          "stickiness": "default"
+        },
+        {
+          "name": "agasdgaegagse",
+          "weight": 500,
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "name-tester",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "userWithId", "parameters": { "userIds": "ok" } }
+      ],
+      "variants": [
+        {
+          "name": "T1",
+          "weight": 500,
+          "weightType": "variable",
+          "payload": { "type": "string", "value": "T1" },
+          "overrides": [],
+          "stickiness": "default"
+        },
+        {
+          "name": "CC",
+          "weight": 500,
+          "weightType": "variable",
+          "payload": { "type": "string", "value": "C" },
+          "overrides": [],
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "NarendraPatil",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        { "name": "remoteAddress", "parameters": { "IPs": "" } },
+        { "name": "default", "parameters": {} },
+        {
+          "name": "applicationHostname",
+          "parameters": { "hostNames": "" }
+        },
+        { "name": "demo", "parameters": { "demoGroup": "" } },
+        { "name": "userWithId", "parameters": { "userIds": "" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "NarendraTesting",
+      "type": "operational",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "userWithId", "parameters": { "userIds": "nar,rus" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "needs-improvement",
+      "type": "operational",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "new-api",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {}, "constraints": [] }
+      ],
+      "variants": [
+        {
+          "name": "v1",
+          "weight": 1000,
+          "weightType": "fix",
+          "payload": { "type": "string", "value": "v1" },
+          "overrides": [],
+          "stickiness": "default"
+        },
+        {
+          "name": "v2",
+          "weight": 0,
+          "weightType": "variable",
+          "payload": { "type": "string", "value": "v2" },
+          "overrides": [{ "contextName": "userId", "values": ["me"] }],
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "new-feature-815",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "newFeatureCustomerId",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "customerWithId",
+          "parameters": { "CustomerId": "104057243,104067509" },
+          "constraints": []
+        },
+        {
+          "name": "Environment",
+          "parameters": {
+            "Dev": "true",
+            "QA": "true",
+            "Test": "false",
+            "Training": "true",
+            "Prod": ""
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "newFeatureDiscount",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": [
+        {
+          "name": "HugeDiscount",
+          "weight": 500,
+          "weightType": "variable",
+          "payload": { "type": "string", "value": "50" },
+          "overrides": [
+            { "contextName": "userId", "values": ["kvajars"] }
+          ],
+          "stickiness": "default"
+        },
+        {
+          "name": "SmallDiscount",
+          "weight": 500,
+          "weightType": "variable",
+          "payload": { "type": "string", "value": "5" },
+          "overrides": [
+            { "contextName": "userId", "values": ["aksoles"] }
+          ],
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "newFeatureToggle",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "applicationHostname",
+          "parameters": { "hostNames": "server1" },
+          "constraints": []
+        },
+        {
+          "name": "remoteAddress",
+          "parameters": { "IPs": "172.10.0.0" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "newFeatureUserId",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "50",
+            "stickiness": "userId",
+            "groupId": "newFeatureUserId"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "NewFet",
+      "type": "kill-switch",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "newKillSwitch",
+      "type": "kill-switch",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": [
+        {
+          "name": "PayloadVariant",
+          "weight": 1000,
+          "weightType": "variable",
+          "payload": {
+            "type": "string",
+            "value": "TFF er for tiden utilgjengelig. Det jobbes med saken og vi forventer at det vil være løst innen 15:00."
+          },
+          "overrides": [],
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "OW",
+      "type": "operational",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "permissiontoggle",
+      "type": "permission",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "plannified-down-time",
+      "type": "operational",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "poc-forms-hub",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {}, "constraints": [] }
+      ],
+      "variants": []
+    },
+    {
+      "name": "qweqweawe",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {}, "constraints": [] },
+        {
+          "name": "Environment",
+          "parameters": {
+            "Dev": "true",
+            "QA": "",
+            "Test": "",
+            "Training": "true",
+            "Prod": ""
+          },
+          "constraints": []
+        },
+        {
+          "name": "generaltest",
+          "parameters": {
+            "rollout": 49,
+            "userIds": "TH,ERT",
+            "On/off": "true"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "RC",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "Reallycoolfeature",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        { "name": "cid-strategy", "parameters": { "solution": "" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "RecruiterPortalFeedback",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "RecruiterPortalFeedbackswsss",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "regra",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "applicationHostname",
+          "parameters": { "hostNames": "" }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "relaseWhenReady",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "ResponseFeature",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": [
+        {
+          "name": "ResponseFeature2",
+          "weight": 1000,
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "RiccardoTest",
+      "type": "experiment",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "100",
+            "stickiness": "default",
+            "groupId": "RiccardoTest"
+          }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "robert",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "Environment",
+          "parameters": {
+            "Dev": "",
+            "QA": "",
+            "Test": "",
+            "Training": "",
+            "Prod": ""
+          }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "Roman",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {}, "constraints": [] }
+      ],
+      "variants": []
+    },
+    {
+      "name": "rs-fs-1929",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "10",
+            "stickiness": "userId",
+            "groupId": "rs-fs-1929"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "S3Conversion",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "CustomId", "parameters": { "CustomerId": "123" } },
+        {
+          "name": "CustomId",
+          "parameters": { "CustomerId": "321" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "sad",
+      "type": "permission",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "sadasd",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "100",
+            "stickiness": "default",
+            "groupId": "sadasd"
+          },
+          "constraints": []
+        },
+        { "name": "default", "parameters": {}, "constraints": [] },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "100",
+            "stickiness": "default",
+            "groupId": "sadasd"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "sadasdsa",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "applicationHostname",
+          "parameters": { "hostNames": "dasda" }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "SCID",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "foobar",
+          "parameters": { "ENVIRONMENT": "DEV" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "ScreeningQ",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "sdasd",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "applicationHostname",
+          "parameters": { "hostNames": "" }
+        },
+        { "name": "default", "parameters": {} }
+      ],
+      "variants": []
+    },
+    {
+      "name": "sdasdasd",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "100",
+            "stickiness": "default",
+            "groupId": "sdasdasd"
+          }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "sdfgsdfg",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "sdfsdf",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "sdfsdfdfdfd",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "gradualRolloutRandom",
+          "parameters": { "percentage": 41 },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "sdfsdfsdf",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "userWithId",
+          "parameters": { "userIds": "sadasd,sad" },
+          "constraints": []
+        },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "63",
+            "stickiness": "default",
+            "groupId": "sdfsdfsdf"
+          },
+          "constraints": []
+        },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "68",
+            "stickiness": "default",
+            "groupId": "sdfsdfsdf"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "sdsf",
+      "type": "kill-switch",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": [
+        {
+          "name": "sdfbbbbb",
+          "weight": 1000,
+          "weightType": "variable",
+          "payload": { "type": "string", "value": "ffff" },
+          "overrides": [
+            { "contextName": "userId", "values": ["gggg"] },
+            { "contextName": "userId", "values": ["v1"] }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "secure-installation",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "userWithId", "parameters": { "userIds": "1,2" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "Shop",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "shutdown",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "Some-new-toggle",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "41",
+            "stickiness": "default",
+            "groupId": "Some-new-toggle"
+          }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "Something",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "Somethingcool",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "spring-variants",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "75",
+            "stickiness": "default",
+            "groupId": "spring-variants"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": [
+        {
+          "name": "test",
+          "weight": 800,
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        },
+        {
+          "name": "this-is-fun",
+          "weight": 200,
+          "weightType": "fix",
+          "overrides": [],
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "sss",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "SuperAwesomeFeature",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "superfeature",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "super-truper",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        { "name": "Implicit", "parameters": { "macro": "6" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "sweetness",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "75",
+            "stickiness": "default",
+            "groupId": "sweetness"
+          }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "SwitchFeature",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "SwitchOnline",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "Taco",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "test",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "userWithId",
+          "parameters": { "userIds": "123,1" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "Test",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "TEST",
+      "type": "experiment",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "test-01",
+      "type": "experiment",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": [
+        {
+          "name": "foruser",
+          "weight": 1000,
+          "overrides": [{ "contextName": "userId", "values": ["1"] }],
+          "weightType": "variable"
+        }
+      ]
+    },
+    {
+      "name": "test1",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "test1",
+          "parameters": { "codes": "" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "test-11111-kill-feature-ever-released",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "70",
+            "stickiness": "default",
+            "groupId": "test-11111-kill-feature-ever-released"
+          }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "test123",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "test-123",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "RuntimeEnvironmentBased",
+          "parameters": { "runtimeEnvironmentId": "" }
+        },
+        { "name": "test1", "parameters": { "codes": "" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "Test-123",
+      "type": "release",
+      "enabled": true,
+      "stale": true,
+      "strategies": [
+        {
+          "name": "userWithId",
+          "parameters": { "userIds": "jjjjjjj" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "test1231231",
+      "type": "permission",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "test1234214",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "Test234",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "Environment",
+          "parameters": {
+            "Dev": "true",
+            "QA": "true",
+            "Test": "",
+            "Training": "",
+            "Prod": "false"
+          }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "test2345",
+      "type": "permission",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "32",
+            "stickiness": "default",
+            "groupId": "test2345"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "test256",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "userWithId",
+          "parameters": { "userIds": "sdzxfsdf" },
+          "constraints": []
+        },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": 38,
+            "stickiness": "default",
+            "groupId": "test256"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "test.3.12.0",
+      "type": "experiment",
+      "enabled": true,
+      "stale": true,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "47",
+            "stickiness": "default",
+            "groupId": "test.3.12.0"
+          },
+          "constraints": []
+        },
+        {
+          "name": "test-env",
+          "parameters": { "prod": "true", "dev": "true" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "Test33",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "50",
+            "stickiness": "userId",
+            "groupId": "Test33"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "test777",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "test8878687",
+      "type": "experiment",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        { "name": "test", "parameters": { "users": "tttt,hhjgj" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "test-cid",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "cid-strategy",
+          "parameters": { "solution": "VCF,SYN,VCF_4.10" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "test.create",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "Test.create",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "demo",
+          "parameters": { "demoGroup": "" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "test.create.adddon",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "teste",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "teste1",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "test1", "parameters": {}, "constraints": [] }
+      ],
+      "variants": []
+    },
+    {
+      "name": "teste123123",
+      "type": "kill-switch",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "applicationHostname",
+          "parameters": { "hostNames": "asd,teste,tesasd" }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "Tester",
+      "type": "kill-switch",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "test-feature",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        { "name": "userWithId", "parameters": { "userIds": "" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "testFeature",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "test-feature-1",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "selected-schools",
+          "parameters": { "schoolId": "bla" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "test-feature-99999",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "Test-FF",
+      "type": "experiment",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "demo",
+          "parameters": { "demoGroup": "abc" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "test-for-me",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "TestGroup",
+      "type": "permission",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "TestGroup", "parameters": { "Group": "Foo" } },
+        { "name": "TestGroup", "parameters": { "Group": "Bar" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "testgtasdas",
+      "type": "kill-switch",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "applicationHostname",
+          "parameters": { "hostNames": "" }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "Testing",
+      "type": "permission",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "applicationHostname",
+          "parameters": { "hostNames": "" }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "testing123",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "testing-toggle-12",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "testlog",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "test-new-feature",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        { "name": "userWithId", "parameters": { "userIds": "5" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "Test_Permission1",
+      "type": "permission",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "test1",
+          "parameters": { "codes": "code1,code2" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "test.ping",
+      "type": "kill-switch",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "testproduct",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "test-raf",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "test-release-flag",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": [
+        {
+          "name": "endpoint",
+          "weight": 1000,
+          "payload": { "type": "string", "value": "this_is_the_endpoint" },
+          "overrides": [],
+          "weightType": "variable"
+        }
+      ]
+    },
+    {
+      "name": "TestSwitch1",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "test-t",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "testtertogle",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "testtest",
+      "type": "experiment",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        { "name": "dfazza", "parameters": { "asdfasdf": "afasd" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "test-test",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "userWithId",
+          "parameters": { "userIds": "test,test1,test2" },
+          "constraints": []
+        },
+        { "name": "default", "parameters": {}, "constraints": [] }
+      ],
+      "variants": [
+        {
+          "name": "t1",
+          "weight": 750,
+          "weightType": "fix",
+          "payload": { "type": "string", "value": "t1" },
+          "overrides": [{ "contextName": "userId", "values": ["abcdef"] }],
+          "stickiness": "default"
+        },
+        {
+          "name": "t2",
+          "weight": 250,
+          "payload": { "type": "string", "value": "t2" },
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "test-test-and-some-more-test",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "Environment",
+          "parameters": {
+            "Dev": "",
+            "QA": "",
+            "Test": "",
+            "Training": "",
+            "Prod": "true"
+          }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "TestTesting",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "default", "parameters": {} },
+        {
+          "name": "asd",
+          "parameters": { "asd": "asd", "sdf": "" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "testtoggle",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "test-toggle",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "testtt",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "test_variant",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": [
+        {
+          "name": "version",
+          "weight": 1000,
+          "payload": { "type": "string", "value": "v1" },
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "test-w",
+      "type": "operational",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "Testymctestface",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "Environment",
+          "parameters": {
+            "Dev": "true",
+            "QA": "true",
+            "Test": "",
+            "Training": "",
+            "Prod": "true"
+          }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "tgtg",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "the-awesome-feature",
+      "type": "experiment",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "Theone",
+      "type": "operational",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "ticket",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "demo", "parameters": { "demoGroup": "dsfasfd" } }
+      ],
+      "variants": [
+        {
+          "name": "bool",
+          "weight": 1000,
+          "weightType": "variable",
+          "payload": { "type": "string", "value": "valuess" },
+          "overrides": [],
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "TotesMcGoats",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "trololo",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "tryion.dev.auth",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "Ttt",
+      "type": "operational",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "uname",
+      "type": "experiment",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "unique",
+      "type": "kill-switch",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "UniqueCreateContractFeature",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "unleaseh-my-mama",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "demo", "parameters": { "demoGroup": "you" } }
+      ],
+      "variants": []
+    },
+    {
+      "name": "unleash_aws_s3",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "gradualRolloutRandom",
+          "parameters": { "percentage": "60" }
+        }
+      ],
+      "variants": [
+        {
+          "name": "s3",
+          "weight": 333,
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        },
+        {
+          "name": "gcp",
+          "weight": 333,
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        },
+        {
+          "name": "azure",
+          "weight": 333,
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "unleash-demo.avansert",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "userWithId",
+          "parameters": { "userIds": "testbruker" },
+          "constraints": []
+        },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "47",
+            "stickiness": "default",
+            "groupId": "unleash-demo.avansert"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "unleash-demo.hjemmelagd",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "byEnhet",
+          "parameters": { "valgtEnhet": "456" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "unleash-demo.scheduler",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "unleash-demo.scheduler.default-pa",
+      "type": "release",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "user.pornFilter",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "UserID",
+          "parameters": { "AD_GRP_1, AD_GRP_2": "asdf,asdf2,asdf3,asdf4" }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "vartest",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": [
+        {
+          "name": "v1",
+          "weight": 333,
+          "payload": { "type": "string", "value": "v1" },
+          "overrides": [],
+          "weightType": "variable"
+        },
+        {
+          "name": "v2",
+          "weight": 333,
+          "payload": { "type": "string", "value": "v2" },
+          "overrides": [],
+          "weightType": "variable"
+        },
+        {
+          "name": "v3",
+          "weight": 333,
+          "payload": { "type": "string", "value": "v3" },
+          "overrides": [],
+          "weightType": "variable"
+        }
+      ]
+    },
+    {
+      "name": "vcvcvc-test-feature",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        { "name": "foobar", "parameters": { "ENVIRONMENT": "DEV" } },
+        {
+          "name": "applicationHostname",
+          "parameters": { "hostNames": "test" },
+          "constraints": []
+        },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "49",
+            "stickiness": "default",
+            "groupId": "vcvcvc-test-feature"
+          },
+          "constraints": []
+        },
+        {
+          "name": "remoteAddress",
+          "parameters": { "IPs": "1.1.1.1" },
+          "constraints": []
+        },
+        {
+          "name": "Environment",
+          "parameters": {
+            "Dev": "true",
+            "QA": "",
+            "Test": "",
+            "Training": "",
+            "Prod": ""
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "Very.cool.toggle",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "49",
+            "stickiness": "default",
+            "groupId": "Very.cool.toggle"
+          }
+        },
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "25",
+            "stickiness": "default",
+            "groupId": "Very.cool.toggle"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": [
+        {
+          "name": "xc",
+          "weight": 500,
+          "payload": { "type": "string", "value": "sdf" },
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        },
+        {
+          "name": "dsfsdf",
+          "weight": 500,
+          "payload": { "type": "string", "value": "sdf" },
+          "overrides": [],
+          "weightType": "variable",
+          "stickiness": "default"
+        }
+      ]
+    },
+    {
+      "name": "vlad",
+      "type": "experiment",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "wasd",
+      "type": "experiment",
+      "enabled": false,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "51",
+            "stickiness": "default",
+            "groupId": "wasd"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "whitelabel",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "whitelist",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "userWithId",
+          "parameters": { "userIds": "juan@gmail.com" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "wwwwwwww",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "39",
+            "stickiness": "default",
+            "groupId": "wwwwwwww"
+          },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "xcvh",
+      "type": "kill-switch",
+      "enabled": false,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "xxx",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "flexibleRollout",
+          "parameters": {
+            "rollout": "100",
+            "stickiness": "userId",
+            "groupId": "xxx"
+          }
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "yest",
+      "type": "experiment",
+      "enabled": true,
+      "stale": false,
+      "strategies": [{ "name": "default", "parameters": {} }],
+      "variants": []
+    },
+    {
+      "name": "zxc",
+      "type": "operational",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "applicationHostname",
+          "parameters": { "hostNames": "trunk,testing" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    },
+    {
+      "name": "zXVa",
+      "type": "release",
+      "enabled": true,
+      "stale": false,
+      "strategies": [
+        {
+          "name": "applicationHostname",
+          "parameters": { "hostNames": "dsagfa,asdfadf" },
+          "constraints": []
+        }
+      ],
+      "variants": []
+    }
+  ]
+}
