@@ -15,14 +15,19 @@ func Test_bootstrapFromFile(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	unleash.Initialize(
+	err = unleash.Initialize(
 		unleash.WithListener(&unleash.DebugListener{}),
 		unleash.WithAppName("my-application"),
 		unleash.WithRefreshInterval(5*time.Second),
 		unleash.WithMetricsInterval(5*time.Second),
 		unleash.WithStorage(&unleash.BootstrapStorage{Reader: demoReader}),
-		unleash.WithUrl("https://nonexistingurl"),
+		unleash.WithUrl("https://localhost:4242"),
 	)
+
+	if err != nil {
+		t.Fail()
+	} 
+
 	enabled := unleash.IsEnabled("DateExample", unleash.WithContext(context.Context{}))
 	fmt.Printf("feature is enabled? %v\n", enabled)
 	if enabled == false {
