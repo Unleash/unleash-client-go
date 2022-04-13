@@ -14,14 +14,17 @@ type BootstrapStorage struct {
 }
 
 func (bs *BootstrapStorage) Load() error {
-	if len(bs.backingStore.data) == 0 && bs.Reader != nil {
-		dec := json.NewDecoder(bs.Reader)
-		client_features := api.FeatureResponse{}
-		if err := dec.Decode(&client_features); err != nil {
-			return err
-		}
-		bs.backingStore.data = client_features.FeatureMap()
+	if len(bs.backingStore.data) > 0 || bs.Reader == nil {
+		return nil
 	}
+
+	dec := json.NewDecoder(bs.Reader)
+	clientFeatures := api.FeatureResponse{}
+	if err := dec.Decode(&clientFeatures); err != nil {
+		return err
+	}
+
+	bs.backingStore.data = clientFeatures.FeatureMap()
 	return nil
 }
 
