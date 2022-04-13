@@ -64,11 +64,11 @@ import (
 func init() {
     myBootstrap := os.Open("bootstrapfile.json") // or wherever your file is located at runtime
     // BootstrapStorage handles the case where Reader is nil
-    unleash.Initialize(
-	    unleash.WithListener(&unleash.DebugListener{}),
+	unleash.Initialize(
+		unleash.WithListener(&unleash.DebugListener{}),
 		unleash.WithAppName("my-application"),
 		unleash.WithUrl("http://unleash.herokuapp.com/api/"),
-        unleash.WithStorage(&BootstrapStorage{Reader: myBootstrap})
+		unleash.WithStorage(&BootstrapStorage{Reader: myBootstrap})
 	)
 }
 ```
