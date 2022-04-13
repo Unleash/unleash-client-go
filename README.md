@@ -75,7 +75,7 @@ func init() {
 
 #### Bootstrapping from S3
 
-Bootstrapping from S3 is then done by downloading the file using the aws library and then passing in a Reader to the just downloaded file
+Bootstrapping from S3 is then done by downloading the file using the AWS library and then passing in a Reader to the just downloaded file:
 
 ```go
 import (
