@@ -46,7 +46,6 @@ func (bs *BootstrapStorage) Persist() error {
 	return bs.backingStore.Persist()
 }
 
-// Get returns the data for the specified feature toggle.
 func (bs *BootstrapStorage) Get(key string) (interface{}, bool) {
 	return bs.backingStore.Get(key)
 }
