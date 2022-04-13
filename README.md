@@ -86,7 +86,7 @@ import (
 )
 
 func init() {
-    	// Load the shared AWS config
+    // Load the shared AWS config
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		log.Fatal(err)
