@@ -120,7 +120,7 @@ func init() {
 
 #### Bootstrapping from Google
 
-Since the google cloud storage API returns a Reader, implementing a Bootstrap from GCS is done using something similar to
+Since the Google Cloud Storage API returns a Reader, implementing a Bootstrap from GCS is done using something similar to
 
 ```go
 import (
