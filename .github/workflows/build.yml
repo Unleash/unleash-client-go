@@ -1,9 +1,6 @@
 name: Build
 
-on:
-  push:
-    branches:
-      - v3
+on: [push]
 
 jobs:
   build:
