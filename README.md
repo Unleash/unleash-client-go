@@ -107,7 +107,6 @@ func init() {
 	reader := obj.Body
 	defer reader.Close()
 
-
     // BootstrapStorage handles the case where Reader is nil
     unleash.Initialize(
 	    unleash.WithListener(&unleash.DebugListener{}),
