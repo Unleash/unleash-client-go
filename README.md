@@ -54,7 +54,7 @@ If you'd like to prebake your application with feature toggles (maybe you're wor
 
 #### Bootstrapping from file
 
-Bootstrapping from file on disk is then done using something similar to
+Bootstrapping from file on disk is then done using something similar to:
 
 ```go
 import (
