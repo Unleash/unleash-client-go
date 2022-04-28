@@ -70,7 +70,7 @@ func WithUrl(url string) ConfigOption {
 }
 
 // WithRefreshInterval specifies the time interval with which the client should sync the
-// feature toggles from the unleash server.
+// feature toggles from the unleash server (default 15s).
 func WithRefreshInterval(refreshInterval time.Duration) ConfigOption {
 	return func(o *configOption) {
 		o.refreshInterval = refreshInterval
@@ -78,7 +78,7 @@ func WithRefreshInterval(refreshInterval time.Duration) ConfigOption {
 }
 
 // WithMetricsInterval specifies the time interval with which the client should upload
-// the metrics data to the unleash server.
+// the metrics data to the unleash server (default 60s).
 func WithMetricsInterval(metricsInterval time.Duration) ConfigOption {
 	return func(o *configOption) {
 		o.metricsInterval = metricsInterval
