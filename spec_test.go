@@ -19,7 +19,7 @@ const mockHost = "http://unleash-apu"
 const specFolder = "./testdata/client-specification/specifications"
 
 var specIndex = filepath.Join(specFolder, "index.json")
-var specNotImplemented = []string{"12-custom-stickiness"}
+var specNotImplemented = []string{""}
 
 type TestState struct {
 	Version  int           `json:"version"`
@@ -128,6 +128,7 @@ func (td TestDefinition) Run(t *testing.T) {
 		listener.On("OnReady").Return()
 		listener.On("OnRegistered", mock.AnythingOfType("ClientData")).Return()
 		listener.On("OnCount", mock.AnythingOfType("string"), mock.AnythingOfType("bool")).Return()
+		listener.On("OnError", mock.AnythingOfType("*errors.errorString")).Return()
 
 		client, err := td.Mock(listener)
 		assert.NoError(t, err)

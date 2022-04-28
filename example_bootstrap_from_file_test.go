@@ -26,7 +26,7 @@ func Test_bootstrapFromFile(t *testing.T) {
 
 	if err != nil {
 		t.Fail()
-	} 
+	}
 
 	enabled := unleash.IsEnabled("DateExample", unleash.WithContext(context.Context{}))
 	fmt.Printf("feature is enabled? %v\n", enabled)

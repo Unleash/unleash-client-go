@@ -75,8 +75,9 @@ func (f Feature) getVariantFromWeights(ctx *context.Context) *Variant {
 	if totalWeight == 0 {
 		return DISABLED_VARIANT
 	}
+	stickiness := f.Variants[0].Stickiness
 
-	target := getNormalizedNumber(getSeed(ctx), f.Name, totalWeight)
+	target := getNormalizedNumber(getSeed(ctx, stickiness), f.Name, totalWeight)
 	counter := uint32(0)
 	for _, variant := range f.Variants {
 		counter += uint32(variant.Weight)
@@ -100,7 +101,16 @@ func (f Feature) getOverrideVariant(ctx *context.Context) *VariantInternal {
 	return nil
 }
 
-func getSeed(ctx *context.Context) string {
+func getSeed(ctx *context.Context, stickiness string) string {
+	if stickiness != "default" && stickiness != "" {
+		value := ctx.Field(stickiness)
+		if value == "" {
+			return strconv.Itoa(rand.Intn(10000))
+		}
+
+		return value
+	}
+
 	if ctx.UserId != "" {
 		return ctx.UserId
 	} else if ctx.SessionId != "" {
