@@ -62,8 +62,8 @@ import (
 )
 
 func init() {
-    myBootstrap := os.Open("bootstrapfile.json") // or wherever your file is located at runtime
-    // BootstrapStorage handles the case where Reader is nil
+	myBootstrap := os.Open("bootstrapfile.json") // or wherever your file is located at runtime
+	// BootstrapStorage handles the case where Reader is nil
 	unleash.Initialize(
 		unleash.WithListener(&unleash.DebugListener{}),
 		unleash.WithAppName("my-application"),
@@ -80,39 +80,39 @@ Bootstrapping from S3 is then done by downloading the file using the AWS library
 ```go
 import (
 	"github.com/Unleash/unleash-client-go/v3"
-    "github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 func init() {
-    // Load the shared AWS config
+	// Load the shared AWS config
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	
 	// Create an S3 client
 	client := s3.NewFromConfig(cfg)
-
+	
 	obj, err := client.GetObject(context.TODO(), &s3.GetObjectInput{
 		Bucket: aws.String("YOURBUCKET"),
 		Key:    aws.String("YOURKEY"),
 	})
-
+	
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	
 	reader := obj.Body
 	defer reader.Close()
-
-    // BootstrapStorage handles the case where Reader is nil
-    unleash.Initialize(
-	    unleash.WithListener(&unleash.DebugListener{}),
+	
+	// BootstrapStorage handles the case where Reader is nil
+	unleash.Initialize(
+		unleash.WithListener(&unleash.DebugListener{}),
 		unleash.WithAppName("YOURAPPNAME"),
 		unleash.WithUrl("YOURINSTANCE_URL"),
-        unleash.WithStorage(&BootstrapStorage{Reader: reader})
+		unleash.WithStorage(&BootstrapStorage{Reader: reader})
 	)
 }
 ```
@@ -124,25 +124,26 @@ Since the Google Cloud Storage API returns a Reader, implementing a Bootstrap fr
 ```go
 import (
 	"github.com/Unleash/unleash-client-go/v3"
-    "cloud.google.com/go/storage"
+	"cloud.google.com/go/storage"
 )
 
 func init() {
-    ctx := context.Background() // Configure Google Cloud context
-    client, err := storage.NewClient(ctx) // Configure your client
-    if err != nil {
-        // TODO: Handle error.
-    }
-    defer client.Close()
-
-    // Fetch the bucket, then object and then create a reader
-    reader := client.Bucket(bucketName).Object("my-bootstrap.json").NewReader(ctx)
-    // BootstrapStorage handles the case where Reader is nil
-    unleash.Initialize(
-	    unleash.WithListener(&unleash.DebugListener{}),
+	ctx := context.Background() // Configure Google Cloud context
+	client, err := storage.NewClient(ctx) // Configure your client
+	if err != nil {
+		// TODO: Handle error.
+	}
+	defer client.Close()
+	
+	// Fetch the bucket, then object and then create a reader
+	reader := client.Bucket(bucketName).Object("my-bootstrap.json").NewReader(ctx)
+	
+	// BootstrapStorage handles the case where Reader is nil
+	unleash.Initialize(
+		unleash.WithListener(&unleash.DebugListener{}),
 		unleash.WithAppName("my-application"),
 		unleash.WithUrl("http://unleash.herokuapp.com/api/"),
-        unleash.WithStorage(&unleash.BootstrapStorage{Reader: reader})
+		unleash.WithStorage(&unleash.BootstrapStorage{Reader: reader})
 	)
 }
 ```
@@ -187,9 +188,9 @@ This client SDK allows you to send in the unleash context as part of the `isEnab
 
 ```go
 ctx := context.Context{
-    UserId: "123",
-    SessionId: "some-session-id",
-    RemoteAddress: "127.0.0.1",
+	UserId:        "123",
+	SessionId:     "some-session-id",
+	RemoteAddress: "127.0.0.1",
 }
 
 unleash.IsEnabled("someToggle", unleash.WithContext(ctx))
@@ -225,16 +226,16 @@ Requirements:
 
 Run tests:
 
-    make
+	make
 
 Run lint check:
 
-    make lint
+	make lint
 
 Run code-style checks:(currently failing)
 
-    make strict-check
+	make strict-check
 
 Run race-tests:
 
-    make test-all
+	make test-all
