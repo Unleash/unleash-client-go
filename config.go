@@ -218,6 +218,7 @@ type repositoryOptions struct {
 	url             url.URL
 	backupPath      string
 	refreshInterval time.Duration
+	segments        map[int]api.Segment
 	storage         Storage
 	httpClient      *http.Client
 	customHeaders   http.Header
@@ -233,3 +234,5 @@ type metricsOptions struct {
 	httpClient      *http.Client
 	customHeaders   http.Header
 }
+
+

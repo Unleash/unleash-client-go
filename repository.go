@@ -23,6 +23,7 @@ type repository struct {
 	cancel        func()
 	isReady       bool
 	refreshTicker *time.Ticker
+	segments      map[int][]api.Constraint
 }
 
 func newRepository(options repositoryOptions, channels repositoryChannels) *repository {
@@ -32,6 +33,7 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 		close:              make(chan struct{}),
 		closed:             make(chan struct{}),
 		refreshTicker:      time.NewTicker(options.refreshInterval),
+		segments:           map[int][]api.Constraint{},
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	repo.ctx = ctx
@@ -124,6 +126,7 @@ func (r *repository) fetch() error {
 
 	r.Lock()
 	r.etag = resp.Header.Get("Etag")
+	r.segments = featureResp.SegmentsMap()
 	r.options.storage.Reset(featureResp.FeatureMap(), true)
 	r.Unlock()
 	return nil
@@ -148,6 +151,18 @@ func (r *repository) getToggle(key string) *api.Feature {
 		}
 	}
 	return nil
+}
+
+func (r *repository) resolveSegmentConstraints(toggleName string) []api.Constraint {
+	toggle := r.getToggle(toggleName);
+	segmentConstraints := []api.Constraint{}
+
+	for _, segmentId := range toggle.Segments {
+		resolvedConstraints := r.segments[segmentId];
+		segmentConstraints = append(segmentConstraints, resolvedConstraints...)
+	}
+
+	return segmentConstraints;
 }
 
 func (r *repository) list() []api.Feature {
