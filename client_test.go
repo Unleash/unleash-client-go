@@ -75,6 +75,7 @@ func TestClient_WithFallbackFunc(t *testing.T) {
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
 	mockListener.On("OnCount", feature, true).Return()
+	mockListener.On("OnError").Return()
 
 	client, err := NewClient(
 		WithUrl(mockerServer),
@@ -144,6 +145,7 @@ func TestClient_ListFeatures(t *testing.T) {
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("onError").Return()
 
 	client, err := NewClient(
 		WithUrl(mockerServer),
@@ -177,6 +179,7 @@ func TestClientWithProjectName(t *testing.T) {
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("OnError").Return()
 
 	client, err := NewClient(
 		WithUrl(mockerServer),
@@ -209,6 +212,8 @@ func TestClientWithoutProjectName(t *testing.T) {
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+    mockListener.On("OnError").Return()
+
 
 	client, err := NewClient(
 		WithUrl(mockerServer),
@@ -284,6 +289,9 @@ func TestClientWithVariantContext(t *testing.T) {
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("OnError", mock.AnythingOfType("*errors.errorString"))
+
+
 
 	client, err := NewClient(
 		WithUrl(mockerServer),
@@ -297,6 +305,7 @@ func TestClientWithVariantContext(t *testing.T) {
 	client.WaitForReady()
 
 	defaultVariant := client.GetVariant("feature-name")
+
 	assert.Equal(api.GetDefaultVariant(), defaultVariant)
 	variant := client.GetVariant("feature-name", WithVariantContext(context.Context{
 		Properties: map[string]string{"custom-id": "custom-ctx"},

@@ -24,6 +24,7 @@ var specNotImplemented = []string{""}
 type TestState struct {
 	Version  int           `json:"version"`
 	Features []api.Feature `json:"features"`
+	Segments []api.Segment `json:"segments"`
 }
 
 type TestCase struct {
@@ -100,7 +101,6 @@ func (td TestDefinition) Mock(listener interface{}) (*Client, error) {
 	gock.New(mockHost).
 		Post("/client/register").
 		Reply(200)
-
 	gock.New(mockHost).
 		Get("/client/features").
 		Reply(200).
@@ -109,6 +109,7 @@ func (td TestDefinition) Mock(listener interface{}) (*Client, error) {
 				Version: td.State.Version,
 			},
 			Features: td.State.Features,
+			Segments: td.State.Segments,
 		})
 
 	return NewClient(

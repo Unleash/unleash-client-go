@@ -12,6 +12,7 @@ import (
 	"github.com/Unleash/unleash-client-go/v3/api"
 )
 
+var SEGMENT_CLIENT_SPEC_VERSION = "4.2.0"
 type repository struct {
 	repositoryChannels
 	sync.RWMutex
@@ -95,6 +96,9 @@ func (r *repository) fetch() error {
 	req.Header.Add("UNLEASH-APPNAME", r.options.appName)
 	req.Header.Add("UNLEASH-INSTANCEID", r.options.instanceId)
 	req.Header.Add("User-Agent", r.options.appName)
+	// Needs to reference a version of the client specifications that include
+	// global segments
+	req.Header.Add("Unleash-Client-Spec", SEGMENT_CLIENT_SPEC_VERSION)
 
 	for k, v := range r.options.customHeaders {
 		req.Header[k] = v
@@ -153,16 +157,18 @@ func (r *repository) getToggle(key string) *api.Feature {
 	return nil
 }
 
-func (r *repository) resolveSegmentConstraints(toggleName string) []api.Constraint {
-	toggle := r.getToggle(toggleName);
+func (r *repository) resolveSegmentConstraints(strategy api.Strategy) (error, []api.Constraint) {
 	segmentConstraints := []api.Constraint{}
 
-	for _, segmentId := range toggle.Segments {
-		resolvedConstraints := r.segments[segmentId];
-		segmentConstraints = append(segmentConstraints, resolvedConstraints...)
+	for _, segmentId := range strategy.Segments {
+		if resolvedConstraints, ok := r.segments[segmentId]; ok {
+			segmentConstraints = append(segmentConstraints, resolvedConstraints...)
+		} else {
+			return fmt.Errorf("segment does not exists"), segmentConstraints
+		}
 	}
 
-	return segmentConstraints;
+	return nil, segmentConstraints;
 }
 
 func (r *repository) list() []api.Feature {
