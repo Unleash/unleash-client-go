@@ -278,6 +278,7 @@ func TestClientWithVariantContext(t *testing.T) {
 		Reply(200).
 		JSON(api.FeatureResponse{
 			Features: features,
+			Segments: []api.Segment{},
 		})
 
 	mockListener := &MockedListener{}
