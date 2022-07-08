@@ -79,29 +79,3 @@ func TestRepository_GetFeaturesFail(t *testing.T) {
 	}
 	client.Close()
 }
-
-// func TestRepository_SetSegmentsMap(t *testing.T) {
-// 	parsedUrl, err := url.Parse("http://foo.com")
-// 	if err != nil {
-// 		return;
-// 	}
-// 	options := repositoryOptions{
-// 		appName: "test-app",
-// 		instanceId: "my-instance",
-// 		projectName: "default",
-// 		url: *parsedUrl,
-// 		backupPath: "",
-// 		refreshInterval: 1,
-// 		segments: map[int]api.Segment{},
-// 		storage: &DefaultStorage{},
-// 		customHeaders: http.Header{},
-// 		httpClient: &http.Client{},
-// 	}
-
-//    repository := newRepository(options, repositoryChannels{errorChannels: errorChannels{
-// 	errors: make(chan error),
-// 	warnings: make(chan error),
-//    }, ready: make(chan string))
-
-//    fmt.Print(repository)
-// }
