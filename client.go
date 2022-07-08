@@ -286,10 +286,10 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) (enabled b
 		}
 
 		segmentConstraints, err := uc.repository.resolveSegmentConstraints(s)
-		
+
 		if err != nil {
 			uc.errors <- err
-			return false;
+			return false
 		}
 
 		allConstraints := make([]api.Constraint, 0)

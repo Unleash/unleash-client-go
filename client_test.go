@@ -371,10 +371,10 @@ func TestClient_WithSegment(t *testing.T) {
 		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
-	
+
 	assert.NoError(err)
 	client.WaitForReady()
-	
+
 	isEnabled := client.IsEnabled(feature, WithContext(context.Context{
 		Properties: map[string]string{"custom-id": "custom-ctx"},
 	}))
@@ -417,8 +417,6 @@ func TestClient_WithNonExistingSegment(t *testing.T) {
 		},
 	}
 
-
-
 	gock.New(mockerServer).
 		Get("/client/features").
 		Reply(200).
@@ -431,8 +429,6 @@ func TestClient_WithNonExistingSegment(t *testing.T) {
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
 	mockListener.On("OnCount", feature, false).Return()
 	mockListener.On("OnError", mock.AnythingOfType("*errors.errorString"))
-
-	
 
 	client, err := NewClient(
 		WithUrl(mockerServer),
@@ -448,7 +444,7 @@ func TestClient_WithNonExistingSegment(t *testing.T) {
 	isEnabled := client.IsEnabled(feature, WithContext(context.Context{
 		Properties: map[string]string{"custom-id": "custom-ctx"},
 	}))
-	
+
 	assert.False(isEnabled)
 
 	assert.True(gock.IsDone(), "there should be no more mocks")
@@ -499,23 +495,23 @@ func TestClient_WithMultipleSegments(t *testing.T) {
 						Operator:    api.OperatorIn,
 						Values:      []string{"custom-ctx"},
 					}}},
-					{Id: 2, Constraints: []api.Constraint{
+				{Id: 2, Constraints: []api.Constraint{
 					{
 						ContextName: "semver",
 						Operator:    api.OperatorSemverGt,
-						Value:      "3.2.1",
+						Value:       "3.2.1",
 					}}},
-					{Id: 4, Constraints: []api.Constraint{
+				{Id: 4, Constraints: []api.Constraint{
 					{
 						ContextName: "age",
 						Operator:    api.OperatorNumEq,
 						Value:       "18",
 					}}},
-					{Id: 6, Constraints: []api.Constraint{
+				{Id: 6, Constraints: []api.Constraint{
 					{
 						ContextName: "domain",
 						Operator:    api.OperatorStrStartsWith,
-						Values:     []string{"unleash"},
+						Values:      []string{"unleash"},
 					}}},
 			}})
 
@@ -531,12 +527,12 @@ func TestClient_WithMultipleSegments(t *testing.T) {
 		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
-	
+
 	assert.NoError(err)
 	client.WaitForReady()
 
 	fmt.Printf("%v", client.repository.segments)
-	
+
 	isEnabled := client.IsEnabled(feature, WithContext(context.Context{
 		Properties: map[string]string{"custom-id": "custom-ctx", "semver": "3.2.2", "age": "18", "domain": "unleashtest"},
 	}))
@@ -603,23 +599,23 @@ func TestClient_VariantShouldRespectConstraint(t *testing.T) {
 						Operator:    api.OperatorIn,
 						Values:      []string{"custom-ctx"},
 					}}},
-					{Id: 2, Constraints: []api.Constraint{
+				{Id: 2, Constraints: []api.Constraint{
 					{
 						ContextName: "semver",
 						Operator:    api.OperatorSemverGt,
-						Value:      "3.2.1",
+						Value:       "3.2.1",
 					}}},
-					{Id: 4, Constraints: []api.Constraint{
+				{Id: 4, Constraints: []api.Constraint{
 					{
 						ContextName: "age",
 						Operator:    api.OperatorNumEq,
 						Value:       "18",
 					}}},
-					{Id: 6, Constraints: []api.Constraint{
+				{Id: 6, Constraints: []api.Constraint{
 					{
 						ContextName: "domain",
 						Operator:    api.OperatorStrStartsWith,
-						Values:     []string{"unleash"},
+						Values:      []string{"unleash"},
 					}}},
 			}})
 
@@ -635,12 +631,12 @@ func TestClient_VariantShouldRespectConstraint(t *testing.T) {
 		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
-	
+
 	assert.NoError(err)
 	client.WaitForReady()
 
 	fmt.Printf("%v", client.repository.segments)
-	
+
 	variant := client.GetVariant(feature, WithVariantContext(context.Context{
 		Properties: map[string]string{"custom-id": "custom-ctx", "semver": "3.2.2", "age": "18", "domain": "unleashtest"},
 	}))
@@ -707,23 +703,23 @@ func TestClient_VariantShouldFailWhenSegmentConstraintsDontMatch(t *testing.T) {
 						Operator:    api.OperatorIn,
 						Values:      []string{"custom-ctx"},
 					}}},
-					{Id: 2, Constraints: []api.Constraint{
+				{Id: 2, Constraints: []api.Constraint{
 					{
 						ContextName: "semver",
 						Operator:    api.OperatorSemverGt,
-						Value:      "3.2.1",
+						Value:       "3.2.1",
 					}}},
-					{Id: 4, Constraints: []api.Constraint{
+				{Id: 4, Constraints: []api.Constraint{
 					{
 						ContextName: "age",
 						Operator:    api.OperatorNumEq,
 						Value:       "15",
 					}}},
-					{Id: 6, Constraints: []api.Constraint{
+				{Id: 6, Constraints: []api.Constraint{
 					{
 						ContextName: "domain",
 						Operator:    api.OperatorStrStartsWith,
-						Values:     []string{"unleash"},
+						Values:      []string{"unleash"},
 					}}},
 			}})
 
@@ -738,12 +734,12 @@ func TestClient_VariantShouldFailWhenSegmentConstraintsDontMatch(t *testing.T) {
 		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
-	
+
 	assert.NoError(err)
 	client.WaitForReady()
 
 	fmt.Printf("%v", client.repository.segments)
-	
+
 	variant := client.GetVariant(feature, WithVariantContext(context.Context{
 		Properties: map[string]string{"custom-id": "custom-ctx", "semver": "3.2.2", "age": "18", "domain": "unleashtest"},
 	}))

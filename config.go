@@ -233,5 +233,3 @@ type metricsOptions struct {
 	httpClient      *http.Client
 	customHeaders   http.Header
 }
-
-
