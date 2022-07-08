@@ -34,3 +34,4 @@ func getFetchURLPath(projectName string) string {
 	}
 	return "./client/features"
 }
+

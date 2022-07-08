@@ -47,8 +47,6 @@ type Feature struct {
 
 	// Variants is a list of variants of the feature toggle.
 	Variants []VariantInternal `json:"variants"`
-
-	Segments []int `json:"segments"`
 }
 
 func (fr FeatureResponse) FeatureMap() map[string]interface{} {

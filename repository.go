@@ -13,6 +13,7 @@ import (
 )
 
 var SEGMENT_CLIENT_SPEC_VERSION = "4.2.0"
+
 type repository struct {
 	repositoryChannels
 	sync.RWMutex
@@ -157,18 +158,18 @@ func (r *repository) getToggle(key string) *api.Feature {
 	return nil
 }
 
-func (r *repository) resolveSegmentConstraints(strategy api.Strategy) (error, []api.Constraint) {
+func (r *repository) resolveSegmentConstraints(strategy api.Strategy) ([]api.Constraint, error) {
 	segmentConstraints := []api.Constraint{}
 
 	for _, segmentId := range strategy.Segments {
 		if resolvedConstraints, ok := r.segments[segmentId]; ok {
 			segmentConstraints = append(segmentConstraints, resolvedConstraints...)
 		} else {
-			return fmt.Errorf("segment does not exists"), segmentConstraints
+			return segmentConstraints, fmt.Errorf("segment does not exists")
 		}
 	}
 
-	return nil, segmentConstraints;
+	return segmentConstraints, nil
 }
 
 func (r *repository) list() []api.Feature {
