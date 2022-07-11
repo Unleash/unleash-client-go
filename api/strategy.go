@@ -17,6 +17,8 @@ type Strategy struct {
 
 	// Parameters is the parameters of the strategy.
 	Parameters ParameterMap `json:"parameters"`
+
+	Segments []int `json:"segments"`
 }
 
 type ParameterDescription struct {

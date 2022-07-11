@@ -12,6 +12,8 @@ import (
 	"github.com/Unleash/unleash-client-go/v3/api"
 )
 
+var SEGMENT_CLIENT_SPEC_VERSION = "4.2.0"
+
 type repository struct {
 	repositoryChannels
 	sync.RWMutex
@@ -23,6 +25,7 @@ type repository struct {
 	cancel        func()
 	isReady       bool
 	refreshTicker *time.Ticker
+	segments      map[int][]api.Constraint
 }
 
 func newRepository(options repositoryOptions, channels repositoryChannels) *repository {
@@ -32,6 +35,7 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 		close:              make(chan struct{}),
 		closed:             make(chan struct{}),
 		refreshTicker:      time.NewTicker(options.refreshInterval),
+		segments:           map[int][]api.Constraint{},
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	repo.ctx = ctx
@@ -93,6 +97,9 @@ func (r *repository) fetch() error {
 	req.Header.Add("UNLEASH-APPNAME", r.options.appName)
 	req.Header.Add("UNLEASH-INSTANCEID", r.options.instanceId)
 	req.Header.Add("User-Agent", r.options.appName)
+	// Needs to reference a version of the client specifications that include
+	// global segments
+	req.Header.Add("Unleash-Client-Spec", SEGMENT_CLIENT_SPEC_VERSION)
 
 	for k, v := range r.options.customHeaders {
 		req.Header[k] = v
@@ -124,6 +131,7 @@ func (r *repository) fetch() error {
 
 	r.Lock()
 	r.etag = resp.Header.Get("Etag")
+	r.segments = featureResp.SegmentsMap()
 	r.options.storage.Reset(featureResp.FeatureMap(), true)
 	r.Unlock()
 	return nil
@@ -148,6 +156,20 @@ func (r *repository) getToggle(key string) *api.Feature {
 		}
 	}
 	return nil
+}
+
+func (r *repository) resolveSegmentConstraints(strategy api.Strategy) ([]api.Constraint, error) {
+	segmentConstraints := []api.Constraint{}
+
+	for _, segmentId := range strategy.Segments {
+		if resolvedConstraints, ok := r.segments[segmentId]; ok {
+			segmentConstraints = append(segmentConstraints, resolvedConstraints...)
+		} else {
+			return segmentConstraints, fmt.Errorf("segment does not exist")
+		}
+	}
+
+	return segmentConstraints, nil
 }
 
 func (r *repository) list() []api.Feature {

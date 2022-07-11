@@ -285,7 +285,18 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) (enabled b
 			continue
 		}
 
-		if ok, err := constraints.Check(ctx, s.Constraints); err != nil {
+		segmentConstraints, err := uc.repository.resolveSegmentConstraints(s)
+
+		if err != nil {
+			uc.errors <- err
+			return false
+		}
+
+		allConstraints := make([]api.Constraint, 0)
+		allConstraints = append(allConstraints, segmentConstraints...)
+		allConstraints = append(allConstraints, s.Constraints...)
+
+		if ok, err := constraints.Check(ctx, allConstraints); err != nil {
 			uc.errors <- err
 		} else if ok && foundStrategy.IsEnabled(s.Parameters, ctx) {
 			return true

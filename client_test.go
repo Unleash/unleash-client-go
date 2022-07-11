@@ -1,6 +1,7 @@
 package unleash
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/Unleash/unleash-client-go/v3/api"
@@ -75,6 +76,7 @@ func TestClient_WithFallbackFunc(t *testing.T) {
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
 	mockListener.On("OnCount", feature, true).Return()
+	mockListener.On("OnError").Return()
 
 	client, err := NewClient(
 		WithUrl(mockerServer),
@@ -144,6 +146,7 @@ func TestClient_ListFeatures(t *testing.T) {
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("onError").Return()
 
 	client, err := NewClient(
 		WithUrl(mockerServer),
@@ -177,6 +180,7 @@ func TestClientWithProjectName(t *testing.T) {
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("OnError").Return()
 
 	client, err := NewClient(
 		WithUrl(mockerServer),
@@ -209,6 +213,7 @@ func TestClientWithoutProjectName(t *testing.T) {
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("OnError").Return()
 
 	client, err := NewClient(
 		WithUrl(mockerServer),
@@ -278,11 +283,13 @@ func TestClientWithVariantContext(t *testing.T) {
 		Reply(200).
 		JSON(api.FeatureResponse{
 			Features: features,
+			Segments: []api.Segment{},
 		})
 
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("OnError", mock.AnythingOfType("*errors.errorString"))
 
 	client, err := NewClient(
 		WithUrl(mockerServer),
@@ -296,10 +303,448 @@ func TestClientWithVariantContext(t *testing.T) {
 	client.WaitForReady()
 
 	defaultVariant := client.GetVariant("feature-name")
+
 	assert.Equal(api.GetDefaultVariant(), defaultVariant)
 	variant := client.GetVariant("feature-name", WithVariantContext(context.Context{
 		Properties: map[string]string{"custom-id": "custom-ctx"},
 	}))
 	assert.Equal("custom-variant", variant.Name)
+	assert.True(gock.IsDone(), "there should be no more mocks")
+}
+
+func TestClient_WithSegment(t *testing.T) {
+	assert := assert.New(t)
+	defer gock.OffAll()
+
+	gock.New(mockerServer).
+		Post("/client/register").
+		MatchHeader("UNLEASH-APPNAME", mockAppName).
+		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
+		Reply(200)
+
+	feature := "feature-segment"
+	features := []api.Feature{
+		{
+			Name:        feature,
+			Description: "feature-desc",
+			Enabled:     true,
+			CreatedAt:   time.Date(1974, time.May, 19, 1, 2, 3, 4, time.UTC),
+			Strategy:    "feature-strategy",
+			Strategies: []api.Strategy{
+				{
+					Id:          1,
+					Name:        "default",
+					Constraints: []api.Constraint{},
+					Parameters:  map[string]interface{}{},
+					Segments:    []int{1},
+				},
+			},
+			Parameters: map[string]interface{}{
+				"feature-param-1": "feature-value-1",
+			},
+		},
+	}
+
+	gock.New(mockerServer).
+		Get("/client/features").
+		Reply(200).
+		JSON(api.FeatureResponse{
+			Features: features,
+			Segments: []api.Segment{
+				{Id: 1, Constraints: []api.Constraint{
+					{
+						ContextName: "custom-id",
+						Operator:    api.OperatorIn,
+						Values:      []string{"custom-ctx"},
+					}}},
+			}})
+
+	mockListener := &MockedListener{}
+	mockListener.On("OnReady").Return()
+	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("OnCount", feature, true).Return()
+	mockListener.On("OnError").Return()
+
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithListener(mockListener),
+	)
+
+	assert.NoError(err)
+	client.WaitForReady()
+
+	isEnabled := client.IsEnabled(feature, WithContext(context.Context{
+		Properties: map[string]string{"custom-id": "custom-ctx"},
+	}))
+
+	assert.True(isEnabled)
+
+	assert.True(gock.IsDone(), "there should be no more mocks")
+}
+
+func TestClient_WithNonExistingSegment(t *testing.T) {
+	assert := assert.New(t)
+	defer gock.OffAll()
+
+	gock.New(mockerServer).
+		Post("/client/register").
+		MatchHeader("UNLEASH-APPNAME", mockAppName).
+		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
+		Reply(200)
+
+	feature := "feature-segment-non-existing"
+	features := []api.Feature{
+		{
+			Name:        feature,
+			Description: "feature-desc",
+			Enabled:     true,
+			CreatedAt:   time.Date(1974, time.May, 19, 1, 2, 3, 4, time.UTC),
+			Strategy:    "feature-strategy",
+			Strategies: []api.Strategy{
+				{
+					Id:          1,
+					Name:        "default",
+					Constraints: []api.Constraint{},
+					Parameters:  map[string]interface{}{},
+					Segments:    []int{1},
+				},
+			},
+			Parameters: map[string]interface{}{
+				"feature-param-1": "feature-value-1",
+			},
+		},
+	}
+
+	gock.New(mockerServer).
+		Get("/client/features").
+		Reply(200).
+		JSON(api.FeatureResponse{
+			Features: features,
+			Segments: []api.Segment{}})
+
+	mockListener := &MockedListener{}
+	mockListener.On("OnReady").Return()
+	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("OnCount", feature, false).Return()
+	mockListener.On("OnError", mock.AnythingOfType("*errors.errorString"))
+
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithListener(mockListener),
+	)
+
+	assert.NoError(err)
+
+	client.WaitForReady()
+
+	isEnabled := client.IsEnabled(feature, WithContext(context.Context{
+		Properties: map[string]string{"custom-id": "custom-ctx"},
+	}))
+
+	assert.False(isEnabled)
+
+	assert.True(gock.IsDone(), "there should be no more mocks")
+}
+
+func TestClient_WithMultipleSegments(t *testing.T) {
+	assert := assert.New(t)
+	defer gock.OffAll()
+
+	gock.New(mockerServer).
+		Post("/client/register").
+		MatchHeader("UNLEASH-APPNAME", mockAppName).
+		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
+		Reply(200)
+
+	feature := "feature-segment-multiple"
+	features := []api.Feature{
+		{
+			Name:        feature,
+			Description: "feature-desc",
+			Enabled:     true,
+			CreatedAt:   time.Date(1974, time.May, 19, 1, 2, 3, 4, time.UTC),
+			Strategy:    "feature-strategy",
+			Strategies: []api.Strategy{
+				{
+					Id:          1,
+					Name:        "default",
+					Constraints: []api.Constraint{},
+					Parameters:  map[string]interface{}{},
+					Segments:    []int{1, 4, 6, 2},
+				},
+			},
+			Parameters: map[string]interface{}{
+				"feature-param-1": "feature-value-1",
+			},
+		},
+	}
+
+	gock.New(mockerServer).
+		Get("/client/features").
+		Reply(200).
+		JSON(api.FeatureResponse{
+			Features: features,
+			Segments: []api.Segment{
+				{Id: 1, Constraints: []api.Constraint{
+					{
+						ContextName: "custom-id",
+						Operator:    api.OperatorIn,
+						Values:      []string{"custom-ctx"},
+					}}},
+				{Id: 2, Constraints: []api.Constraint{
+					{
+						ContextName: "semver",
+						Operator:    api.OperatorSemverGt,
+						Value:       "3.2.1",
+					}}},
+				{Id: 4, Constraints: []api.Constraint{
+					{
+						ContextName: "age",
+						Operator:    api.OperatorNumEq,
+						Value:       "18",
+					}}},
+				{Id: 6, Constraints: []api.Constraint{
+					{
+						ContextName: "domain",
+						Operator:    api.OperatorStrStartsWith,
+						Values:      []string{"unleash"},
+					}}},
+			}})
+
+	mockListener := &MockedListener{}
+	mockListener.On("OnReady").Return()
+	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("OnCount", feature, true).Return()
+	mockListener.On("OnError").Return()
+
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithListener(mockListener),
+	)
+
+	assert.NoError(err)
+	client.WaitForReady()
+
+	fmt.Printf("%v", client.repository.segments)
+
+	isEnabled := client.IsEnabled(feature, WithContext(context.Context{
+		Properties: map[string]string{"custom-id": "custom-ctx", "semver": "3.2.2", "age": "18", "domain": "unleashtest"},
+	}))
+
+	assert.True(isEnabled)
+
+	assert.True(gock.IsDone(), "there should be no more mocks")
+}
+
+func TestClient_VariantShouldRespectConstraint(t *testing.T) {
+	assert := assert.New(t)
+	defer gock.OffAll()
+
+	gock.New(mockerServer).
+		Post("/client/register").
+		MatchHeader("UNLEASH-APPNAME", mockAppName).
+		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
+		Reply(200)
+
+	feature := "feature-segment-multiple"
+	features := []api.Feature{
+		{
+			Name:        feature,
+			Description: "feature-desc",
+			Enabled:     true,
+			CreatedAt:   time.Date(1974, time.May, 19, 1, 2, 3, 4, time.UTC),
+			Strategy:    "feature-strategy",
+			Strategies: []api.Strategy{
+				{
+					Id:          1,
+					Name:        "default",
+					Constraints: []api.Constraint{},
+					Parameters:  map[string]interface{}{},
+					Segments:    []int{1, 4, 6, 2},
+				},
+			},
+			Parameters: map[string]interface{}{
+				"feature-param-1": "feature-value-1",
+			},
+			Variants: []api.VariantInternal{
+				{
+					Variant: api.Variant{
+						Name:    "custom-variant",
+						Payload: api.Payload{},
+						Enabled: true,
+					},
+					Weight:     100,
+					WeightType: "",
+					Overrides:  nil,
+				},
+			},
+		},
+	}
+
+	gock.New(mockerServer).
+		Get("/client/features").
+		Reply(200).
+		JSON(api.FeatureResponse{
+			Features: features,
+			Segments: []api.Segment{
+				{Id: 1, Constraints: []api.Constraint{
+					{
+						ContextName: "custom-id",
+						Operator:    api.OperatorIn,
+						Values:      []string{"custom-ctx"},
+					}}},
+				{Id: 2, Constraints: []api.Constraint{
+					{
+						ContextName: "semver",
+						Operator:    api.OperatorSemverGt,
+						Value:       "3.2.1",
+					}}},
+				{Id: 4, Constraints: []api.Constraint{
+					{
+						ContextName: "age",
+						Operator:    api.OperatorNumEq,
+						Value:       "18",
+					}}},
+				{Id: 6, Constraints: []api.Constraint{
+					{
+						ContextName: "domain",
+						Operator:    api.OperatorStrStartsWith,
+						Values:      []string{"unleash"},
+					}}},
+			}})
+
+	mockListener := &MockedListener{}
+	mockListener.On("OnReady").Return()
+	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("OnCount", feature, true).Return()
+	mockListener.On("OnError").Return()
+
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithListener(mockListener),
+	)
+
+	assert.NoError(err)
+	client.WaitForReady()
+
+	fmt.Printf("%v", client.repository.segments)
+
+	variant := client.GetVariant(feature, WithVariantContext(context.Context{
+		Properties: map[string]string{"custom-id": "custom-ctx", "semver": "3.2.2", "age": "18", "domain": "unleashtest"},
+	}))
+
+	assert.True(variant.Enabled)
+
+	assert.True(gock.IsDone(), "there should be no more mocks")
+}
+
+func TestClient_VariantShouldFailWhenSegmentConstraintsDontMatch(t *testing.T) {
+	assert := assert.New(t)
+	defer gock.OffAll()
+
+	gock.New(mockerServer).
+		Post("/client/register").
+		MatchHeader("UNLEASH-APPNAME", mockAppName).
+		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
+		Reply(200)
+
+	feature := "feature-segment-multiple"
+	features := []api.Feature{
+		{
+			Name:        feature,
+			Description: "feature-desc",
+			Enabled:     true,
+			CreatedAt:   time.Date(1974, time.May, 19, 1, 2, 3, 4, time.UTC),
+			Strategy:    "feature-strategy",
+			Strategies: []api.Strategy{
+				{
+					Id:          1,
+					Name:        "default",
+					Constraints: []api.Constraint{},
+					Parameters:  map[string]interface{}{},
+					Segments:    []int{1, 4, 6, 2},
+				},
+			},
+			Parameters: map[string]interface{}{
+				"feature-param-1": "feature-value-1",
+			},
+			Variants: []api.VariantInternal{
+				{
+					Variant: api.Variant{
+						Name:    "custom-variant",
+						Payload: api.Payload{},
+						Enabled: true,
+					},
+					Weight:     100,
+					WeightType: "",
+					Overrides:  nil,
+				},
+			},
+		},
+	}
+
+	gock.New(mockerServer).
+		Get("/client/features").
+		Reply(200).
+		JSON(api.FeatureResponse{
+			Features: features,
+			Segments: []api.Segment{
+				{Id: 1, Constraints: []api.Constraint{
+					{
+						ContextName: "custom-id",
+						Operator:    api.OperatorIn,
+						Values:      []string{"custom-ctx"},
+					}}},
+				{Id: 2, Constraints: []api.Constraint{
+					{
+						ContextName: "semver",
+						Operator:    api.OperatorSemverGt,
+						Value:       "3.2.1",
+					}}},
+				{Id: 4, Constraints: []api.Constraint{
+					{
+						ContextName: "age",
+						Operator:    api.OperatorNumEq,
+						Value:       "15",
+					}}},
+				{Id: 6, Constraints: []api.Constraint{
+					{
+						ContextName: "domain",
+						Operator:    api.OperatorStrStartsWith,
+						Values:      []string{"unleash"},
+					}}},
+			}})
+
+	mockListener := &MockedListener{}
+	mockListener.On("OnReady").Return()
+	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("OnError").Return()
+
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithListener(mockListener),
+	)
+
+	assert.NoError(err)
+	client.WaitForReady()
+
+	fmt.Printf("%v", client.repository.segments)
+
+	variant := client.GetVariant(feature, WithVariantContext(context.Context{
+		Properties: map[string]string{"custom-id": "custom-ctx", "semver": "3.2.2", "age": "18", "domain": "unleashtest"},
+	}))
+
+	assert.False(variant.Enabled)
+
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }

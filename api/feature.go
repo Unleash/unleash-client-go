@@ -15,6 +15,12 @@ type ParameterMap map[string]interface{}
 type FeatureResponse struct {
 	Response
 	Features []Feature `json:"features"`
+	Segments []Segment `json:"segments"`
+}
+
+type Segment struct {
+  Id int `json:"id"`
+  Constraints []Constraint `json:"constraints"`
 }
 
 type Feature struct {
@@ -49,6 +55,15 @@ func (fr FeatureResponse) FeatureMap() map[string]interface{} {
 		features[f.Name] = f
 	}
 	return features
+}
+
+func (fr FeatureResponse) SegmentsMap() map[int][]Constraint {
+	segments := map[int][]Constraint{}
+	for _, segment := range fr.Segments {
+		segments[segment.Id] = segment.Constraints
+	}
+
+	return segments;
 }
 
 // Get variant for a given feature which is considered as enabled
