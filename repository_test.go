@@ -1,6 +1,8 @@
 package unleash
 
 import (
+	"bytes"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -78,4 +80,50 @@ func TestRepository_GetFeaturesFail(t *testing.T) {
 		t.Fatal("client isn't ready but should be")
 	}
 	client.Close()
+}
+
+func TestRepository_ParseAPIResponse(t *testing.T) {
+	assert := assert.New(t)
+	data := []byte(`{
+			"version": 2,
+			"features": [
+				{
+					"strategies": [],
+					"impressionData": false,
+					"enabled": false,
+					"name": "my-feature",
+					"description": "",
+					"project": "default",
+					"stale": false,
+					"type": "release",
+					"variants": []
+				},
+				{
+					"strategies": [],
+					"impressionData": false,
+					"enabled": false,
+					"name": "my-new-feature",
+					"description": "",
+					"project": "default",
+					"stale": false,
+					"type": "release",
+					"variants": []
+				}
+			],
+			"query": {
+				"inlineSegmentConstraints": true
+			}
+		}`)
+
+	reader := bytes.NewReader(data);
+	dec := json.NewDecoder(reader)
+
+	var response api.FeatureResponse
+
+	err := dec.Decode(&response)
+
+	assert.Nil(err)
+
+	assert.Equal(2, len(response.Features))
+	assert.Equal(0, len(response.Segments))
 }
