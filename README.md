@@ -48,6 +48,7 @@ func init() {
 	)
 }
 ```
+
 #### Preloading feature toggles
 
 If you'd like to prebake your application with feature toggles (maybe you're working without persistent storage, so Unleash's backup isn't available), you can replace the defaultStorage implementation with a BootstrapStorage. This allows you to pass in a reader to where data in the format of `/api/client/features` can be found.
@@ -91,22 +92,22 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	
+
 	// Create an S3 client
 	client := s3.NewFromConfig(cfg)
-	
+
 	obj, err := client.GetObject(context.TODO(), &s3.GetObjectInput{
 		Bucket: aws.String("YOURBUCKET"),
 		Key:    aws.String("YOURKEY"),
 	})
-	
+
 	if err != nil {
 		log.Fatal(err)
 	}
-	
+
 	reader := obj.Body
 	defer reader.Close()
-	
+
 	// BootstrapStorage handles the case where Reader is nil
 	unleash.Initialize(
 		unleash.WithListener(&unleash.DebugListener{}),
@@ -134,10 +135,10 @@ func init() {
 		// TODO: Handle error.
 	}
 	defer client.Close()
-	
+
 	// Fetch the bucket, then object and then create a reader
 	reader := client.Bucket(bucketName).Object("my-bootstrap.json").NewReader(ctx)
-	
+
 	// BootstrapStorage handles the case where Reader is nil
 	unleash.Initialize(
 		unleash.WithListener(&unleash.DebugListener{}),
@@ -202,6 +203,11 @@ This client uses go routines to report several events and doesn't drain the chan
 
 ## Development
 
+## Steps to release
+
+- Update the clientVersion in `client.go`
+- Tag the repository with the new tag
+
 ## Adding client specifications
 
 In order to make sure the unleash clients uphold their contract, we have defined a set of
@@ -226,16 +232,16 @@ Requirements:
 
 Run tests:
 
-	make
+    make
 
 Run lint check:
 
-	make lint
+    make lint
 
 Run code-style checks:(currently failing)
 
-	make strict-check
+    make strict-check
 
 Run race-tests:
 
-	make test-all
+    make test-all
