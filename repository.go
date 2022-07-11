@@ -165,7 +165,7 @@ func (r *repository) resolveSegmentConstraints(strategy api.Strategy) ([]api.Con
 		if resolvedConstraints, ok := r.segments[segmentId]; ok {
 			segmentConstraints = append(segmentConstraints, resolvedConstraints...)
 		} else {
-			return segmentConstraints, fmt.Errorf("segment does not exists")
+			return segmentConstraints, fmt.Errorf("segment does not exist")
 		}
 	}
 
