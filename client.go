@@ -312,7 +312,12 @@ func (uc *Client) isEnabled(featureName string, feature *api.Feature, options ..
 // It is safe to call this method from multiple goroutines concurrently.
 func (uc *Client) IsFeatureEnabled(feature *api.Feature, options ...FeatureOption) (enabled bool) {
 	defer func() {
-		uc.metrics.count(feature.Name, enabled)
+		if feature == nil {
+			uc.metrics.count("", enabled)
+		} else {
+			uc.metrics.count(feature.Name, enabled)
+		}
+
 	}()
 
 	return uc.isEnabled("", feature, options...)

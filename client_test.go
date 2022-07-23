@@ -99,6 +99,48 @@ func TestClient_WithFallbackFunc(t *testing.T) {
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
 
+func TestClient_WithFallbackFuncNilFeature(t *testing.T) {
+	assert := assert.New(t)
+	defer gock.OffAll()
+
+	gock.New(mockerServer).
+		Post("/client/register").
+		MatchHeader("UNLEASH-APPNAME", mockAppName).
+		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
+		Reply(200)
+
+	gock.New(mockerServer).
+		Get("/client/features").
+		Reply(200).
+		JSON(api.FeatureResponse{})
+
+	mockListener := &MockedListener{}
+	mockListener.On("OnReady").Return()
+	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("OnCount", "", true).Return()
+	mockListener.On("OnError").Return()
+
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithListener(mockListener),
+	)
+
+	assert.NoError(err)
+
+	client.WaitForReady()
+
+	emptyStringFallback := func(f string, ctx *context.Context) bool {
+		return f == ""
+	}
+
+	isFeatureEnabled := client.IsFeatureEnabled(nil, WithFallbackFunc(emptyStringFallback))
+	assert.True(isFeatureEnabled)
+
+	assert.True(gock.IsDone(), "there should be no more mocks")
+}
+
 func TestClient_ListFeatures(t *testing.T) {
 	assert := assert.New(t)
 	defer gock.OffAll()
@@ -381,6 +423,12 @@ func TestClient_WithSegment(t *testing.T) {
 
 	assert.True(isEnabled)
 
+	isFeatureEnabled := client.IsFeatureEnabled(&features[0], WithContext(context.Context{
+		Properties: map[string]string{"custom-id": "custom-ctx"},
+	}))
+
+	assert.True(isFeatureEnabled)
+
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
 
@@ -446,6 +494,12 @@ func TestClient_WithNonExistingSegment(t *testing.T) {
 	}))
 
 	assert.False(isEnabled)
+
+	isFeatureEnabled := client.IsFeatureEnabled(&features[0], WithContext(context.Context{
+		Properties: map[string]string{"custom-id": "custom-ctx"},
+	}))
+
+	assert.False(isFeatureEnabled)
 
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
@@ -538,6 +592,12 @@ func TestClient_WithMultipleSegments(t *testing.T) {
 	}))
 
 	assert.True(isEnabled)
+
+	isFeatureEnabled := client.IsFeatureEnabled(&features[0], WithContext(context.Context{
+		Properties: map[string]string{"custom-id": "custom-ctx", "semver": "3.2.2", "age": "18", "domain": "unleashtest"},
+	}))
+
+	assert.True(isFeatureEnabled)
 
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
