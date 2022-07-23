@@ -242,15 +242,15 @@ func (uc *Client) IsEnabled(featureName string, options ...FeatureOption) (enabl
 	defer func() {
 		uc.metrics.count(featureName, enabled)
 	}()
-
-	f := uc.repository.getToggle(featureName)
-	return uc.isEnabled(f, options...)
+	feature := uc.repository.getToggle(featureName)
+	return uc.isEnabled(featureName, feature, options...)
 }
 
 // isEnabled abstracts away the details of checking if a toggle is turned on or off
+// featureName is used as a backup in case the provided feature is nil
 // without metrics
 // without retrieval of api.Feature
-func (uc *Client) isEnabled(feature *api.Feature, options ...FeatureOption) (enabled bool) {
+func (uc *Client) isEnabled(featureName string, feature *api.Feature, options ...FeatureOption) (enabled bool) {
 	var opts featureOption
 	for _, o := range options {
 		o(&opts)
@@ -263,7 +263,7 @@ func (uc *Client) isEnabled(feature *api.Feature, options ...FeatureOption) (ena
 
 	if feature == nil {
 		if opts.fallbackFunc != nil {
-			return opts.fallbackFunc(feature.Name, ctx)
+			return opts.fallbackFunc(featureName, ctx)
 		} else if opts.fallback != nil {
 			return *opts.fallback
 		}
@@ -313,13 +313,14 @@ func (uc *Client) IsFeatureEnabled(feature *api.Feature, options ...FeatureOptio
 	defer func() {
 		uc.metrics.count(feature.Name, enabled)
 	}()
-	return uc.isEnabled(feature, options...)
+
+	return uc.isEnabled("", feature, options...)
 }
 
 // GetVariant queries a variant as the specified feature is enabled.
 //
 // It is safe to call this method from multiple goroutines concurrently.
-func (uc *Client) GetVariant(feature string, options ...VariantOption) *api.Variant {
+func (uc *Client) GetVariant(featureName string, options ...VariantOption) *api.Variant {
 	defaultVariant := api.GetDefaultVariant()
 	var opts variantOption
 	for _, o := range options {
@@ -331,15 +332,15 @@ func (uc *Client) GetVariant(feature string, options ...VariantOption) *api.Vari
 		ctx = ctx.Override(*opts.ctx)
 	}
 
-	f := uc.repository.getToggle(feature)
+	f := uc.repository.getToggle(featureName)
 
-	if !uc.isEnabled(f, WithContext(*ctx)) {
+	if !uc.isEnabled(featureName, f, WithContext(*ctx)) {
 		return defaultVariant
 	}
 
 	if f == nil {
 		if opts.variantFallbackFunc != nil {
-			return opts.variantFallbackFunc(feature, ctx)
+			return opts.variantFallbackFunc(featureName, ctx)
 		} else if opts.variantFallback != nil {
 			return opts.variantFallback
 		}
@@ -357,7 +358,7 @@ func (uc *Client) GetVariant(feature string, options ...VariantOption) *api.Vari
 	variant := f.GetVariant(ctx)
 
 	defer func() {
-		uc.metrics.countVariants(feature, variant.Name)
+		uc.metrics.countVariants(featureName, variant.Name)
 	}()
 	return variant
 }
