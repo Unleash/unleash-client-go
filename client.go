@@ -307,7 +307,6 @@ func (uc *Client) isEnabled(featureName string, feature *api.Feature, options ..
 }
 
 // IsFeatureEnabled queries whether the specified feature is enabled or not.
-// If feature is nil then the Feature.Name will be treated as the empty string ""
 //
 // It is safe to call this method from multiple goroutines concurrently.
 func (uc *Client) IsFeatureEnabled(feature *api.Feature, options ...FeatureOption) (enabled bool) {
