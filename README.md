@@ -201,6 +201,47 @@ unleash.IsEnabled("someToggle", unleash.WithContext(ctx))
 
 This client uses go routines to report several events and doesn't drain the channel by default. So you need to either register a listener using `WithListener` or drain the channel "manually" (demonstrated in [this example](https://github.com/Unleash/unleash-client-go/blob/master/example_with_instance_test.go)).
 
+### Feature Resolver
+
+`FeatureResolver` is a `FeatureOption` used in `IsEnabled` via the `WithResolver`. 
+
+The `FeatureResolver` can be used to provide a feature instance in a different way than the client would normally retrieve it. This alternative resolver can be useful if you already have the feature instance and don't want to incur the cost to retrieve it from the repository.
+
+An example of its usage is below:
+```go
+ctx := context.Context{
+	UserId:        "123",
+	SessionId:     "some-session-id",
+	RemoteAddress: "127.0.0.1",
+}
+
+// the FeatureResolver function that will be passed into WithResolver
+resolver := func(featureName string) *api.Feature {
+    if featureName == "someToggle" {
+        // Feature being created in place for sake of example, but it is preferable an existing feature instance is used
+        return &api.Feature{
+            Name:        "someToggle",
+            Description: "Example of someToggle",
+            Enabled:     true,
+            Strategies: []api.Strategy{
+                {
+                    Id:   1,
+                    Name: "default",
+                },
+            },
+            CreatedAt:  time.Time{},
+            Strategy:   "default-strategy",
+        }
+    } else {
+        // it shouldn't reach this block because the name will match above "someToggle" for this example
+        return nil
+    }
+}
+
+// This would return true because the matched strategy is default and the feature is Enabled 
+unleash.IsEnabled("someToggle", unleash.WithContext(ctx), unleash.WithResolver(resolver))
+```
+
 ## Development
 
 ## Steps to release
