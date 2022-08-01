@@ -114,7 +114,7 @@ func TestClient_WithResolver(t *testing.T) {
 		Reply(200).
 		JSON(api.FeatureResponse{})
 
-	feature := "does_not_exist"
+	const feature = "some_special_value"
 
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
@@ -133,21 +133,16 @@ func TestClient_WithResolver(t *testing.T) {
 
 	client.WaitForReady()
 
-	const expectedFeatureName = "some_special_value"
-
 	resolver := func(featureName string) *api.Feature {
-		if featureName == expectedFeatureName {
+		if featureName == feature {
 			return &api.Feature{
 				Name:        "some_special_value-resolved",
 				Description: "",
 				Enabled:     true,
 				Strategies: []api.Strategy{
 					{
-						Id:          1,
-						Name:        "default",
-						Constraints: []api.Constraint{},
-						Parameters:  map[string]interface{}{},
-						Segments:    []int{1},
+						Id:   1,
+						Name: "default",
 					},
 				},
 				CreatedAt:  time.Time{},
@@ -156,12 +151,12 @@ func TestClient_WithResolver(t *testing.T) {
 				Variants:   nil,
 			}
 		} else {
-			t.Fatalf("the feature name passed %s was not the expected one %s", featureName, expectedFeatureName)
+			t.Fatalf("the feature name passed %s was not the expected one %s", featureName, feature)
 			return nil
 		}
 	}
 
-	isEnabled := client.IsEnabled(expectedFeatureName, WithResolver(resolver))
+	isEnabled := client.IsEnabled(feature, WithResolver(resolver))
 	assert.True(isEnabled)
 
 	assert.True(gock.IsDone(), "there should be no more mocks")
