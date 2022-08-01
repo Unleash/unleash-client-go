@@ -17,7 +17,7 @@ import (
 const (
 	deprecatedSuffix = "/features"
 	clientName       = "unleash-client-go"
-	clientVersion    = "3.7.0"
+	clientVersion    = "3.6.0"
 )
 
 var defaultStrategies = []strategy.Strategy{
@@ -238,19 +238,19 @@ func (uc *Client) sync() {
 // IsEnabled queries whether the specified feature is enabled or not.
 //
 // It is safe to call this method from multiple goroutines concurrently.
-func (uc *Client) IsEnabled(featureName string, options ...FeatureOption) (enabled bool) {
+func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled bool) {
 	defer func() {
-		uc.metrics.count(featureName, enabled)
+		uc.metrics.count(feature, enabled)
 	}()
 
-	f := uc.repository.getToggle(featureName)
-	return uc.isEnabled(f, options...)
+	return uc.isEnabled(feature, options...)
 }
 
 // isEnabled abstracts away the details of checking if a toggle is turned on or off
 // without metrics
-// without retrieval of api.Feature
-func (uc *Client) isEnabled(feature *api.Feature, options ...FeatureOption) (enabled bool) {
+func (uc *Client) isEnabled(feature string, options ...FeatureOption) (enabled bool) {
+	f := uc.repository.getToggle(feature)
+
 	var opts featureOption
 	for _, o := range options {
 		o(&opts)
@@ -261,24 +261,24 @@ func (uc *Client) isEnabled(feature *api.Feature, options ...FeatureOption) (ena
 		ctx = ctx.Override(*opts.ctx)
 	}
 
-	if feature == nil {
+	if f == nil {
 		if opts.fallbackFunc != nil {
-			return opts.fallbackFunc(feature.Name, ctx)
+			return opts.fallbackFunc(feature, ctx)
 		} else if opts.fallback != nil {
 			return *opts.fallback
 		}
 		return false
 	}
 
-	if !feature.Enabled {
+	if !f.Enabled {
 		return false
 	}
 
-	if len(feature.Strategies) == 0 {
-		return feature.Enabled
+	if len(f.Strategies) == 0 {
+		return f.Enabled
 	}
 
-	for _, s := range feature.Strategies {
+	for _, s := range f.Strategies {
 		foundStrategy := uc.getStrategy(s.Name)
 		if foundStrategy == nil {
 			// TODO: warnOnce missingStrategy
@@ -306,16 +306,6 @@ func (uc *Client) isEnabled(feature *api.Feature, options ...FeatureOption) (ena
 	return false
 }
 
-// IsFeatureEnabled queries whether the specified feature is enabled or not.
-//
-// It is safe to call this method from multiple goroutines concurrently.
-func (uc *Client) IsFeatureEnabled(feature *api.Feature, options ...FeatureOption) (enabled bool) {
-	defer func() {
-		uc.metrics.count(feature.Name, enabled)
-	}()
-	return uc.isEnabled(feature, options...)
-}
-
 // GetVariant queries a variant as the specified feature is enabled.
 //
 // It is safe to call this method from multiple goroutines concurrently.
@@ -331,11 +321,11 @@ func (uc *Client) GetVariant(feature string, options ...VariantOption) *api.Vari
 		ctx = ctx.Override(*opts.ctx)
 	}
 
-	f := uc.repository.getToggle(feature)
-
-	if !uc.isEnabled(f, WithContext(*ctx)) {
+	if !uc.isEnabled(feature, WithContext(*ctx)) {
 		return defaultVariant
 	}
+
+	f := uc.repository.getToggle(feature)
 
 	if f == nil {
 		if opts.variantFallbackFunc != nil {
