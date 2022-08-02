@@ -85,7 +85,7 @@ func WithMetricsInterval(metricsInterval time.Duration) ConfigOption {
 	}
 }
 
-// WithDisabledMetrics specifies that the client should not log metrics to the unleash server.
+// WithDisableMetrics specifies that the client should not log metrics to the unleash server.
 func WithDisableMetrics(disableMetrics bool) ConfigOption {
 	return func(o *configOption) {
 		o.disableMetrics = disableMetrics
@@ -139,6 +139,16 @@ func WithProjectName(projectName string) ConfigOption {
 	}
 }
 
+// FeatureResolver represents a function to be called to resolve the feature instead of using the repository
+type FeatureResolver func(feature string) *api.Feature
+
+// WithResolver allows you to bypass the repository when resolving a feature name to its actual instance.
+func WithResolver(resolver FeatureResolver) FeatureOption {
+	return func(opts *featureOption) {
+		opts.resolver = resolver
+	}
+}
+
 // FallbackFunc represents a function to be called if the feature is not found.
 type FallbackFunc func(feature string, ctx *context.Context) bool
 
@@ -146,6 +156,7 @@ type featureOption struct {
 	fallback     *bool
 	fallbackFunc FallbackFunc
 	ctx          *context.Context
+	resolver     FeatureResolver
 }
 
 // FeatureOption provides options for querying if a feature is enabled or not.
@@ -183,6 +194,13 @@ func WithVariantContext(ctx context.Context) VariantOption {
 	}
 }
 
+// WithVariantResolver allows you to bypass the repository when resolving a feature name to its actual instance.
+func WithVariantResolver(resolver FeatureResolver) VariantOption {
+	return func(opts *variantOption) {
+		opts.resolver = resolver
+	}
+}
+
 // VariantFallbackFunc represents a function to be called if the variant is not found.
 type VariantFallbackFunc func(feature string, ctx *context.Context) *api.Variant
 
@@ -190,6 +208,7 @@ type variantOption struct {
 	variantFallback     *api.Variant
 	variantFallbackFunc VariantFallbackFunc
 	ctx                 *context.Context
+	resolver            FeatureResolver
 }
 
 // VariantOption provides options for querying if a variant is found or not.

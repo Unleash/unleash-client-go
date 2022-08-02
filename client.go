@@ -17,7 +17,7 @@ import (
 const (
 	deprecatedSuffix = "/features"
 	clientName       = "unleash-client-go"
-	clientVersion    = "3.6.0"
+	clientVersion    = "3.7.0"
 )
 
 var defaultStrategies = []strategy.Strategy{
@@ -249,11 +249,16 @@ func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled b
 // isEnabled abstracts away the details of checking if a toggle is turned on or off
 // without metrics
 func (uc *Client) isEnabled(feature string, options ...FeatureOption) (enabled bool) {
-	f := uc.repository.getToggle(feature)
-
 	var opts featureOption
 	for _, o := range options {
 		o(&opts)
+	}
+
+	var f *api.Feature
+	if opts.resolver != nil {
+		f = opts.resolver(feature)
+	} else {
+		f = uc.repository.getToggle(feature)
 	}
 
 	ctx := uc.staticContext
@@ -321,11 +326,22 @@ func (uc *Client) GetVariant(feature string, options ...VariantOption) *api.Vari
 		ctx = ctx.Override(*opts.ctx)
 	}
 
-	if !uc.isEnabled(feature, WithContext(*ctx)) {
-		return defaultVariant
+	if opts.resolver != nil {
+		if !uc.isEnabled(feature, WithContext(*ctx), WithResolver(opts.resolver)) {
+			return defaultVariant
+		}
+	} else {
+		if !uc.isEnabled(feature, WithContext(*ctx)) {
+			return defaultVariant
+		}
 	}
 
-	f := uc.repository.getToggle(feature)
+	var f *api.Feature
+	if opts.resolver != nil {
+		f = opts.resolver(feature)
+	} else {
+		f = uc.repository.getToggle(feature)
+	}
 
 	if f == nil {
 		if opts.variantFallbackFunc != nil {

@@ -99,6 +99,69 @@ func TestClient_WithFallbackFunc(t *testing.T) {
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
 
+func TestClient_WithResolver(t *testing.T) {
+	assert := assert.New(t)
+	defer gock.OffAll()
+
+	gock.New(mockerServer).
+		Post("/client/register").
+		MatchHeader("UNLEASH-APPNAME", mockAppName).
+		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
+		Reply(200)
+
+	gock.New(mockerServer).
+		Get("/client/features").
+		Reply(200).
+		JSON(api.FeatureResponse{})
+
+	const feature = "some_special_value"
+
+	mockListener := &MockedListener{}
+	mockListener.On("OnReady").Return()
+	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("OnCount", feature, true).Return()
+	mockListener.On("OnError").Return()
+
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithListener(mockListener),
+	)
+
+	assert.NoError(err)
+
+	client.WaitForReady()
+
+	resolver := func(featureName string) *api.Feature {
+		if featureName == feature {
+			return &api.Feature{
+				Name:        "some_special_value-resolved",
+				Description: "",
+				Enabled:     true,
+				Strategies: []api.Strategy{
+					{
+						Id:   1,
+						Name: "default",
+					},
+				},
+				CreatedAt:  time.Time{},
+				Strategy:   "default-strategy",
+				Parameters: nil,
+				Variants:   nil,
+			}
+		} else {
+			t.Fatalf("the feature name passed %s was not the expected one %s", featureName, feature)
+			return nil
+		}
+	}
+
+	isEnabled := client.IsEnabled(feature, WithResolver(resolver))
+	assert.True(isEnabled)
+
+	assert.True(gock.IsDone(), "there should be no more mocks")
+}
+
 func TestClient_ListFeatures(t *testing.T) {
 	assert := assert.New(t)
 	defer gock.OffAll()
@@ -309,6 +372,20 @@ func TestClientWithVariantContext(t *testing.T) {
 		Properties: map[string]string{"custom-id": "custom-ctx"},
 	}))
 	assert.Equal("custom-variant", variant.Name)
+
+	variantFromResolver := client.GetVariant("feature-name", WithVariantContext(context.Context{
+		Properties: map[string]string{"custom-id": "custom-ctx"},
+	}), WithVariantResolver(func(featureName string) *api.Feature {
+		if featureName == features[0].Name {
+			return &features[0]
+		} else {
+			t.Fatalf("the feature name passed %s was not the expected one %s", featureName, features[0].Name)
+			return nil
+		}
+	}))
+
+	assert.Equal("custom-variant", variantFromResolver.Name)
+
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
 
@@ -381,6 +458,19 @@ func TestClient_WithSegment(t *testing.T) {
 
 	assert.True(isEnabled)
 
+	isEnabledWithResolver := client.IsEnabled(feature, WithContext(context.Context{
+		Properties: map[string]string{"custom-id": "custom-ctx"},
+	}), WithResolver(func(featureName string) *api.Feature {
+		if featureName == features[0].Name {
+			return &features[0]
+		} else {
+			t.Fatalf("the feature name passed %s was not the expected one %s", featureName, features[0].Name)
+			return nil
+		}
+	}))
+
+	assert.True(isEnabledWithResolver)
+
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
 
@@ -446,6 +536,19 @@ func TestClient_WithNonExistingSegment(t *testing.T) {
 	}))
 
 	assert.False(isEnabled)
+
+	isEnabledWithResolver := client.IsEnabled(feature, WithContext(context.Context{
+		Properties: map[string]string{"custom-id": "custom-ctx"},
+	}), WithResolver(func(featureName string) *api.Feature {
+		if featureName == features[0].Name {
+			return &features[0]
+		} else {
+			t.Fatalf("the feature name passed %s was not the expected one %s", featureName, features[0].Name)
+			return nil
+		}
+	}))
+
+	assert.False(isEnabledWithResolver)
 
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
@@ -538,6 +641,19 @@ func TestClient_WithMultipleSegments(t *testing.T) {
 	}))
 
 	assert.True(isEnabled)
+
+	isEnabledWithResolver := client.IsEnabled(feature, WithContext(context.Context{
+		Properties: map[string]string{"custom-id": "custom-ctx", "semver": "3.2.2", "age": "18", "domain": "unleashtest"},
+	}), WithResolver(func(featureName string) *api.Feature {
+		if featureName == features[0].Name {
+			return &features[0]
+		} else {
+			t.Fatalf("the feature name passed %s was not the expected one %s", featureName, features[0].Name)
+			return nil
+		}
+	}))
+
+	assert.True(isEnabledWithResolver)
 
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
@@ -643,6 +759,19 @@ func TestClient_VariantShouldRespectConstraint(t *testing.T) {
 
 	assert.True(variant.Enabled)
 
+	variantFromResolver := client.GetVariant(feature, WithVariantContext(context.Context{
+		Properties: map[string]string{"custom-id": "custom-ctx", "semver": "3.2.2", "age": "18", "domain": "unleashtest"},
+	}), WithVariantResolver(func(featureName string) *api.Feature {
+		if featureName == features[0].Name {
+			return &features[0]
+		} else {
+			t.Fatalf("the feature name passed %s was not the expected one %s", featureName, features[0].Name)
+			return nil
+		}
+	}))
+
+	assert.True(variantFromResolver.Enabled)
+
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
 
@@ -745,6 +874,19 @@ func TestClient_VariantShouldFailWhenSegmentConstraintsDontMatch(t *testing.T) {
 	}))
 
 	assert.False(variant.Enabled)
+
+	variantFromResolver := client.GetVariant(feature, WithVariantContext(context.Context{
+		Properties: map[string]string{"custom-id": "custom-ctx", "semver": "3.2.2", "age": "18", "domain": "unleashtest"},
+	}), WithVariantResolver(func(featureName string) *api.Feature {
+		if featureName == features[0].Name {
+			return &features[0]
+		} else {
+			t.Fatalf("the feature name passed %s was not the expected one %s", featureName, features[0].Name)
+			return nil
+		}
+	}))
+
+	assert.False(variantFromResolver.Enabled)
 
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
