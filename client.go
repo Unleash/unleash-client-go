@@ -159,6 +159,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 			url:             *parsedUrl,
 			appName:         uc.options.appName,
 			projectName:     uc.options.projectName,
+			environment:     uc.options.environment,
 			instanceId:      uc.options.instanceId,
 			refreshInterval: uc.options.refreshInterval,
 			storage:         uc.options.storage,

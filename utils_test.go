@@ -9,9 +9,12 @@ import (
 // TestGetFetchURLPath verifies that getFetchURLPath returns the correct path
 func TestGetFetchURLPath(t *testing.T) {
 	assert := assert.New(t)
-	res := getFetchURLPath("")
+	res := getFetchURLPath("", "")
 	assert.Equal("./client/features", res)
 
-	res = getFetchURLPath("myProject")
+	res = getFetchURLPath("myProject", "")
 	assert.Equal("./client/features?project=myProject", res)
+
+	res = getFetchURLPath("myProject", "development")
+	assert.Equal("./client/features?environment=development&project=myProject", res)
 }

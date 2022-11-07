@@ -292,6 +292,40 @@ func TestClientWithoutProjectName(t *testing.T) {
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
 
+func TestClientWithEnvironment(t *testing.T) {
+	assert := assert.New(t)
+	environment := "development"
+	defer gock.OffAll()
+
+	gock.New(mockerServer).
+		Post("/client/register").
+		Reply(200)
+
+	gock.New(mockerServer).
+		Get("/client/features").
+		Reply(200).
+		JSON(api.FeatureResponse{})
+
+	mockListener := &MockedListener{}
+	mockListener.On("OnReady").Return()
+	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("OnError").Return()
+
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithEnvironment(environment),
+		WithInstanceId(mockInstanceId),
+		WithListener(mockListener),
+	)
+
+	client.WaitForReady()
+
+	assert.NoError(err)
+	assert.Equal(client.options.environment, environment)
+	assert.True(gock.IsDone(), "there should be no more mocks")
+}
+
 func TestClientWithVariantContext(t *testing.T) {
 	assert := assert.New(t)
 	defer gock.OffAll()

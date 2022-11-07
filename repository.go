@@ -86,7 +86,7 @@ func (r *repository) sync() {
 }
 
 func (r *repository) fetch() error {
-	u, _ := r.options.url.Parse(getFetchURLPath(r.options.projectName))
+	u, _ := r.options.url.Parse(getFetchURLPath(r.options.projectName, r.options.environment))
 
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {

@@ -52,7 +52,7 @@ func TestRepository_GetFeaturesFail(t *testing.T) {
 	mockListener.On("OnReady").Run(func(args mock.Arguments) { close(ready) }).Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
 	mockListener.On("OnError", mock.MatchedBy(func(e error) bool {
-		return strings.HasSuffix(e.Error(), "/client/features returned status code 400")
+		return strings.HasSuffix(e.Error(), "/client/features?environment=default returned status code 400")
 	})).Return()
 	mockListener.On("OnSent", mock.AnythingOfType("MetricsData")).Return()
 	client, err := NewClient(
@@ -114,8 +114,7 @@ func TestRepository_ParseAPIResponse(t *testing.T) {
 				"inlineSegmentConstraints": true
 			}
 		}`)
-
-	reader := bytes.NewReader(data);
+	reader := bytes.NewReader(data)
 	dec := json.NewDecoder(reader)
 
 	var response api.FeatureResponse
@@ -126,4 +125,80 @@ func TestRepository_ParseAPIResponse(t *testing.T) {
 
 	assert.Equal(2, len(response.Features))
 	assert.Equal(0, len(response.Segments))
+}
+
+func TestRepository_GetFeaturesWithEnvironment(t *testing.T) {
+	assert := assert.New(t)
+	data := []byte(`{
+		"version": 2,
+		"features": [
+			{
+				"strategies": [{
+					"name":"default",
+					"constraints": [],
+					"parameters": {}
+				}],
+				"impressionData": false,
+				"enabled": true,
+				"name": "my-feature",
+				"description": "",
+				"project": "default",
+				"stale": false,
+				"type": "release",
+				"variants": []
+			}
+		],
+		"query": {
+			"project": [
+				"default"
+			],
+			"environment":"development",
+			"inlineSegmentConstraints": true
+		}
+	}`)
+
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		switch req.Method + " " + req.URL.Path {
+		case "POST /client/register":
+		case "GET /client/features":
+			rw.WriteHeader(200)
+			_, err := rw.Write(data)
+			if err != nil {
+				t.Error(err)
+			}
+		case "POST /client/metrics":
+		default:
+			t.Fatalf("Unexpected request: %+v", req)
+		}
+	}))
+	defer srv.Close()
+
+	ready := make(chan struct{})
+	mockListener := &MockedListener{}
+	mockListener.On("OnReady").Run(func(args mock.Arguments) { close(ready) }).Return()
+	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("OnError", mock.MatchedBy(func(e error) bool {
+		return strings.HasSuffix(e.Error(), "/client/features?environment=development&project=default returned status code 400")
+	})).Return()
+	mockListener.On("OnSent", mock.AnythingOfType("MetricsData")).Return()
+	client, err := NewClient(
+		WithUrl(srv.URL),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithProjectName("default"),
+		WithEnvironment("development"),
+		WithListener(mockListener),
+		WithRefreshInterval(100*time.Millisecond),
+		WithDisableMetrics(true),
+	)
+	assert.Nil(err, "client should not return an error")
+
+	select {
+	case <-ready:
+	case <-time.NewTimer(time.Second).C:
+		t.Fatal("client isn't ready but should be")
+	}
+	client.Close()
+
+	assert.True(client.IsEnabled("my-feature"))
 }

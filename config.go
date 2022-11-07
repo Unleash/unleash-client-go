@@ -234,6 +234,7 @@ type repositoryOptions struct {
 	appName         string
 	instanceId      string
 	projectName     string
+	environment     string
 	url             url.URL
 	backupPath      string
 	refreshInterval time.Duration

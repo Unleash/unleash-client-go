@@ -3,6 +3,7 @@ package unleash
 import (
 	"fmt"
 	"math/rand"
+	"net/url"
 	"os"
 	"os/user"
 	"time"
@@ -28,9 +29,20 @@ func generateInstanceId() string {
 	return prefix
 }
 
-func getFetchURLPath(projectName string) string {
+func getFetchURLPath(projectName, environment string) string {
+	u, _ := url.Parse("./client/features")
+
+	q := u.Query()
+
 	if projectName != "" {
-		return fmt.Sprintf("./client/features?project=%s", projectName)
+		q.Set("project", projectName)
 	}
-	return "./client/features"
+
+	if environment != "" {
+		q.Set("environment", environment)
+	}
+
+	u.RawQuery = q.Encode()
+
+	return u.String()
 }
