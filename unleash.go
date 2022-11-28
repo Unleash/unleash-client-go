@@ -37,6 +37,9 @@ type RepositoryListener interface {
 
 // IsEnabled queries the default client whether or not the specified feature is enabled or not.
 func IsEnabled(feature string, options ...FeatureOption) bool {
+	if defaultClient == nil {
+		return false
+	}
 	return defaultClient.IsEnabled(feature, options...)
 }
 
@@ -47,11 +50,17 @@ func Initialize(options ...ConfigOption) (err error) {
 }
 
 func GetVariant(feature string, options ...VariantOption) *api.Variant {
+	if defaultClient == nil {
+		return api.GetDefaultVariant()
+	}
 	return defaultClient.GetVariant(feature, options...)
 }
 
 // Close will close the default client.
 func Close() error {
+	if defaultClient == nil {
+		return nil
+	}
 	return defaultClient.Close()
 }
 
