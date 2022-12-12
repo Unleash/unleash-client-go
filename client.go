@@ -315,6 +315,15 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) (enabled b
 //
 // It is safe to call this method from multiple goroutines concurrently.
 func (uc *Client) GetVariant(feature string, options ...VariantOption) *api.Variant {
+	variant, enabled := uc.getVariant(feature, options...)
+	defer func() {
+		uc.metrics.countVariants(feature, enabled, variant.Name)
+	}()
+	return variant
+}
+
+// getVariant abstracts away the logic for resolving a variant without metrics
+func (uc *Client) getVariant(feature string, options ...VariantOption) (*api.Variant, bool) {
 	defaultVariant := api.GetDefaultVariant()
 	var opts variantOption
 	for _, o := range options {
@@ -328,11 +337,11 @@ func (uc *Client) GetVariant(feature string, options ...VariantOption) *api.Vari
 
 	if opts.resolver != nil {
 		if !uc.isEnabled(feature, WithContext(*ctx), WithResolver(opts.resolver)) {
-			return defaultVariant
+			return defaultVariant, false
 		}
 	} else {
 		if !uc.isEnabled(feature, WithContext(*ctx)) {
-			return defaultVariant
+			return defaultVariant, false
 		}
 	}
 
@@ -345,27 +354,22 @@ func (uc *Client) GetVariant(feature string, options ...VariantOption) *api.Vari
 
 	if f == nil {
 		if opts.variantFallbackFunc != nil {
-			return opts.variantFallbackFunc(feature, ctx)
+			return opts.variantFallbackFunc(feature, ctx), false
 		} else if opts.variantFallback != nil {
-			return opts.variantFallback
+			return opts.variantFallback, false
 		}
-		return defaultVariant
+		return defaultVariant, false
 	}
 
 	if !f.Enabled {
-		return defaultVariant
+		return defaultVariant, false
 	}
 
 	if len(f.Variants) == 0 {
-		return defaultVariant
+		return defaultVariant, false
 	}
 
-	variant := f.GetVariant(ctx)
-
-	defer func() {
-		uc.metrics.countVariants(feature, variant.Name)
-	}()
-	return variant
+	return f.GetVariant(ctx), true
 }
 
 // Close stops the client from syncing data from the server.

@@ -53,6 +53,43 @@ func TestMetrics_RegisterInstance(t *testing.T) {
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
 
+func TestMetrics_VariantsCountToggles(t *testing.T) {
+	assert := assert.New(t)
+	defer gock.OffAll()
+
+	gock.New(mockerServer).
+		Post("/client/register").
+		MatchHeader("UNLEASH-APPNAME", mockAppName).
+		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
+		Reply(200)
+
+	gock.New(mockerServer).
+		Get("/client/features").
+		Reply(200).
+		JSON(api.FeatureResponse{})
+
+	mockListener := &MockedListener{}
+	mockListener.On("OnReady").Return()
+	mockListener.On("OnCount", "foo", false).Return()
+	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithListener(mockListener),
+	)
+
+	client.WaitForReady()
+	client.GetVariant("foo")
+
+	assert.EqualValues(client.metrics.bucket.Toggles["foo"].No, 1)
+	client.Close()
+
+	assert.Nil(err, "client should not return an error")
+	assert.True(gock.IsDone(), "there should be no more mocks")
+}
+
 func TestMetrics_DoPost(t *testing.T) {
 	assert := assert.New(t)
 	defer gock.OffAll()
