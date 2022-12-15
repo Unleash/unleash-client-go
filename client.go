@@ -315,15 +315,15 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) (enabled b
 //
 // It is safe to call this method from multiple goroutines concurrently.
 func (uc *Client) GetVariant(feature string, options ...VariantOption) *api.Variant {
-	variant, enabled := uc.getVariant(feature, options...)
+	variant := uc.getVariantWithoutMetrics(feature, options...)
 	defer func() {
-		uc.metrics.countVariants(feature, enabled, variant.Name)
+		uc.metrics.countVariants(feature, variant.Enabled, variant.Name)
 	}()
 	return variant
 }
 
-// getVariant abstracts away the logic for resolving a variant without metrics
-func (uc *Client) getVariant(feature string, options ...VariantOption) (*api.Variant, bool) {
+// getVariantWithoutMetrics abstracts away the logic for resolving a variant without metrics
+func (uc *Client) getVariantWithoutMetrics(feature string, options ...VariantOption) *api.Variant {
 	defaultVariant := api.GetDefaultVariant()
 	var opts variantOption
 	for _, o := range options {
@@ -337,11 +337,11 @@ func (uc *Client) getVariant(feature string, options ...VariantOption) (*api.Var
 
 	if opts.resolver != nil {
 		if !uc.isEnabled(feature, WithContext(*ctx), WithResolver(opts.resolver)) {
-			return defaultVariant, false
+			return defaultVariant
 		}
 	} else {
 		if !uc.isEnabled(feature, WithContext(*ctx)) {
-			return defaultVariant, false
+			return defaultVariant
 		}
 	}
 
@@ -354,22 +354,22 @@ func (uc *Client) getVariant(feature string, options ...VariantOption) (*api.Var
 
 	if f == nil {
 		if opts.variantFallbackFunc != nil {
-			return opts.variantFallbackFunc(feature, ctx), false
+			return opts.variantFallbackFunc(feature, ctx)
 		} else if opts.variantFallback != nil {
-			return opts.variantFallback, false
+			return opts.variantFallback
 		}
-		return defaultVariant, false
+		return defaultVariant
 	}
 
 	if !f.Enabled {
-		return defaultVariant, false
+		return defaultVariant
 	}
 
 	if len(f.Variants) == 0 {
-		return defaultVariant, false
+		return defaultVariant
 	}
 
-	return f.GetVariant(ctx), true
+	return f.GetVariant(ctx)
 }
 
 // Close stops the client from syncing data from the server.
