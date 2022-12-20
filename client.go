@@ -315,15 +315,15 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) (enabled b
 //
 // It is safe to call this method from multiple goroutines concurrently.
 func (uc *Client) GetVariant(feature string, options ...VariantOption) *api.Variant {
-	variant := uc.GetVariantWithoutMetrics(feature, options...)
+	variant := uc.getVariantWithoutMetrics(feature, options...)
 	defer func() {
 		uc.metrics.countVariants(feature, variant.Enabled, variant.Name)
 	}()
 	return variant
 }
 
-// GetVariantWithoutMetrics abstracts away the logic for resolving a variant without metrics
-func (uc *Client) GetVariantWithoutMetrics(feature string, options ...VariantOption) *api.Variant {
+// getVariantWithoutMetrics abstracts away the logic for resolving a variant without metrics
+func (uc *Client) getVariantWithoutMetrics(feature string, options ...VariantOption) *api.Variant {
 	defaultVariant := api.GetDefaultVariant()
 	var opts variantOption
 	for _, o := range options {
