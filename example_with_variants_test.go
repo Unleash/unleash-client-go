@@ -40,7 +40,7 @@ func Test_withVariants(t *testing.T) {
 	}
 }
 
-func Test_withVariantsAndUnexistentUnexistingStrategy(t *testing.T) {
+func Test_withVariantsAndANonExistingStrategyName(t *testing.T) {
 	demoReader, err := os.Open("demo_app_toggles.json")
 	if err != nil {
 		t.Fail()
