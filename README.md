@@ -285,4 +285,4 @@ Run code-style checks:(currently failing)
 
 Run race-tests:
 
-    make test-all
+    make test-race
