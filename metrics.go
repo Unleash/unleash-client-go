@@ -230,11 +230,13 @@ func (m *metrics) count(name string, enabled bool) {
 	m.metricsChannels.count <- metric{Name: name, Enabled: enabled}
 }
 
-func (m *metrics) countVariants(name string, variantName string) {
+func (m *metrics) countVariants(name string, enabled bool, variantName string) {
 	if m.options.disableMetrics {
 		return
 	}
 
+	m.add(name, enabled, 1)
+	m.metricsChannels.count <- metric{Name: name, Enabled: enabled}
 	t, _ := m.bucket.Toggles[name]
 	if len(t.Variants) == 0 {
 		t.Variants = make(map[string]int32)

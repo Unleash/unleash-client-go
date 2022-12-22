@@ -1,49 +1,66 @@
-package unleash
+package unleash_test
 
 import (
-	"encoding/json"
-	"net/http"
+	"fmt"
+	"os"
+	"testing"
+	"time"
 
-	"github.com/stretchr/testify/mock"
+	"github.com/Unleash/unleash-client-go/v3"
 )
 
-const (
-	mockerServer   = "http://foo.com"
-	mockAppName    = "unleash-client-go-tests"
-	mockInstanceId = "1234"
-)
+func Test_withVariants(t *testing.T) {
+	demoReader, err := os.Open("demo_app_toggles.json")
+	if err != nil {
+		t.Fail()
+	}
+	err = unleash.Initialize(
+		unleash.WithListener(&unleash.DebugListener{}),
+		unleash.WithAppName("my-application"),
+		unleash.WithRefreshInterval(5*time.Second),
+		unleash.WithMetricsInterval(5*time.Second),
+		unleash.WithStorage(&unleash.BootstrapStorage{Reader: demoReader}),
+		unleash.WithUrl("https://localhost:4242"),
+	)
 
-type MockedListener struct {
-	mock.Mock
+	if err != nil {
+		t.Fail()
+	}
+
+	feature := unleash.GetVariant("Demo")
+	fmt.Printf("feature is %v\n", feature)
+	if feature.Enabled == false {
+		t.Fatalf("Expected feature to be enabled")
+	}
+	if feature.Name != "small" && feature.Name != "medium" {
+		t.Fatalf("Expected one of the variant names")
+	}
+	if feature.Payload.Value != "35" && feature.Payload.Value != "55" {
+		t.Fatalf("Expected one of the variant payloads")
+	}
 }
 
-func (l *MockedListener) OnError(err error) {
-	l.Called(err)
-}
+func Test_withVariantsAndANonExistingStrategyName(t *testing.T) {
+	demoReader, err := os.Open("demo_app_toggles.json")
+	if err != nil {
+		t.Fail()
+	}
+	err = unleash.Initialize(
+		unleash.WithListener(&unleash.DebugListener{}),
+		unleash.WithAppName("my-application"),
+		unleash.WithRefreshInterval(5*time.Second),
+		unleash.WithMetricsInterval(5*time.Second),
+		unleash.WithStorage(&unleash.BootstrapStorage{Reader: demoReader}),
+		unleash.WithUrl("https://localhost:4242"),
+	)
 
-func (l *MockedListener) OnWarning(warning error) {
-	l.Called(warning)
-}
+	if err != nil {
+		t.Fail()
+	}
 
-func (l *MockedListener) OnReady() {
-	l.Called()
-}
-
-func (l *MockedListener) OnCount(name string, enabled bool) {
-	l.Called(name, enabled)
-}
-
-func (l *MockedListener) OnSent(payload MetricsData) {
-	l.Called(payload)
-}
-
-func (l *MockedListener) OnRegistered(payload ClientData) {
-	l.Called(payload)
-}
-
-func writeJSON(rw http.ResponseWriter, x interface{}) {
-	enc := json.NewEncoder(rw)
-	if err := enc.Encode(x); err != nil {
-		panic(err)
+	feature := unleash.GetVariant("AuditLog")
+	fmt.Printf("feature is %v\n", feature)
+	if feature.Enabled == true {
+		t.Fatalf("Expected feature to be disabled because Environment does not exist as strategy")
 	}
 }

@@ -351,6 +351,7 @@ func TestClientWithVariantContext(t *testing.T) {
 
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
+	mockListener.On("OnCount", mock.AnythingOfType("string"), mock.AnythingOfType("bool")).Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
 	mockListener.On("OnError", mock.AnythingOfType("*errors.errorString"))
 
@@ -854,6 +855,7 @@ func TestClient_VariantShouldFailWhenSegmentConstraintsDontMatch(t *testing.T) {
 
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
+	mockListener.On("OnCount", mock.AnythingOfType("string"), mock.AnythingOfType("bool")).Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
 	mockListener.On("OnError").Return()
 
