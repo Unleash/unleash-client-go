@@ -237,6 +237,10 @@ func (m *metrics) countVariants(name string, enabled bool, variantName string) {
 
 	m.add(name, enabled, 1)
 	m.metricsChannels.count <- metric{Name: name, Enabled: enabled}
+
+	m.bucketMu.Lock()
+	defer m.bucketMu.Unlock()
+
 	t, _ := m.bucket.Toggles[name]
 	if len(t.Variants) == 0 {
 		t.Variants = make(map[string]int32)
