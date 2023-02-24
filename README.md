@@ -1,4 +1,4 @@
-[![Build Status](https://github.com/Unleash/unleash-client-go/actions/workflows/build.yml/badge.svg)](https://github.com/Unleash/unleash-client-go/actions/workflows/build.yml) [![GoDoc](https://godoc.org/github.com/Unleash/unleash-client-go?status.svg)](https://godoc.org/github.com/Unleash/unleash-client-go) [![Go Report Card](https://goreportcard.com/badge/github.com/Unleash/unleash-client-go)](https://goreportcard.com/report/github.com/Unleash/unleash-client-go)
+[![Build Status](https://github.com/Unleash/unleash-client-go/actions/workflows/build.yml/badge.svg)](https://github.com/Unleash/unleash-client-go/actions/workflows/build.yml) [![GoDoc](https://pkg.go.dev/badge/github.com/Unleash/unleash-client-go/v3?status.svg)](https://pkg.go.dev/github.com/Unleash/unleash-client-go/v3) [![Go Report Card](https://goreportcard.com/badge/github.com/Unleash/unleash-client-go)](https://goreportcard.com/report/github.com/Unleash/unleash-client-go)
 [![Coverage Status](https://coveralls.io/repos/github/Unleash/unleash-client-go/badge.svg?branch=v3)](https://coveralls.io/github/Unleash/unleash-client-go?branch=v3)
 
 # unleash-client-go
