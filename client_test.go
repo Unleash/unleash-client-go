@@ -892,3 +892,46 @@ func TestClient_VariantShouldFailWhenSegmentConstraintsDontMatch(t *testing.T) {
 
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
+
+func TestVariantWeights(t *testing.T) {
+	assert := assert.New(t)
+
+	feature := api.Feature{
+			
+				Name: "VariantTest", 
+				Description: "nice", 
+				Enabled: true, Variants: []api.VariantInternal{
+					{
+						Variant: api.Variant{
+							Name:    "variant_one",
+							Enabled: true,
+							Payload: api.Payload{},
+						},
+						Weight:     500,
+						WeightType: "fix",
+					},
+					{
+						Variant: api.Variant{
+							Name:    "variant_two",
+							Enabled: true,
+							Payload: api.Payload{},
+						},
+						Weight:     500,
+						WeightType: "fix",
+					},
+				},
+			
+		}
+	variant1 := 0
+	variant2 := 0
+	for i := 0; i < 10000; i++ {
+		f := feature.GetVariant(&context.Context{})
+		if f.Name == "variant_one" {
+			variant1++
+		} else {
+			variant2++
+		}
+	}
+	assert.InDelta(8000, variant1, 500)
+	assert.InDelta(5000, variant2, 500)
+}
