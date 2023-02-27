@@ -19,8 +19,8 @@ type FeatureResponse struct {
 }
 
 type Segment struct {
-  Id int `json:"id"`
-  Constraints []Constraint `json:"constraints"`
+	Id          int          `json:"id"`
+	Constraints []Constraint `json:"constraints"`
 }
 
 type Feature struct {
@@ -63,7 +63,7 @@ func (fr FeatureResponse) SegmentsMap() map[int][]Constraint {
 		segments[segment.Id] = segment.Constraints
 	}
 
-	return segments;
+	return segments
 }
 
 // Get variant for a given feature which is considered as enabled
@@ -117,6 +117,7 @@ func (f Feature) getOverrideVariant(ctx *context.Context) *VariantInternal {
 }
 
 func getSeed(ctx *context.Context, stickiness string) string {
+	rand.Seed(time.Now().UnixNano())
 	if stickiness != "default" && stickiness != "" {
 		value := ctx.Field(stickiness)
 		if value == "" {

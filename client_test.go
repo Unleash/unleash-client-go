@@ -897,31 +897,30 @@ func TestVariantWeights(t *testing.T) {
 	assert := assert.New(t)
 
 	feature := api.Feature{
-			
-				Name: "VariantTest", 
-				Description: "nice", 
-				Enabled: true, Variants: []api.VariantInternal{
-					{
-						Variant: api.Variant{
-							Name:    "variant_one",
-							Enabled: true,
-							Payload: api.Payload{},
-						},
-						Weight:     500,
-						WeightType: "fix",
-					},
-					{
-						Variant: api.Variant{
-							Name:    "variant_two",
-							Enabled: true,
-							Payload: api.Payload{},
-						},
-						Weight:     500,
-						WeightType: "fix",
-					},
+
+		Name:        "VariantTest",
+		Description: "nice",
+		Enabled:     true, Variants: []api.VariantInternal{
+			{
+				Variant: api.Variant{
+					Name:    "variant_one",
+					Enabled: true,
+					Payload: api.Payload{},
 				},
-			
-		}
+				Weight:     500,
+				WeightType: "fix",
+			},
+			{
+				Variant: api.Variant{
+					Name:    "variant_two",
+					Enabled: true,
+					Payload: api.Payload{},
+				},
+				Weight:     500,
+				WeightType: "fix",
+			},
+		},
+	}
 	variant1 := 0
 	variant2 := 0
 	for i := 0; i < 10000; i++ {
@@ -932,6 +931,6 @@ func TestVariantWeights(t *testing.T) {
 			variant2++
 		}
 	}
-	assert.InDelta(8000, variant1, 500)
-	assert.InDelta(5000, variant2, 500)
+	assert.InDelta(5000, variant1, 250)
+	assert.InDelta(5000, variant2, 250)
 }
