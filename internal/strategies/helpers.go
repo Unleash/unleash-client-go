@@ -84,7 +84,10 @@ func (r *rng) float() float64 {
 }
 
 func (r *rng) string() string {
-	return strconv.Itoa(r.int())
+	r.Lock()
+	n := r.random.Intn(10000) + 1
+	r.Unlock()
+	return strconv.Itoa(n)
 }
 
 // newRng creates a new random number generator for numbers between 1-100

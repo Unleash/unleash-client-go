@@ -75,7 +75,7 @@ func TestNewRng(t *testing.T) {
 			assert.True(t, randomInt >= 0 && randomInt <= 100)
 
 			randomString := rng.string()
-			assert.True(t, len(randomString) <= 3)
+			assert.True(t, len(randomString) <= 5)
 
 			randomFloat := rng.float()
 			assert.True(t, randomFloat > 0.0 && randomFloat <= 100.0)
