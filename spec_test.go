@@ -80,12 +80,12 @@ func (vtc VariantTestCase) RunWithClient(client *Client) func(*testing.T) {
 		go func() {
 			// Call IsEnabled concurrently with itself to catch
 			// potential data races with go test -race.
-			client.IsEnabled(vtc.ToggleName, WithContext(vtc.Context))
+			client.GetVariant(vtc.ToggleName, WithVariantContext(vtc.Context))
 			wg.Done()
 		}()
-		result := client.IsEnabled(vtc.ToggleName, WithContext(vtc.Context))
+		result := client.GetVariant(vtc.ToggleName, WithVariantContext(vtc.Context))
 		wg.Wait()
-		assert.Equal(t, vtc.ExpectedResult.Enabled, result)
+		assert.Equal(t, vtc.ExpectedResult.Enabled, result.Enabled)
 		assert.Equal(t, vtc.ExpectedResult, client.GetVariant(vtc.ToggleName))
 	}
 }
