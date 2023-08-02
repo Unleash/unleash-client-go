@@ -393,12 +393,12 @@ func (uc *Client) getVariantWithoutMetrics(feature string, options ...VariantOpt
 		return defaultVariant
 	}
 
-	if len(f.Variants) == 0 {
-		return defaultVariant
-	}
-
 	if strategyResult.Variant != nil {
 		return strategyResult.Variant
+	}
+
+	if len(f.Variants) == 0 {
+		return defaultVariant
 	}
 
 	return api.VariantSetup{
