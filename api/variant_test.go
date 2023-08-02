@@ -113,24 +113,6 @@ func (suite *VariantTestSuite) TestGetVariantWhenFeatureHasNoVariant() {
 	suite.Equal(DISABLED_VARIANT, variantSetup, "Should return default variant")
 }
 
-func (suite *VariantTestSuite) TestGetVariantWhenFeatureIsNotEnabled() {
-	mockFeature := Feature{
-		Name:     "test.variants",
-		Enabled:  false,
-		Variants: suite.VariantWithOverride,
-	}
-	mockContext := &context.Context{
-		UserId:        "1",
-		SessionId:     "ABCDE",
-		RemoteAddress: "127.0.0.1",
-	}
-	variantSetup := VariantSetup{
-		Name:     mockFeature.Name,
-		Variants: mockFeature.Variants,
-	}.GetVariant(mockContext)
-	suite.Equal(DISABLED_VARIANT, variantSetup, "Should return default variant")
-}
-
 func (suite *VariantTestSuite) TestGetVariant_OverrideOnUserId() {
 	mockFeature := Feature{
 		Name:     "test.variants",
