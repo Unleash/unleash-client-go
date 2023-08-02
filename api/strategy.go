@@ -36,3 +36,8 @@ type StrategyDescription struct {
 	Description string                 `json:"description"`
 	Parameters  []ParameterDescription `json:"parameters"`
 }
+
+type StrategyResult struct {
+	Enabled bool
+	Variant *Variant
+}

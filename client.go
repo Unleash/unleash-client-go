@@ -243,12 +243,12 @@ func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled b
 		uc.metrics.count(feature, enabled)
 	}()
 
-	return uc.isEnabled(feature, options...)
+	return uc.isEnabled(feature, options...).Enabled
 }
 
 // isEnabled abstracts away the details of checking if a toggle is turned on or off
 // without metrics
-func (uc *Client) isEnabled(feature string, options ...FeatureOption) (enabled bool) {
+func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.StrategyResult {
 	var opts featureOption
 	for _, o := range options {
 		o(&opts)
@@ -268,19 +268,29 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) (enabled b
 
 	if f == nil {
 		if opts.fallbackFunc != nil {
-			return opts.fallbackFunc(feature, ctx)
+			return api.StrategyResult{
+				Enabled: opts.fallbackFunc(feature, ctx),
+			}
 		} else if opts.fallback != nil {
-			return *opts.fallback
+			return api.StrategyResult{
+				Enabled: *opts.fallback,
+			}
 		}
-		return false
+		return api.StrategyResult{
+			Enabled: false,
+		}
 	}
 
 	if !f.Enabled {
-		return false
+		return api.StrategyResult{
+			Enabled: false,
+		}
 	}
 
 	if len(f.Strategies) == 0 {
-		return f.Enabled
+		return api.StrategyResult{
+			Enabled: f.Enabled,
+		}
 	}
 
 	for _, s := range f.Strategies {
@@ -294,7 +304,9 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) (enabled b
 
 		if err != nil {
 			uc.errors <- err
-			return false
+			return api.StrategyResult{
+				Enabled: false,
+			}
 		}
 
 		allConstraints := make([]api.Constraint, 0)
@@ -304,11 +316,25 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) (enabled b
 		if ok, err := constraints.Check(ctx, allConstraints); err != nil {
 			uc.errors <- err
 		} else if ok && foundStrategy.IsEnabled(s.Parameters, ctx) {
-			return true
+			if s.Variants != nil && len(s.Variants) > 0 {
+				return api.StrategyResult{
+					Enabled: true,
+					Variant: api.VariantSetup{
+						Name:     f.Name,
+						Variants: s.Variants,
+					}.GetVariant(ctx),
+				}
+			} else {
+				return api.StrategyResult{
+					Enabled: true,
+				}
+			}
 		}
 	}
 
-	return false
+	return api.StrategyResult{
+		Enabled: false,
+	}
 }
 
 // GetVariant queries a variant as the specified feature is enabled.
@@ -335,14 +361,16 @@ func (uc *Client) getVariantWithoutMetrics(feature string, options ...VariantOpt
 		ctx = ctx.Override(*opts.ctx)
 	}
 
+	var strategyResult api.StrategyResult
+
 	if opts.resolver != nil {
-		if !uc.isEnabled(feature, WithContext(*ctx), WithResolver(opts.resolver)) {
-			return defaultVariant
-		}
+		strategyResult = uc.isEnabled(feature, WithContext(*ctx), WithResolver(opts.resolver))
 	} else {
-		if !uc.isEnabled(feature, WithContext(*ctx)) {
-			return defaultVariant
-		}
+		strategyResult = uc.isEnabled(feature, WithContext(*ctx))
+	}
+
+	if !strategyResult.Enabled {
+		return defaultVariant
 	}
 
 	var f *api.Feature
@@ -369,7 +397,14 @@ func (uc *Client) getVariantWithoutMetrics(feature string, options ...VariantOpt
 		return defaultVariant
 	}
 
-	return f.GetVariant(ctx)
+	if strategyResult.Variant != nil {
+		return strategyResult.Variant
+	}
+
+	return api.VariantSetup{
+		Name:     f.Name,
+		Variants: f.Variants,
+	}.GetVariant(ctx)
 }
 
 // Close stops the client from syncing data from the server.

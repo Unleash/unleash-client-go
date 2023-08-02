@@ -19,8 +19,8 @@ type FeatureResponse struct {
 }
 
 type Segment struct {
-  Id int `json:"id"`
-  Constraints []Constraint `json:"constraints"`
+	Id          int          `json:"id"`
+	Constraints []Constraint `json:"constraints"`
 }
 
 type Feature struct {
@@ -63,12 +63,12 @@ func (fr FeatureResponse) SegmentsMap() map[int][]Constraint {
 		segments[segment.Id] = segment.Constraints
 	}
 
-	return segments;
+	return segments
 }
 
 // Get variant for a given feature which is considered as enabled
-func (f Feature) GetVariant(ctx *context.Context) *Variant {
-	if f.Enabled && len(f.Variants) > 0 {
+func (f VariantSetup) GetVariant(ctx *context.Context) *Variant {
+	if len(f.Variants) > 0 {
 		v := f.getOverrideVariant(ctx)
 		var variant *Variant
 		if v == nil {
@@ -82,7 +82,7 @@ func (f Feature) GetVariant(ctx *context.Context) *Variant {
 	return DISABLED_VARIANT
 }
 
-func (f Feature) getVariantFromWeights(ctx *context.Context) *Variant {
+func (f VariantSetup) getVariantFromWeights(ctx *context.Context) *Variant {
 	totalWeight := 0
 	for _, variant := range f.Variants {
 		totalWeight += variant.Weight
@@ -104,7 +104,7 @@ func (f Feature) getVariantFromWeights(ctx *context.Context) *Variant {
 	return DISABLED_VARIANT
 }
 
-func (f Feature) getOverrideVariant(ctx *context.Context) *VariantInternal {
+func (f VariantSetup) getOverrideVariant(ctx *context.Context) *VariantInternal {
 	for _, variant := range f.Variants {
 		for _, override := range variant.Overrides {
 			if override.matchValue(ctx) {
