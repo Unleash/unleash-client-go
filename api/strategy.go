@@ -19,6 +19,9 @@ type Strategy struct {
 	Parameters ParameterMap `json:"parameters"`
 
 	Segments []int `json:"segments"`
+
+	// Variants for a strategy
+	Variants []VariantInternal `json:"variants"`
 }
 
 type ParameterDescription struct {
