@@ -366,9 +366,9 @@ func TestClientWithVariantContext(t *testing.T) {
 
 	client.WaitForReady()
 
-	//defaultVariant := client.GetVariant("feature-name")
-	//
-	//assert.Equal(api.GetDefaultVariant(), defaultVariant)
+	defaultVariant := client.GetVariant("feature-name")
+
+	assert.Equal(api.GetDefaultVariant(), defaultVariant)
 	variant := client.GetVariant("feature-name", WithVariantContext(context.Context{
 		Properties: map[string]string{"custom-id": "custom-ctx"},
 	}))
