@@ -319,8 +319,8 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.Strate
 			if s.Variants != nil && len(s.Variants) > 0 {
 				return api.StrategyResult{
 					Enabled: true,
-					Variant: api.VariantSetup{
-						Name:     f.Name,
+					Variant: api.VariantCollection{
+						GroupId:  f.Name,
 						Variants: s.Variants,
 					}.GetVariant(ctx),
 				}
@@ -401,8 +401,8 @@ func (uc *Client) getVariantWithoutMetrics(feature string, options ...VariantOpt
 		return defaultVariant
 	}
 
-	return api.VariantSetup{
-		Name:     f.Name,
+	return api.VariantCollection{
+		GroupId:  f.Name,
 		Variants: f.Variants,
 	}.GetVariant(ctx)
 }

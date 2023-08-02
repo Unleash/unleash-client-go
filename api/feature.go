@@ -67,7 +67,7 @@ func (fr FeatureResponse) SegmentsMap() map[int][]Constraint {
 }
 
 // Get variant for a given feature which is considered as enabled
-func (f VariantSetup) GetVariant(ctx *context.Context) *Variant {
+func (f VariantCollection) GetVariant(ctx *context.Context) *Variant {
 	if len(f.Variants) > 0 {
 		v := f.getOverrideVariant(ctx)
 		var variant *Variant
@@ -82,7 +82,7 @@ func (f VariantSetup) GetVariant(ctx *context.Context) *Variant {
 	return DISABLED_VARIANT
 }
 
-func (f VariantSetup) getVariantFromWeights(ctx *context.Context) *Variant {
+func (f VariantCollection) getVariantFromWeights(ctx *context.Context) *Variant {
 	totalWeight := 0
 	for _, variant := range f.Variants {
 		totalWeight += variant.Weight
@@ -92,7 +92,7 @@ func (f VariantSetup) getVariantFromWeights(ctx *context.Context) *Variant {
 	}
 	stickiness := f.Variants[0].Stickiness
 
-	target := getNormalizedNumber(getSeed(ctx, stickiness), f.Name, totalWeight)
+	target := getNormalizedNumber(getSeed(ctx, stickiness), f.GroupId, totalWeight)
 	counter := uint32(0)
 	for _, variant := range f.Variants {
 		counter += uint32(variant.Weight)
@@ -104,7 +104,7 @@ func (f VariantSetup) getVariantFromWeights(ctx *context.Context) *Variant {
 	return DISABLED_VARIANT
 }
 
-func (f VariantSetup) getOverrideVariant(ctx *context.Context) *VariantInternal {
+func (f VariantCollection) getOverrideVariant(ctx *context.Context) *VariantInternal {
 	for _, variant := range f.Variants {
 		for _, override := range variant.Overrides {
 			if override.matchValue(ctx) {

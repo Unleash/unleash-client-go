@@ -105,8 +105,8 @@ func (suite *VariantTestSuite) TestGetVariantWhenFeatureHasNoVariant() {
 		Enabled: true,
 	}
 	mockContext := &context.Context{}
-	variantSetup := VariantSetup{
-		Name:     mockFeature.Name,
+	variantSetup := VariantCollection{
+		GroupId:  mockFeature.Name,
 		Variants: mockFeature.Variants,
 	}.GetVariant(mockContext)
 
@@ -128,8 +128,8 @@ func (suite *VariantTestSuite) TestGetVariant_OverrideOnUserId() {
 		Type:  "string",
 		Value: "Test 1",
 	}
-	variantSetup := VariantSetup{
-		Name:     mockFeature.Name,
+	variantSetup := VariantCollection{
+		GroupId:  mockFeature.Name,
 		Variants: mockFeature.Variants,
 	}.GetVariant(mockContext)
 	suite.Equal("VarA", variantSetup.Name, "Should return VarA")
@@ -151,8 +151,8 @@ func (suite *VariantTestSuite) TestGetVariant_OverrideOnRemoteAddress() {
 		Type:  "string",
 		Value: "Test 2",
 	}
-	variantSetup := VariantSetup{
-		Name:     mockFeature.Name,
+	variantSetup := VariantCollection{
+		GroupId:  mockFeature.Name,
 		Variants: mockFeature.Variants,
 	}.GetVariant(mockContext)
 	suite.Equal("VarB", variantSetup.Name, "Should return VarB")
@@ -175,8 +175,8 @@ func (suite *VariantTestSuite) TestGetVariant_OverrideOnSessionId() {
 		Type:  "string",
 		Value: "Test 1",
 	}
-	variantSetup := VariantSetup{
-		Name:     mockFeature.Name,
+	variantSetup := VariantCollection{
+		GroupId:  mockFeature.Name,
 		Variants: mockFeature.Variants,
 	}.GetVariant(mockContext)
 	suite.Equal("VarA", variantSetup.Name, "Should return VarA")
@@ -199,8 +199,8 @@ func (suite *VariantTestSuite) TestGetVariant_OverrideOnCustomProperties() {
 		Type:  "string",
 		Value: "Test 3",
 	}
-	variantSetup := VariantSetup{
-		Name:     mockFeature.Name,
+	variantSetup := VariantCollection{
+		GroupId:  mockFeature.Name,
 		Variants: mockFeature.Variants,
 	}.GetVariant(mockContext)
 	suite.Equal("VarC", variantSetup.Name, "Should return VarC")
@@ -217,8 +217,8 @@ func (suite *VariantTestSuite) TestGetVariant_ShouldReturnVarD() {
 	mockContext := &context.Context{
 		UserId: "123",
 	}
-	variantSetup := VariantSetup{
-		Name:     mockFeature.Name,
+	variantSetup := VariantCollection{
+		GroupId:  mockFeature.Name,
 		Variants: mockFeature.Variants,
 	}.GetVariant(mockContext)
 	suite.Equal("VarD", variantSetup.Name, "Should return VarD")
@@ -234,8 +234,8 @@ func (suite *VariantTestSuite) TestGetVariant_ShouldReturnVarE() {
 	mockContext := &context.Context{
 		UserId: "163",
 	}
-	variantSetup := VariantSetup{
-		Name:     mockFeature.Name,
+	variantSetup := VariantCollection{
+		GroupId:  mockFeature.Name,
 		Variants: mockFeature.Variants,
 	}.GetVariant(mockContext)
 	suite.Equal("VarE", variantSetup.Name, "Should return VarE")
@@ -251,8 +251,8 @@ func (suite *VariantTestSuite) TestGetVariant_ShouldReturnVarF() {
 	mockContext := &context.Context{
 		UserId: "40",
 	}
-	variantSetup := VariantSetup{
-		Name:     mockFeature.Name,
+	variantSetup := VariantCollection{
+		GroupId:  mockFeature.Name,
 		Variants: mockFeature.Variants,
 	}.GetVariant(mockContext)
 	suite.Equal("VarF", variantSetup.Name, "Should return VarF")
