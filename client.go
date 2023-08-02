@@ -317,10 +317,18 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.Strate
 			uc.errors <- err
 		} else if ok && foundStrategy.IsEnabled(s.Parameters, ctx) {
 			if s.Variants != nil && len(s.Variants) > 0 {
+				groupIdValue := s.Parameters[strategy.ParamGroupId]
+				groupId, ok := groupIdValue.(string)
+				if !ok {
+					return api.StrategyResult{
+						Enabled: false,
+					}
+				}
+
 				return api.StrategyResult{
 					Enabled: true,
 					Variant: api.VariantCollection{
-						GroupId:  f.Name,
+						GroupId:  groupId,
 						Variants: s.Variants,
 					}.GetVariant(ctx),
 				}

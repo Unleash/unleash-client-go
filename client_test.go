@@ -913,7 +913,9 @@ func TestClient_ShouldFavorStrategyVariantOverFeatureVariant(t *testing.T) {
 					Id:          1,
 					Name:        "default",
 					Constraints: []api.Constraint{},
-					Parameters:  map[string]interface{}{},
+					Parameters: map[string]interface{}{
+						"groupId": "strategyVariantName",
+					},
 					Variants: []api.VariantInternal{
 						{
 							Variant: api.Variant{
