@@ -12,7 +12,7 @@ import (
 	"github.com/Unleash/unleash-client-go/v3/api"
 )
 
-var SEGMENT_CLIENT_SPEC_VERSION = "4.2.0"
+var SEGMENT_CLIENT_SPEC_VERSION = "4.3.1"
 
 type repository struct {
 	repositoryChannels
