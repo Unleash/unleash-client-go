@@ -892,3 +892,188 @@ func TestClient_VariantShouldFailWhenSegmentConstraintsDontMatch(t *testing.T) {
 
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
+
+func TestClient_ShouldFavorStrategyVariantOverFeatureVariant(t *testing.T) {
+	assert := assert.New(t)
+	defer gock.OffAll()
+
+	gock.New(mockerServer).
+		Post("/client/register").
+		Reply(200)
+
+	features := []api.Feature{
+		{
+			Name:        "feature-x",
+			Description: "feature-desc",
+			Enabled:     true,
+			CreatedAt:   time.Date(1974, time.May, 19, 1, 2, 3, 4, time.UTC),
+			Strategy:    "feature-strategy",
+			Strategies: []api.Strategy{
+				{
+					Id:          1,
+					Name:        "default",
+					Constraints: []api.Constraint{},
+					Parameters: map[string]interface{}{
+						"groupId": "strategyVariantName",
+					},
+					Variants: []api.VariantInternal{
+						{
+							Variant: api.Variant{
+								Name: "strategyVariantName",
+								Payload: api.Payload{
+									Type:  "string",
+									Value: "strategyVariantValue",
+								},
+							},
+							Weight: 1000,
+						},
+					},
+				},
+			},
+			Variants: []api.VariantInternal{
+				{
+					Variant: api.Variant{
+						Name: "willBeIgnored",
+						Payload: api.Payload{
+							Type:  "string",
+							Value: "willBeIgnored",
+						},
+						Enabled: true,
+					},
+					Weight: 100,
+				},
+			},
+		},
+	}
+
+	gock.New(mockerServer).
+		Get("/client/features").
+		Reply(200).
+		JSON(api.FeatureResponse{
+			Features: features,
+			Segments: []api.Segment{},
+		})
+
+	mockListener := &MockedListener{}
+	mockListener.On("OnReady").Return()
+	mockListener.On("OnCount", mock.AnythingOfType("string"), mock.AnythingOfType("bool")).Return()
+	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("OnError", mock.AnythingOfType("*errors.errorString"))
+
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithListener(mockListener),
+	)
+
+	assert.NoError(err)
+
+	client.WaitForReady()
+
+	strategyVariant := client.GetVariant("feature-x")
+
+	assert.True(strategyVariant.Enabled)
+
+	assert.Equal("strategyVariantName", strategyVariant.Name)
+
+	assert.True(gock.IsDone(), "there should be no more mocks")
+}
+
+func TestClient_ShouldReturnOldVariantForNonMatchingStrategyVariant(t *testing.T) {
+	assert := assert.New(t)
+	defer gock.OffAll()
+
+	gock.New(mockerServer).
+		Post("/client/register").
+		Reply(200)
+
+	features := []api.Feature{
+		{
+			Name:        "feature-x",
+			Description: "feature-desc",
+			Enabled:     true,
+			CreatedAt:   time.Date(1974, time.May, 19, 1, 2, 3, 4, time.UTC),
+			Strategy:    "feature-strategy",
+			Strategies: []api.Strategy{
+				{
+					Id:          1,
+					Name:        "flexibleRollout",
+					Constraints: []api.Constraint{},
+					Parameters: map[string]interface{}{
+						"rollout":    0,
+						"stickiness": "default",
+					},
+					Variants: []api.VariantInternal{
+						{
+							Variant: api.Variant{
+								Name: "strategyVariantName",
+								Payload: api.Payload{
+									Type:  "string",
+									Value: "strategyVariantValue",
+								},
+								Enabled: true,
+							},
+							Weight: 1000,
+						},
+					},
+				},
+				{
+					Id:          2,
+					Name:        "flexibleRollout",
+					Constraints: []api.Constraint{},
+					Parameters: map[string]interface{}{
+						"rollout":    100,
+						"stickiness": "default",
+					},
+				},
+			},
+			Variants: []api.VariantInternal{
+				{
+					Variant: api.Variant{
+						Name: "willBeSelected",
+						Payload: api.Payload{
+							Type:  "string",
+							Value: "willBeSelected",
+						},
+						Enabled: true,
+					},
+					Weight: 100,
+				},
+			},
+		},
+	}
+
+	gock.New(mockerServer).
+		Get("/client/features").
+		Reply(200).
+		JSON(api.FeatureResponse{
+			Features: features,
+			Segments: []api.Segment{},
+		})
+
+	mockListener := &MockedListener{}
+	mockListener.On("OnReady").Return()
+	mockListener.On("OnCount", mock.AnythingOfType("string"), mock.AnythingOfType("bool")).Return()
+	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("OnError", mock.AnythingOfType("*errors.errorString"))
+
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithListener(mockListener),
+	)
+
+	assert.NoError(err)
+
+	client.WaitForReady()
+
+	strategyVariant := client.GetVariant("feature-x")
+
+	assert.True(strategyVariant.Enabled)
+
+	assert.Equal("willBeSelected", strategyVariant.Name)
+
+	assert.True(gock.IsDone(), "there should be no more mocks")
+}

@@ -19,8 +19,8 @@ type FeatureResponse struct {
 }
 
 type Segment struct {
-  Id int `json:"id"`
-  Constraints []Constraint `json:"constraints"`
+	Id          int          `json:"id"`
+	Constraints []Constraint `json:"constraints"`
 }
 
 type Feature struct {
@@ -63,16 +63,16 @@ func (fr FeatureResponse) SegmentsMap() map[int][]Constraint {
 		segments[segment.Id] = segment.Constraints
 	}
 
-	return segments;
+	return segments
 }
 
 // Get variant for a given feature which is considered as enabled
-func (f Feature) GetVariant(ctx *context.Context) *Variant {
-	if f.Enabled && len(f.Variants) > 0 {
-		v := f.getOverrideVariant(ctx)
+func (vc VariantCollection) GetVariant(ctx *context.Context) *Variant {
+	if len(vc.Variants) > 0 {
+		v := vc.getOverrideVariant(ctx)
 		var variant *Variant
 		if v == nil {
-			variant = f.getVariantFromWeights(ctx)
+			variant = vc.getVariantFromWeights(ctx)
 		} else {
 			variant = &v.Variant
 		}
@@ -82,19 +82,19 @@ func (f Feature) GetVariant(ctx *context.Context) *Variant {
 	return DISABLED_VARIANT
 }
 
-func (f Feature) getVariantFromWeights(ctx *context.Context) *Variant {
+func (vc VariantCollection) getVariantFromWeights(ctx *context.Context) *Variant {
 	totalWeight := 0
-	for _, variant := range f.Variants {
+	for _, variant := range vc.Variants {
 		totalWeight += variant.Weight
 	}
 	if totalWeight == 0 {
 		return DISABLED_VARIANT
 	}
-	stickiness := f.Variants[0].Stickiness
+	stickiness := vc.Variants[0].Stickiness
 
-	target := getNormalizedNumber(getSeed(ctx, stickiness), f.Name, totalWeight)
+	target := getNormalizedNumber(getSeed(ctx, stickiness), vc.GroupId, totalWeight)
 	counter := uint32(0)
-	for _, variant := range f.Variants {
+	for _, variant := range vc.Variants {
 		counter += uint32(variant.Weight)
 
 		if counter >= target {
@@ -104,8 +104,8 @@ func (f Feature) getVariantFromWeights(ctx *context.Context) *Variant {
 	return DISABLED_VARIANT
 }
 
-func (f Feature) getOverrideVariant(ctx *context.Context) *VariantInternal {
-	for _, variant := range f.Variants {
+func (vc VariantCollection) getOverrideVariant(ctx *context.Context) *VariantInternal {
+	for _, variant := range vc.Variants {
 		for _, override := range variant.Overrides {
 			if override.matchValue(ctx) {
 				variant.Overrides = nil

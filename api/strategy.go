@@ -19,6 +19,9 @@ type Strategy struct {
 	Parameters ParameterMap `json:"parameters"`
 
 	Segments []int `json:"segments"`
+
+	// Variants for a strategy
+	Variants []VariantInternal `json:"variants"`
 }
 
 type ParameterDescription struct {
@@ -32,4 +35,9 @@ type StrategyDescription struct {
 	Name        string                 `json:"name"`
 	Description string                 `json:"description"`
 	Parameters  []ParameterDescription `json:"parameters"`
+}
+
+type StrategyResult struct {
+	Enabled bool
+	Variant *Variant
 }

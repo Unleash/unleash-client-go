@@ -41,6 +41,13 @@ type VariantInternal struct {
 	Overrides []Override `json:"overrides"`
 }
 
+type VariantCollection struct {
+	// groupId to evaluate the variant
+	GroupId string
+	// variants for a feature toggle or feature strategy
+	Variants []VariantInternal
+}
+
 func (o Override) getIdentifier(ctx *context.Context) string {
 	var value string
 	switch o.ContextName {

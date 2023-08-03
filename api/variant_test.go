@@ -105,21 +105,12 @@ func (suite *VariantTestSuite) TestGetVariantWhenFeatureHasNoVariant() {
 		Enabled: true,
 	}
 	mockContext := &context.Context{}
-	suite.Equal(DISABLED_VARIANT, mockFeature.GetVariant(mockContext), "Should return default variant")
-}
+	variantSetup := VariantCollection{
+		GroupId:  mockFeature.Name,
+		Variants: mockFeature.Variants,
+	}.GetVariant(mockContext)
 
-func (suite *VariantTestSuite) TestGetVariantWhenFeatureIsNotEnabled() {
-	mockFeature := Feature{
-		Name:     "test.variants",
-		Enabled:  false,
-		Variants: suite.VariantWithOverride,
-	}
-	mockContext := &context.Context{
-		UserId:        "1",
-		SessionId:     "ABCDE",
-		RemoteAddress: "127.0.0.1",
-	}
-	suite.Equal(DISABLED_VARIANT, mockFeature.GetVariant(mockContext), "Should return default variant")
+	suite.Equal(DISABLED_VARIANT, variantSetup, "Should return default variant")
 }
 
 func (suite *VariantTestSuite) TestGetVariant_OverrideOnUserId() {
@@ -137,9 +128,13 @@ func (suite *VariantTestSuite) TestGetVariant_OverrideOnUserId() {
 		Type:  "string",
 		Value: "Test 1",
 	}
-	suite.Equal("VarA", mockFeature.GetVariant(mockContext).Name, "Should return VarA")
-	suite.Equal(true, mockFeature.GetVariant(mockContext).Enabled, "Should be equal")
-	suite.Equal(expectedPayload, mockFeature.GetVariant(mockContext).Payload, "Should be equal")
+	variantSetup := VariantCollection{
+		GroupId:  mockFeature.Name,
+		Variants: mockFeature.Variants,
+	}.GetVariant(mockContext)
+	suite.Equal("VarA", variantSetup.Name, "Should return VarA")
+	suite.Equal(true, variantSetup.Enabled, "Should be equal")
+	suite.Equal(expectedPayload, variantSetup.Payload, "Should be equal")
 }
 
 func (suite *VariantTestSuite) TestGetVariant_OverrideOnRemoteAddress() {
@@ -156,9 +151,13 @@ func (suite *VariantTestSuite) TestGetVariant_OverrideOnRemoteAddress() {
 		Type:  "string",
 		Value: "Test 2",
 	}
-	suite.Equal("VarB", mockFeature.GetVariant(mockContext).Name, "Should return VarB")
-	suite.Equal(true, mockFeature.GetVariant(mockContext).Enabled, "Should be equal")
-	suite.Equal(expectedPayload, mockFeature.GetVariant(mockContext).Payload, "Should be equal")
+	variantSetup := VariantCollection{
+		GroupId:  mockFeature.Name,
+		Variants: mockFeature.Variants,
+	}.GetVariant(mockContext)
+	suite.Equal("VarB", variantSetup.Name, "Should return VarB")
+	suite.Equal(true, variantSetup.Enabled, "Should be equal")
+	suite.Equal(expectedPayload, variantSetup.Payload, "Should be equal")
 }
 
 func (suite *VariantTestSuite) TestGetVariant_OverrideOnSessionId() {
@@ -176,9 +175,13 @@ func (suite *VariantTestSuite) TestGetVariant_OverrideOnSessionId() {
 		Type:  "string",
 		Value: "Test 1",
 	}
-	suite.Equal("VarA", mockFeature.GetVariant(mockContext).Name, "Should return VarA")
-	suite.Equal(true, mockFeature.GetVariant(mockContext).Enabled, "Should be equal")
-	suite.Equal(expectedPayload, mockFeature.GetVariant(mockContext).Payload, "Should be equal")
+	variantSetup := VariantCollection{
+		GroupId:  mockFeature.Name,
+		Variants: mockFeature.Variants,
+	}.GetVariant(mockContext)
+	suite.Equal("VarA", variantSetup.Name, "Should return VarA")
+	suite.Equal(true, variantSetup.Enabled, "Should be equal")
+	suite.Equal(expectedPayload, variantSetup.Payload, "Should be equal")
 }
 
 func (suite *VariantTestSuite) TestGetVariant_OverrideOnCustomProperties() {
@@ -196,9 +199,13 @@ func (suite *VariantTestSuite) TestGetVariant_OverrideOnCustomProperties() {
 		Type:  "string",
 		Value: "Test 3",
 	}
-	suite.Equal("VarC", mockFeature.GetVariant(mockContext).Name, "Should return VarC")
-	suite.Equal(true, mockFeature.GetVariant(mockContext).Enabled, "Should be equal")
-	suite.Equal(expectedPayload, mockFeature.GetVariant(mockContext).Payload, "Should be equal")
+	variantSetup := VariantCollection{
+		GroupId:  mockFeature.Name,
+		Variants: mockFeature.Variants,
+	}.GetVariant(mockContext)
+	suite.Equal("VarC", variantSetup.Name, "Should return VarC")
+	suite.Equal(true, variantSetup.Enabled, "Should be equal")
+	suite.Equal(expectedPayload, variantSetup.Payload, "Should be equal")
 }
 
 func (suite *VariantTestSuite) TestGetVariant_ShouldReturnVarD() {
@@ -210,8 +217,12 @@ func (suite *VariantTestSuite) TestGetVariant_ShouldReturnVarD() {
 	mockContext := &context.Context{
 		UserId: "123",
 	}
-	suite.Equal("VarD", mockFeature.GetVariant(mockContext).Name, "Should return VarD")
-	suite.Equal(true, mockFeature.GetVariant(mockContext).Enabled, "Should be equal")
+	variantSetup := VariantCollection{
+		GroupId:  mockFeature.Name,
+		Variants: mockFeature.Variants,
+	}.GetVariant(mockContext)
+	suite.Equal("VarD", variantSetup.Name, "Should return VarD")
+	suite.Equal(true, variantSetup.Enabled, "Should be equal")
 }
 
 func (suite *VariantTestSuite) TestGetVariant_ShouldReturnVarE() {
@@ -223,8 +234,12 @@ func (suite *VariantTestSuite) TestGetVariant_ShouldReturnVarE() {
 	mockContext := &context.Context{
 		UserId: "163",
 	}
-	suite.Equal("VarE", mockFeature.GetVariant(mockContext).Name, "Should return VarE")
-	suite.Equal(true, mockFeature.GetVariant(mockContext).Enabled, "Should be equal")
+	variantSetup := VariantCollection{
+		GroupId:  mockFeature.Name,
+		Variants: mockFeature.Variants,
+	}.GetVariant(mockContext)
+	suite.Equal("VarE", variantSetup.Name, "Should return VarE")
+	suite.Equal(true, variantSetup.Enabled, "Should be equal")
 }
 
 func (suite *VariantTestSuite) TestGetVariant_ShouldReturnVarF() {
@@ -236,8 +251,12 @@ func (suite *VariantTestSuite) TestGetVariant_ShouldReturnVarF() {
 	mockContext := &context.Context{
 		UserId: "40",
 	}
-	suite.Equal("VarF", mockFeature.GetVariant(mockContext).Name, "Should return VarF")
-	suite.Equal(true, mockFeature.GetVariant(mockContext).Enabled, "Should be equal")
+	variantSetup := VariantCollection{
+		GroupId:  mockFeature.Name,
+		Variants: mockFeature.Variants,
+	}.GetVariant(mockContext)
+	suite.Equal("VarF", variantSetup.Name, "Should return VarF")
+	suite.Equal(true, variantSetup.Enabled, "Should be equal")
 }
 
 func TestVariantSuite(t *testing.T) {
