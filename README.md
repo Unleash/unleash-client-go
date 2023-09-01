@@ -203,11 +203,12 @@ This client uses go routines to report several events and doesn't drain the chan
 
 ### Feature Resolver
 
-`FeatureResolver` is a `FeatureOption` used in `IsEnabled` via the `WithResolver`. 
+`FeatureResolver` is a `FeatureOption` used in `IsEnabled` via the `WithResolver`.
 
 The `FeatureResolver` can be used to provide a feature instance in a different way than the client would normally retrieve it. This alternative resolver can be useful if you already have the feature instance and don't want to incur the cost to retrieve it from the repository.
 
 An example of its usage is below:
+
 ```go
 ctx := context.Context{
 	UserId:        "123",
@@ -238,7 +239,7 @@ resolver := func(featureName string) *api.Feature {
     }
 }
 
-// This would return true because the matched strategy is default and the feature is Enabled 
+// This would return true because the matched strategy is default and the feature is Enabled
 unleash.IsEnabled("someToggle", unleash.WithContext(ctx), unleash.WithResolver(resolver))
 ```
 
@@ -286,3 +287,29 @@ Run code-style checks:(currently failing)
 Run race-tests:
 
     make test-race
+
+## Benchmarking
+
+You can benchmark feature toggle evaluation by running:
+
+```
+go test -run=^$ -bench=BenchmarkFeatureToggleEvaluation -benchtime=10s
+```
+
+Here's an example of how the output could look like:
+
+```
+goos: darwin
+goarch: arm64
+pkg: github.com/Unleash/unleash-client-go/v3
+BenchmarkFeatureToggleEvaluation-8 Final Estimated Operations Per Day: 101.131 billion (1.011315e+11)
+13635154 854.3 ns/op
+PASS
+ok github.com/Unleash/unleash-client-go/v3 13.388s
+```
+
+In this example the benchmark was run on a MacBook Pro (M1 Pro, 2021) with 16GB RAM.
+
+We can see a result of **854.3 ns/op**, which means around **101.131 billion** feature toggle evaluations per day.
+
+**Note**: The benchmark is run with a single CPU core, no parallelism.
