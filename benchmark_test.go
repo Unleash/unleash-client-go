@@ -44,7 +44,7 @@ func BenchmarkFeatureToggleEvaluation(b *testing.B) {
 	opsPerDay := opsPerSec * 60 * 60 * 24
 
 	if b.N > 1000000 { // Only print if the number of iterations is large enough for a stable result
-		opsPerDayTrillions := opsPerDay / 1e9 // Convert to billions
-		fmt.Printf("Final Estimated Operations Per Day: %.3f billion (%e)\n", opsPerDayTrillions, opsPerDay)
+		opsPerDayBillions := opsPerDay / 1e9 // Convert to billions
+		fmt.Printf("Final Estimated Operations Per Day: %.3f billion (%e)\n", opsPerDayBillions, opsPerDay)
 	}
 }
