@@ -292,7 +292,9 @@ Run race-tests:
 
 You can benchmark feature toggle evaluation by running:
 
-    go test -run=^$ -bench=BenchmarkFeatureToggleEvaluation -benchtime=10s
+```
+go test -run=^$ -bench=BenchmarkFeatureToggleEvaluation -benchtime=10s
+```
 
 Here's an example of how the output could look like:
 
