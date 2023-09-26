@@ -242,7 +242,7 @@ func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled b
 	defer func() {
 		uc.metrics.count(feature, enabled)
 	}()
-
+	
 	return uc.isEnabled(feature, options...).Enabled
 }
 
@@ -261,10 +261,12 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.Strate
 		f = uc.repository.getToggle(feature)
 	}
 
+
 	ctx := uc.staticContext
 	if opts.ctx != nil {
 		ctx = ctx.Override(*opts.ctx)
 	}
+	
 
 	if f == nil {
 		if opts.fallbackFunc != nil {
@@ -281,6 +283,16 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.Strate
 		}
 	}
 
+	if f.Dependencies != nil && len(*f.Dependencies) > 0 {
+		parentEnabled := uc.isParentDependencySatisfied(f, *ctx)
+
+		if !parentEnabled {
+			return api.StrategyResult{
+				Enabled: false,
+			}
+		}
+	}	
+	
 	if !f.Enabled {
 		return api.StrategyResult{
 			Enabled: false,
@@ -344,6 +356,48 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.Strate
 		Enabled: false,
 	}
 }
+
+func (uc *Client) isParentDependencySatisfied(feature *api.Feature, context context.Context) bool {
+    if feature == nil || feature.Dependencies == nil || len(*feature.Dependencies) == 0 {
+        return true
+    }
+
+    for _, parent := range *feature.Dependencies {
+        parentToggle := uc.repository.getToggle(parent.Feature)
+
+        if parentToggle == nil {
+            return false
+        }
+
+        if parentToggle.Dependencies != nil && len(*parentToggle.Dependencies) > 0 {
+            return false
+        }
+
+		// According to the schema, if the enabled property is absent we assume it's true.
+        if parent.Enabled == nil {
+            if parent.Variants != nil && len(*parent.Variants) > 0 {
+                variantName := uc.getVariantWithoutMetrics(parent.Feature, WithVariantContext(context)).Name
+                if contains(*parent.Variants, variantName) {
+                    continue
+                }
+            } else {
+                if uc.isEnabled(parent.Feature, WithContext(context)).Enabled {
+                    continue
+                }
+            }
+        } else {
+            if !uc.isEnabled(parent.Feature, WithContext(context)).Enabled {
+                continue
+            }
+        }
+
+        return false
+    }
+
+    return true
+}
+
+
 
 // GetVariant queries a variant as the specified feature is enabled.
 //

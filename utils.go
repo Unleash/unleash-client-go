@@ -34,3 +34,12 @@ func getFetchURLPath(projectName string) string {
 	}
 	return "./client/features"
 }
+
+func contains(arr []string, str string) bool {
+    for _, item := range arr {
+        if item == str {
+            return true
+        }
+    }
+    return false
+}
