@@ -246,6 +246,7 @@ func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled b
 	return uc.isEnabled(feature, options...).Enabled
 }
 
+
 // isEnabled abstracts away the details of checking if a toggle is turned on or off
 // without metrics
 func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.StrategyResult {
@@ -253,34 +254,16 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.Strate
 	for _, o := range options {
 		o(&opts)
 	}
-
-	var f *api.Feature
-	if opts.resolver != nil {
-		f = opts.resolver(feature)
-	} else {
-		f = uc.repository.getToggle(feature)
-	}
-
+	
+	f := resolveToggle(uc, opts, feature)
 
 	ctx := uc.staticContext
 	if opts.ctx != nil {
 		ctx = ctx.Override(*opts.ctx)
 	}
-	
 
 	if f == nil {
-		if opts.fallbackFunc != nil {
-			return api.StrategyResult{
-				Enabled: opts.fallbackFunc(feature, ctx),
-			}
-		} else if opts.fallback != nil {
-			return api.StrategyResult{
-				Enabled: *opts.fallback,
-			}
-		}
-		return api.StrategyResult{
-			Enabled: false,
-		}
+		return handleFallback(opts, feature, ctx)
 	}
 
 	if f.Dependencies != nil && len(*f.Dependencies) > 0 {
@@ -292,7 +275,7 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.Strate
 			}
 		}
 	}	
-	
+
 	if !f.Enabled {
 		return api.StrategyResult{
 			Enabled: false,
@@ -304,7 +287,7 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.Strate
 			Enabled: f.Enabled,
 		}
 	}
-
+	
 	for _, s := range f.Strategies {
 		foundStrategy := uc.getStrategy(s.Name)
 		if foundStrategy == nil {
@@ -536,4 +519,32 @@ func (uc *Client) WaitForReady() {
 // ListFeatures returns all available features toggles.
 func (uc *Client) ListFeatures() []api.Feature {
 	return uc.repository.list()
+}
+
+
+func resolveToggle(unleashClient *Client, opts featureOption, featureName string) *api.Feature {
+	var feature *api.Feature
+	if opts.resolver != nil {
+		feature = opts.resolver(featureName)
+	} else {
+		feature = unleashClient.repository.getToggle(featureName)
+	}
+
+	return feature
+}
+
+func handleFallback(opts featureOption, featureName string, ctx *context.Context) api.StrategyResult {
+	if opts.fallbackFunc != nil {
+		return api.StrategyResult{
+			Enabled: opts.fallbackFunc(featureName, ctx),
+		}
+	} else if opts.fallback != nil {
+		return api.StrategyResult{
+			Enabled: *opts.fallback,
+		}
+	}
+
+	return api.StrategyResult{
+		Enabled: false,
+	}
 }
