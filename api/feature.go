@@ -53,11 +53,12 @@ type Feature struct {
 }
 
 type FeatureDependencies struct {
-	// The name of the feature toggle we depend upon
+	// Feature is the name of the feature toggle we depend upon
 	Feature string `json:"feature"`
-	// Possible support for depending on a variant in the future
+	// Variants contains a string of variants that the dependency should resolve to
 	Variants *[]string `json:"variants"`
-
+	// Enabled is the property that determines whether the dependency should be on or off
+	// If the property is absent from the payload it's assumed to be default on
 	Enabled *bool `json:"enabled"`
 } 	
 

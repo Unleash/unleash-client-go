@@ -242,10 +242,9 @@ func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled b
 	defer func() {
 		uc.metrics.count(feature, enabled)
 	}()
-	
+
 	return uc.isEnabled(feature, options...).Enabled
 }
-
 
 // isEnabled abstracts away the details of checking if a toggle is turned on or off
 // without metrics
@@ -254,7 +253,7 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.Strate
 	for _, o := range options {
 		o(&opts)
 	}
-	
+
 	f := resolveToggle(uc, opts, feature)
 
 	ctx := uc.staticContext
@@ -274,7 +273,7 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.Strate
 				Enabled: false,
 			}
 		}
-	}	
+	}
 
 	if !f.Enabled {
 		return api.StrategyResult{
@@ -287,7 +286,7 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.Strate
 			Enabled: f.Enabled,
 		}
 	}
-	
+
 	for _, s := range f.Strategies {
 		foundStrategy := uc.getStrategy(s.Name)
 		if foundStrategy == nil {
@@ -341,46 +340,40 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.Strate
 }
 
 func (uc *Client) isParentDependencySatisfied(feature *api.Feature, context context.Context) bool {
-    if feature == nil || feature.Dependencies == nil || len(*feature.Dependencies) == 0 {
-        return true
-    }
+	for _, parent := range *feature.Dependencies {
+		parentToggle := uc.repository.getToggle(parent.Feature)
 
-    for _, parent := range *feature.Dependencies {
-        parentToggle := uc.repository.getToggle(parent.Feature)
+		if parentToggle == nil {
+			return false
+		}
 
-        if parentToggle == nil {
-            return false
-        }
-
-        if parentToggle.Dependencies != nil && len(*parentToggle.Dependencies) > 0 {
-            return false
-        }
+		if parentToggle.Dependencies != nil && len(*parentToggle.Dependencies) > 0 {
+			return false
+		}
 
 		// According to the schema, if the enabled property is absent we assume it's true.
-        if parent.Enabled == nil {
-            if parent.Variants != nil && len(*parent.Variants) > 0 {
-                variantName := uc.getVariantWithoutMetrics(parent.Feature, WithVariantContext(context)).Name
-                if contains(*parent.Variants, variantName) {
-                    continue
-                }
-            } else {
-                if uc.isEnabled(parent.Feature, WithContext(context)).Enabled {
-                    continue
-                }
-            }
-        } else {
-            if !uc.isEnabled(parent.Feature, WithContext(context)).Enabled {
-                continue
-            }
-        }
+		if parent.Enabled == nil {
+			if parent.Variants != nil && len(*parent.Variants) > 0 {
+				variantName := uc.getVariantWithoutMetrics(parent.Feature, WithVariantContext(context)).Name
+				if contains(*parent.Variants, variantName) {
+					continue
+				}
+			} else {
+				if uc.isEnabled(parent.Feature, WithContext(context)).Enabled {
+					continue
+				}
+			}
+		} else {
+			if !uc.isEnabled(parent.Feature, WithContext(context)).Enabled {
+				continue
+			}
+		}
 
-        return false
-    }
+		return false
+	}
 
-    return true
+	return true
 }
-
-
 
 // GetVariant queries a variant as the specified feature is enabled.
 //
@@ -520,7 +513,6 @@ func (uc *Client) WaitForReady() {
 func (uc *Client) ListFeatures() []api.Feature {
 	return uc.repository.list()
 }
-
 
 func resolveToggle(unleashClient *Client, opts featureOption, featureName string) *api.Feature {
 	var feature *api.Feature

@@ -36,10 +36,10 @@ func getFetchURLPath(projectName string) string {
 }
 
 func contains(arr []string, str string) bool {
-    for _, item := range arr {
-        if item == str {
-            return true
-        }
-    }
-    return false
+	for _, item := range arr {
+		if item == str {
+			return true
+		}
+	}
+	return false
 }
