@@ -340,10 +340,13 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.Strate
 }
 
 func (uc *Client) isParentDependencySatisfied(feature *api.Feature, context context.Context) bool {
+	warnOnce := &WarnOnce{}
+
 	for _, parent := range *feature.Dependencies {
 		parentToggle := uc.repository.getToggle(parent.Feature)
 
 		if parentToggle == nil {
+			warnOnce.Warn("the parent toggle was not found in the cache, the evaluation of this dependency will always be false")
 			return false
 		}
 

@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"os"
 	"os/user"
+	"sync"
 	"time"
 )
 
@@ -42,4 +43,16 @@ func contains(arr []string, str string) bool {
 		}
 	}
 	return false
+}
+
+// WarnOnce is a type for handling warnings that should only be displayed once.
+type WarnOnce struct {
+	once sync.Once
+}
+
+// Warn logs the warning message once.
+func (wo *WarnOnce) Warn(message string) {
+	wo.once.Do(func() {
+		fmt.Println("Warning:", message)
+	})
 }
