@@ -65,6 +65,10 @@ func every(slice interface{}, condition func(interface{}) bool) bool {
 		panic("Input is not a slice")
 	}
 
+	if (sliceValue.Len() == 0) {
+		return false
+	}
+
 	for i := 0; i < sliceValue.Len(); i++ {
 		element := sliceValue.Index(i).Interface()
 		if !condition(element) {
