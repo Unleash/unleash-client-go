@@ -262,3 +262,80 @@ func TestMetrics_SendMetricsFail(t *testing.T) {
 	// Now OnSent should have been called as /client/metrics returned 200.
 	mockListener.AssertCalled(t, "OnSent", mock.AnythingOfType("MetricsData"))
 }
+
+func TestMetrics_ShouldNotCountMetricsForParentToggles(t *testing.T) {
+	assert := assert.New(t)
+	defer gock.OffAll()
+
+	gock.New(mockerServer).
+		Post("/client/register").
+		Reply(200)
+
+	gock.New(mockerServer).
+		Get("/client/features").
+		Reply(200).
+		JSON(api.FeatureResponse{
+			Features: []api.Feature{
+				{
+					Name:        "parent",
+					Enabled:     true,
+					Description: "parent toggle",
+					Strategies: []api.Strategy{
+						{
+							Id:          1,
+							Name:        "flexibleRollout",
+							Constraints: []api.Constraint{},
+							Parameters: map[string]interface{}{
+								"rollout":    100,
+								"stickiness": "default",
+							},
+						},
+					},
+				},
+				{
+					Name:        "child",
+					Enabled:     true,
+					Description: "parent toggle",
+					Strategies: []api.Strategy{
+						{
+							Id:          1,
+							Name:        "flexibleRollout",
+							Constraints: []api.Constraint{},
+							Parameters: map[string]interface{}{
+								"rollout":    100,
+								"stickiness": "default",
+							},
+						},
+					},
+					Dependencies: &[]api.Dependency{
+						{
+							Feature: "parent",
+						},
+					},
+				},
+			},
+		})
+
+	mockListener := &MockedListener{}
+	mockListener.On("OnReady").Return()
+	mockListener.On("OnError").Return()
+	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("OnCount", "child", true).Return()
+
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithListener(mockListener),
+	)
+
+	client.WaitForReady()
+	client.IsEnabled("child")
+
+	assert.EqualValues(client.metrics.bucket.Toggles["child"].Yes, 1)
+	assert.EqualValues(client.metrics.bucket.Toggles["parent"].Yes, 0)
+	client.Close()
+
+	assert.Nil(err, "client should not return an error")
+	assert.True(gock.IsDone(), "there should be no more mocks")
+}

@@ -254,12 +254,7 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.Strate
 		o(&opts)
 	}
 
-	var f *api.Feature
-	if opts.resolver != nil {
-		f = opts.resolver(feature)
-	} else {
-		f = uc.repository.getToggle(feature)
-	}
+	f := resolveToggle(uc, opts, feature)
 
 	ctx := uc.staticContext
 	if opts.ctx != nil {
@@ -267,17 +262,16 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.Strate
 	}
 
 	if f == nil {
-		if opts.fallbackFunc != nil {
+		return handleFallback(opts, feature, ctx)
+	}
+
+	if f.Dependencies != nil && len(*f.Dependencies) > 0 {
+		dependenciesSatisfied := uc.isParentDependencySatisfied(f, *ctx)
+
+		if !dependenciesSatisfied {
 			return api.StrategyResult{
-				Enabled: opts.fallbackFunc(feature, ctx),
+				Enabled: false,
 			}
-		} else if opts.fallback != nil {
-			return api.StrategyResult{
-				Enabled: *opts.fallback,
-			}
-		}
-		return api.StrategyResult{
-			Enabled: false,
 		}
 	}
 
@@ -343,6 +337,44 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.Strate
 	return api.StrategyResult{
 		Enabled: false,
 	}
+}
+
+func (uc *Client) isParentDependencySatisfied(feature *api.Feature, context context.Context) bool {
+	warnOnce := &WarnOnce{}
+
+	dependenciesSatisfied := func(parent api.Dependency) bool {
+		parentToggle := uc.repository.getToggle(parent.Feature)
+
+		if parentToggle == nil {
+			warnOnce.Warn("the parent toggle was not found in the cache, the evaluation of this dependency will always be false")
+			return false
+		}
+
+		if parentToggle.Dependencies != nil && len(*parentToggle.Dependencies) > 0 {
+			return false
+		}
+
+		// According to the schema, if the enabled property is absent we assume it's true.
+		if parent.Enabled == nil {
+			if parent.Variants != nil && len(*parent.Variants) > 0 {
+				variantName := uc.getVariantWithoutMetrics(parent.Feature, WithVariantContext(context)).Name
+				return contains(*parent.Variants, variantName)
+			}
+			return uc.isEnabled(parent.Feature, WithContext(context)).Enabled
+		}
+
+		return !uc.isEnabled(parent.Feature, WithContext(context)).Enabled
+	}
+
+	allDependenciesSatisfied := every(*feature.Dependencies, func(parent interface{}) bool {
+		return dependenciesSatisfied(parent.(api.Dependency))
+	})
+
+	if !allDependenciesSatisfied {
+		return false
+	}
+
+	return true
 }
 
 // GetVariant queries a variant as the specified feature is enabled.
@@ -482,4 +514,31 @@ func (uc *Client) WaitForReady() {
 // ListFeatures returns all available features toggles.
 func (uc *Client) ListFeatures() []api.Feature {
 	return uc.repository.list()
+}
+
+func resolveToggle(unleashClient *Client, opts featureOption, featureName string) *api.Feature {
+	var feature *api.Feature
+	if opts.resolver != nil {
+		feature = opts.resolver(featureName)
+	} else {
+		feature = unleashClient.repository.getToggle(featureName)
+	}
+
+	return feature
+}
+
+func handleFallback(opts featureOption, featureName string, ctx *context.Context) api.StrategyResult {
+	if opts.fallbackFunc != nil {
+		return api.StrategyResult{
+			Enabled: opts.fallbackFunc(featureName, ctx),
+		}
+	} else if opts.fallback != nil {
+		return api.StrategyResult{
+			Enabled: *opts.fallback,
+		}
+	}
+
+	return api.StrategyResult{
+		Enabled: false,
+	}
 }

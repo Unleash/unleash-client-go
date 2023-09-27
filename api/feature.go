@@ -47,6 +47,19 @@ type Feature struct {
 
 	// Variants is a list of variants of the feature toggle.
 	Variants []VariantInternal `json:"variants"`
+
+	// Dependencies is a list of feature toggle dependency objects
+	Dependencies *[]Dependency `json:"dependencies"`
+}
+
+type Dependency struct {
+	// Feature is the name of the feature toggle we depend upon
+	Feature string `json:"feature"`
+	// Variants contains a string of variants that the dependency should resolve to
+	Variants *[]string `json:"variants"`
+	// Enabled is the property that determines whether the dependency should be on or off
+	// If the property is absent from the payload it's assumed to be default on
+	Enabled *bool `json:"enabled"`
 }
 
 func (fr FeatureResponse) FeatureMap() map[string]interface{} {

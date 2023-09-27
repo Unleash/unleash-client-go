@@ -115,7 +115,7 @@ func TestRepository_ParseAPIResponse(t *testing.T) {
 			}
 		}`)
 
-	reader := bytes.NewReader(data);
+	reader := bytes.NewReader(data)
 	dec := json.NewDecoder(reader)
 
 	var response api.FeatureResponse
