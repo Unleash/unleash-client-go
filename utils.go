@@ -62,7 +62,8 @@ func every(slice interface{}, condition func(interface{}) bool) bool {
 	sliceValue := reflect.ValueOf(slice)
 
 	if sliceValue.Kind() != reflect.Slice {
-		panic("Input is not a slice")
+		fmt.Println("Input is not a slice returning")
+		return false
 	}
 
 	if (sliceValue.Len() == 0) {
