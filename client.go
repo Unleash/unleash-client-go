@@ -375,41 +375,6 @@ func (uc *Client) isParentDependencySatisfied(feature *api.Feature, context cont
 	}
 
 	return true
-
-	// for _, parent := range *feature.Dependencies {
-	// 	parentToggle := uc.repository.getToggle(parent.Feature)
-
-	// 	if parentToggle == nil {
-	// 		warnOnce.Warn("the parent toggle was not found in the cache, the evaluation of this dependency will always be false")
-	// 		return false
-	// 	}
-
-	// 	if parentToggle.Dependencies != nil && len(*parentToggle.Dependencies) > 0 {
-	// 		return false
-	// 	}
-
-	// 	// According to the schema, if the enabled property is absent we assume it's true.
-	// 	if parent.Enabled == nil {
-	// 		if parent.Variants != nil && len(*parent.Variants) > 0 {
-	// 			variantName := uc.getVariantWithoutMetrics(parent.Feature, WithVariantContext(context)).Name
-	// 			if contains(*parent.Variants, variantName) {
-	// 				continue
-	// 			}
-	// 		} else {
-	// 			if uc.isEnabled(parent.Feature, WithContext(context)).Enabled {
-	// 				continue
-	// 			}
-	// 		}
-	// 	} else {
-	// 		if !uc.isEnabled(parent.Feature, WithContext(context)).Enabled {
-	// 			continue
-	// 		}
-	// 	}
-
-	// 	return false
-	// }
-
-	// return true
 }
 
 // GetVariant queries a variant as the specified feature is enabled.
