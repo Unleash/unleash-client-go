@@ -71,6 +71,21 @@ func TestEvery(t *testing.T) {
 			t.Errorf("Expected result to be false")
 		}
 	})
+
+	t.Run("Result should be false if one doesn't match the predicate", func(t *testing.T) {
+		words := []string{"apple", "banana", "cherry", "he"}
+		allLong := every(words, func(item interface{}) bool {
+			str, ok := item.(string)
+			if !ok {
+				t.Errorf("Expected a string, got %T", item)
+				return false
+			}
+			return len(str) > 3
+		})
+		if allLong == true {
+			t.Errorf("Expected all words to be long, but got false")
+		}
+	})
 }
 
 func TestContains(t *testing.T) {
