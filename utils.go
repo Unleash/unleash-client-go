@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"os"
 	"os/user"
+	"reflect"
 	"sync"
 	"time"
 )
@@ -55,4 +56,20 @@ func (wo *WarnOnce) Warn(message string) {
 	wo.once.Do(func() {
 		fmt.Println("Warning:", message)
 	})
+}
+
+func every(slice interface{}, condition func(interface{}) bool) bool {
+	sliceValue := reflect.ValueOf(slice)
+
+	if sliceValue.Kind() != reflect.Slice {
+		panic("Input is not a slice")
+	}
+
+	for i := 0; i < sliceValue.Len(); i++ {
+		element := sliceValue.Index(i).Interface()
+		if !condition(element) {
+			return false
+		}
+	}
+	return true
 }
