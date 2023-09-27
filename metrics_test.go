@@ -307,7 +307,7 @@ func TestMetrics_ShouldNotCountMetricsForParentToggles(t *testing.T) {
 							},
 						},
 					},
-					Dependencies: &[]api.FeatureDependencies{
+					Dependencies: &[]api.Dependency{
 						{
 							Feature: "parent",
 						},

@@ -266,9 +266,9 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.Strate
 	}
 
 	if f.Dependencies != nil && len(*f.Dependencies) > 0 {
-		parentEnabled := uc.isParentDependencySatisfied(f, *ctx)
+		dependenciesSatisfied := uc.isParentDependencySatisfied(f, *ctx)
 
-		if !parentEnabled {
+		if !dependenciesSatisfied {
 			return api.StrategyResult{
 				Enabled: false,
 			}
@@ -342,7 +342,7 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.Strate
 func (uc *Client) isParentDependencySatisfied(feature *api.Feature, context context.Context) bool {
 	warnOnce := &WarnOnce{}
 
-	dependenciesSatisfied := func(parent api.FeatureDependencies) bool {
+	dependenciesSatisfied := func(parent api.Dependency) bool {
 		parentToggle := uc.repository.getToggle(parent.Feature)
 
 		if parentToggle == nil {
@@ -367,7 +367,7 @@ func (uc *Client) isParentDependencySatisfied(feature *api.Feature, context cont
 	}
 
 	allDependenciesSatisfied := every(*feature.Dependencies, func(parent interface{}) bool {
-		return dependenciesSatisfied(parent.(api.FeatureDependencies))
+		return dependenciesSatisfied(parent.(api.Dependency))
 	})
 
 	if !allDependenciesSatisfied {

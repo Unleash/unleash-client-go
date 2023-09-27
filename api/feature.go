@@ -49,10 +49,10 @@ type Feature struct {
 	Variants []VariantInternal `json:"variants"`
 
 	// Dependencies is a list of feature toggle dependency objects
-	Dependencies *[]FeatureDependencies `json:"dependencies"`
+	Dependencies *[]Dependency `json:"dependencies"`
 }
 
-type FeatureDependencies struct {
+type Dependency struct {
 	// Feature is the name of the feature toggle we depend upon
 	Feature string `json:"feature"`
 	// Variants contains a string of variants that the dependency should resolve to
