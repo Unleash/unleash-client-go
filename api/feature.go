@@ -60,7 +60,7 @@ type FeatureDependencies struct {
 	// Enabled is the property that determines whether the dependency should be on or off
 	// If the property is absent from the payload it's assumed to be default on
 	Enabled *bool `json:"enabled"`
-} 	
+}
 
 func (fr FeatureResponse) FeatureMap() map[string]interface{} {
 	features := map[string]interface{}{}
