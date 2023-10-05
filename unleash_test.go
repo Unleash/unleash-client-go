@@ -64,3 +64,10 @@ func Test_withVariantsAndANonExistingStrategyName(t *testing.T) {
 		t.Fatalf("Expected feature to be disabled because Environment does not exist as strategy")
 	}
 }
+
+func Test_IsEnabledWithUninitializedClient(t *testing.T) {
+	result := unleash.IsEnabled("foo", unleash.WithFallback(true))
+	if !result {
+		t.Fatalf("Expected true")
+	}
+}

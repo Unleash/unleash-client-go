@@ -38,7 +38,11 @@ type RepositoryListener interface {
 // IsEnabled queries the default client whether or not the specified feature is enabled or not.
 func IsEnabled(feature string, options ...FeatureOption) bool {
 	if defaultClient == nil {
-		return false
+		var opts featureOption
+		for _, o := range options {
+			o(&opts)
+		}
+		return handleFallback(opts, feature, opts.ctx).Enabled
 	}
 	return defaultClient.IsEnabled(feature, options...)
 }
