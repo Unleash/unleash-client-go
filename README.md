@@ -313,3 +313,7 @@ In this example the benchmark was run on a MacBook Pro (M1 Pro, 2021) with 16GB 
 We can see a result of **854.3 ns/op**, which means around **101.131 billion** feature toggle evaluations per day.
 
 **Note**: The benchmark is run with a single CPU core, no parallelism.
+
+## Design philsophy
+
+This feature flag SDK is designed according to our design philosophy. You can [read more about that here](https://docs.getunleash.io/topics/feature-flags/feature-flag-best-practices).
