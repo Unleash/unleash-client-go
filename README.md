@@ -245,6 +245,15 @@ unleash.IsEnabled("someToggle", unleash.WithContext(ctx), unleash.WithResolver(r
 
 ## Development
 
+To override dependency on unleash-client-go github repository to a local development folder (for instance when building a local test-app for the SDK),  
+you can add the following to your apps `go.mod`:
+
+```mod
+    replace github.com/Unleash/unleash-client-go/v3 => ../unleash-client-go/
+```
+
+
+
 ## Steps to release
 
 - Update the clientVersion in `client.go`
