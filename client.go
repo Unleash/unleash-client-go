@@ -112,20 +112,22 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		AppName:     uc.options.appName,
 	}
 
-	if uc.options.listener != nil {
-		if eListener, ok := uc.options.listener.(ErrorListener); ok {
-			uc.errorListener = eListener
-		}
-		if rListener, ok := uc.options.listener.(RepositoryListener); ok {
-			uc.repositoryListener = rListener
-		}
-		if mListener, ok := uc.options.listener.(MetricListener); ok {
-			uc.metricsListener = mListener
-		}
-		defer func() {
-			go uc.sync()
-		}()
+	if uc.options.listener == nil {
+		uc.options.listener = &NoopListener{}
 	}
+
+	if eListener, ok := uc.options.listener.(ErrorListener); ok {
+		uc.errorListener = eListener
+	}
+	if rListener, ok := uc.options.listener.(RepositoryListener); ok {
+		uc.repositoryListener = rListener
+	}
+	if mListener, ok := uc.options.listener.(MetricListener); ok {
+		uc.metricsListener = mListener
+	}
+	defer func() {
+		go uc.sync()
+	}()
 
 	if uc.options.url == "" {
 		return nil, fmt.Errorf("Unleash server URL missing")
