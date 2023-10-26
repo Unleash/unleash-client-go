@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Unleash/unleash-client-go/v3/context"
+	"github.com/Unleash/unleash-client-go/v3/internal/strategies"
 	"github.com/twmb/murmur3"
 )
 
@@ -105,7 +106,7 @@ func (vc VariantCollection) getVariantFromWeights(ctx *context.Context) *Variant
 	}
 	stickiness := vc.Variants[0].Stickiness
 
-	target := getNormalizedNumber(getSeed(ctx, stickiness), vc.GroupId, totalWeight)
+	target := strategies.NormalizedVariantValue(getSeed(ctx, stickiness), vc.GroupId, totalWeight, strategies.VariantNormalizationSeed)
 	counter := uint32(0)
 	for _, variant := range vc.Variants {
 		counter += uint32(variant.Weight)

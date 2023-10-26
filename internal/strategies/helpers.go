@@ -10,6 +10,8 @@ import (
 	"github.com/twmb/murmur3"
 )
 
+var VariantNormalizationSeed uint32 = 86028157
+
 func round(f float64) int {
 	if f < -0.5 {
 		return int(f - 0.5)
@@ -50,11 +52,15 @@ func parameterAsFloat64(param interface{}) (result float64, ok bool) {
 	return
 }
 
-func normalizedValue(id string, groupId string) uint32 {
-	hash := murmur3.New32()
+func normalizedRolloutValue(id string, groupId string) uint32 {
+	return NormalizedVariantValue(id, groupId, 100, 0)
+}
+
+func NormalizedVariantValue(id string, groupId string, normalizer int, seed uint32) uint32 {
+	hash := murmur3.SeedNew32(seed)
 	hash.Write([]byte(groupId + ":" + id))
 	hashCode := hash.Sum32()
-	return hashCode%uint32(100) + 1
+	return hashCode%uint32(normalizer) + 1
 }
 
 // coalesce returns the first non-empty string in the list of arguments
