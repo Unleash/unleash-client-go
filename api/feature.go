@@ -1,14 +1,12 @@
 package api
 
 import (
-	"fmt"
 	"math/rand"
 	"strconv"
 	"time"
 
 	"github.com/Unleash/unleash-client-go/v3/context"
 	"github.com/Unleash/unleash-client-go/v3/internal/strategies"
-	"github.com/twmb/murmur3"
 )
 
 type ParameterMap map[string]interface{}
@@ -148,8 +146,4 @@ func getSeed(ctx *context.Context, stickiness string) string {
 		return ctx.RemoteAddress
 	}
 	return strconv.Itoa(rand.Intn(10000))
-}
-
-func getNormalizedNumber(identifier, groupId string, normalizer int) uint32 {
-	return (murmur3.Sum32([]byte(fmt.Sprintf("%s:%s", groupId, identifier))) % uint32(normalizer)) + 1
 }
