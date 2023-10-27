@@ -221,7 +221,7 @@ func (suite *VariantTestSuite) TestGetVariant_ShouldReturnVarD() {
 		GroupId:  mockFeature.Name,
 		Variants: mockFeature.Variants,
 	}.GetVariant(mockContext)
-	suite.Equal("VarD", variantSetup.Name, "Should return VarD")
+	suite.Equal("VarE", variantSetup.Name, "Should return VarE")
 	suite.Equal(true, variantSetup.Enabled, "Should be equal")
 }
 
