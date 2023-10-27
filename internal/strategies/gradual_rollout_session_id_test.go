@@ -42,7 +42,7 @@ func TestGradualRolloutSessionId_IsEnabled(t *testing.T) {
 	t.Run("p1=p2", func(t *testing.T) {
 		sessionId := "123123"
 		groupId := "group1"
-		percentage := normalizedValue(sessionId, groupId)
+		percentage := normalizedRolloutValue(sessionId, groupId)
 
 		params := map[string]interface{}{
 			strategy.ParamPercentage: percentage,
@@ -57,7 +57,7 @@ func TestGradualRolloutSessionId_IsEnabled(t *testing.T) {
 	t.Run("p1<p2", func(t *testing.T) {
 		sessionId := "123123"
 		groupId := "group1"
-		percentage := normalizedValue(sessionId, groupId) - 1
+		percentage := normalizedRolloutValue(sessionId, groupId) - 1
 
 		params := map[string]interface{}{
 			strategy.ParamPercentage: percentage,
