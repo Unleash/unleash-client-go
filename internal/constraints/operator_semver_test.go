@@ -84,11 +84,11 @@ func TestOperatorSemverErrors(t *testing.T) {
 		},
 		{
 			ctx:         &context.Context{Properties: map[string]string{"x": "1.2.3"}},
-			constraints: []api.Constraint{{ContextName: "x", Operator: "SEMVER_LT", Value: "v4.2.1"}},
+			constraints: []api.Constraint{{ContextName: "x", Operator: "SEMVER_LT", Value: "v3.2.1"}},
 			error:       "Invalid characters in version",
 		},
 		{
-			ctx:         &context.Context{Properties: map[string]string{"x": "v4.2.1"}},
+			ctx:         &context.Context{Properties: map[string]string{"x": "v3.2.1"}},
 			constraints: []api.Constraint{{ContextName: "x", Operator: "SEMVER_GT", Value: "1.2.3"}},
 			error:       "Invalid characters in version",
 		},
