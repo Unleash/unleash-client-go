@@ -1,4 +1,4 @@
-module github.com/Unleash/unleash-client-go/v3
+module github.com/Unleash/unleash-client-go/v4
 
 require (
 	github.com/Masterminds/semver/v3 v3.1.1
