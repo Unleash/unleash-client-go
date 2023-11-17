@@ -1,7 +1,7 @@
 package constraints
 
 import (
-	"github.com/Masterminds/semver/v4"
+	"github.com/Masterminds/semver/v3"
 	"github.com/Unleash/unleash-client-go/v4/api"
 	"github.com/Unleash/unleash-client-go/v4/context"
 )
