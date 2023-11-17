@@ -1,6 +1,6 @@
 package strategies
 
-import "github.com/Unleash/unleash-client-go/v3/context"
+import "github.com/Unleash/unleash-client-go/v4/context"
 
 type defaultStrategy struct{}
 

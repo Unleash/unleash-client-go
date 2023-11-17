@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Unleash/unleash-client-go/v3"
+	"github.com/Unleash/unleash-client-go/v4"
 )
 
 func Test_withVariants(t *testing.T) {

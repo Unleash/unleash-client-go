@@ -1,8 +1,8 @@
 package strategies
 
 import (
-	"github.com/Unleash/unleash-client-go/v3/context"
-	"github.com/Unleash/unleash-client-go/v3/strategy"
+	"github.com/Unleash/unleash-client-go/v4/context"
+	"github.com/Unleash/unleash-client-go/v4/strategy"
 )
 
 type stickiness string

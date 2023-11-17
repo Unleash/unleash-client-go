@@ -3,8 +3,8 @@ package constraints
 import (
 	"fmt"
 
-	"github.com/Unleash/unleash-client-go/v3/api"
-	"github.com/Unleash/unleash-client-go/v3/context"
+	"github.com/Unleash/unleash-client-go/v4/api"
+	"github.com/Unleash/unleash-client-go/v4/context"
 )
 
 // Check checks if all the constraints are fulfilled by the context.

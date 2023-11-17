@@ -1,11 +1,11 @@
-[![Build Status](https://github.com/Unleash/unleash-client-go/actions/workflows/build.yml/badge.svg)](https://github.com/Unleash/unleash-client-go/actions/workflows/build.yml) [![GoDoc](https://pkg.go.dev/badge/github.com/Unleash/unleash-client-go/v3?status.svg)](https://pkg.go.dev/github.com/Unleash/unleash-client-go/v3) [![Go Report Card](https://goreportcard.com/badge/github.com/Unleash/unleash-client-go)](https://goreportcard.com/report/github.com/Unleash/unleash-client-go)
-[![Coverage Status](https://coveralls.io/repos/github/Unleash/unleash-client-go/badge.svg?branch=v3)](https://coveralls.io/github/Unleash/unleash-client-go?branch=v3)
+[![Build Status](https://github.com/Unleash/unleash-client-go/actions/workflows/build.yml/badge.svg)](https://github.com/Unleash/unleash-client-go/actions/workflows/build.yml) [![GoDoc](https://pkg.go.dev/badge/github.com/Unleash/unleash-client-go/v4?status.svg)](https://pkg.go.dev/github.com/Unleash/unleash-client-go/v4) [![Go Report Card](https://goreportcard.com/badge/github.com/Unleash/unleash-client-go)](https://goreportcard.com/report/github.com/Unleash/unleash-client-go)
+[![Coverage Status](https://coveralls.io/repos/github/Unleash/unleash-client-go/badge.svg?branch=v4)](https://coveralls.io/github/Unleash/unleash-client-go?branch=v4)
 
 # unleash-client-go
 
 Unleash Client for Go. Read more about the [Unleash project](https://github.com/Unleash/unleash)
 
-**Version 3.x of the client requires `unleash-server` v3.x or higher.**
+**Version 3.x of the client requires `unleash-server` v4.x or higher.**
 
 ## Go Version
 
@@ -21,7 +21,7 @@ The client may work on older versions of Go as well, but is not actively tested.
 To install the latest version of the client use:
 
 ```bash
-go get github.com/Unleash/unleash-client-go/v3
+go get github.com/Unleash/unleash-client-go/v4
 ```
 
 If you are still using Unleash Server v2.x.x, then you should use:
@@ -36,7 +36,7 @@ The easiest way to get started with Unleash is to initialize it early in your ap
 
 ```go
 import (
-	"github.com/Unleash/unleash-client-go/v3"
+	"github.com/Unleash/unleash-client-go/v4"
 )
 
 func init() {
@@ -59,7 +59,7 @@ Bootstrapping from file on disk is then done using something similar to:
 
 ```go
 import (
-	"github.com/Unleash/unleash-client-go/v3"
+	"github.com/Unleash/unleash-client-go/v4"
 )
 
 func init() {
@@ -80,7 +80,7 @@ Bootstrapping from S3 is then done by downloading the file using the AWS library
 
 ```go
 import (
-	"github.com/Unleash/unleash-client-go/v3"
+	"github.com/Unleash/unleash-client-go/v4"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -124,7 +124,7 @@ Since the Google Cloud Storage API returns a Reader, implementing a Bootstrap fr
 
 ```go
 import (
-	"github.com/Unleash/unleash-client-go/v3"
+	"github.com/Unleash/unleash-client-go/v4"
 	"cloud.google.com/go/storage"
 )
 
@@ -249,7 +249,7 @@ To override dependency on unleash-client-go github repository to a local develop
 you can add the following to your apps `go.mod`:
 
 ```mod
-    replace github.com/Unleash/unleash-client-go/v3 => ../unleash-client-go/
+    replace github.com/Unleash/unleash-client-go/v4 => ../unleash-client-go/
 ```
 
 
@@ -310,11 +310,11 @@ Here's an example of how the output could look like:
 ```
 goos: darwin
 goarch: arm64
-pkg: github.com/Unleash/unleash-client-go/v3
+pkg: github.com/Unleash/unleash-client-go/v4
 BenchmarkFeatureToggleEvaluation-8 Final Estimated Operations Per Day: 101.131 billion (1.011315e+11)
 13635154 854.3 ns/op
 PASS
-ok github.com/Unleash/unleash-client-go/v3 13.388s
+ok github.com/Unleash/unleash-client-go/v4 13.388s
 ```
 
 In this example the benchmark was run on a MacBook Pro (M1 Pro, 2021) with 16GB RAM.

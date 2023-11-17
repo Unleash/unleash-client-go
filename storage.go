@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Unleash/unleash-client-go/v3/api"
+	"github.com/Unleash/unleash-client-go/v4/api"
 )
 
 // Storage is an interface that can be implemented in order to have control over how

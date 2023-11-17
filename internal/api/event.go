@@ -3,7 +3,7 @@ package api
 import (
 	"time"
 
-	"github.com/Unleash/unleash-client-go/v3/api"
+	"github.com/Unleash/unleash-client-go/v4/api"
 )
 
 type EventResponse struct {

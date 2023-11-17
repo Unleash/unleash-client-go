@@ -1,8 +1,8 @@
 package constraints
 
 import (
-	"github.com/Unleash/unleash-client-go/v3/api"
-	"github.com/Unleash/unleash-client-go/v3/context"
+	"github.com/Unleash/unleash-client-go/v4/api"
+	"github.com/Unleash/unleash-client-go/v4/context"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -84,11 +84,11 @@ func TestOperatorSemverErrors(t *testing.T) {
 		},
 		{
 			ctx:         &context.Context{Properties: map[string]string{"x": "1.2.3"}},
-			constraints: []api.Constraint{{ContextName: "x", Operator: "SEMVER_LT", Value: "v3.2.1"}},
+			constraints: []api.Constraint{{ContextName: "x", Operator: "SEMVER_LT", Value: "v4.2.1"}},
 			error:       "Invalid characters in version",
 		},
 		{
-			ctx:         &context.Context{Properties: map[string]string{"x": "v3.2.1"}},
+			ctx:         &context.Context{Properties: map[string]string{"x": "v4.2.1"}},
 			constraints: []api.Constraint{{ContextName: "x", Operator: "SEMVER_GT", Value: "1.2.3"}},
 			error:       "Invalid characters in version",
 		},

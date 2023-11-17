@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Unleash/unleash-client-go/v3"
-	"github.com/Unleash/unleash-client-go/v3/context"
+	"github.com/Unleash/unleash-client-go/v4"
+	"github.com/Unleash/unleash-client-go/v4/context"
 )
 
 func Test_bootstrapFromFile(t *testing.T) {

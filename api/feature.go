@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Unleash/unleash-client-go/v3/context"
-	"github.com/Unleash/unleash-client-go/v3/internal/strategies"
+	"github.com/Unleash/unleash-client-go/v4/context"
+	"github.com/Unleash/unleash-client-go/v4/internal/strategies"
 )
 
 type ParameterMap map[string]interface{}

@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Unleash/unleash-client-go/v3/api"
-	internalapi "github.com/Unleash/unleash-client-go/v3/internal/api"
+	"github.com/Unleash/unleash-client-go/v4/api"
+	internalapi "github.com/Unleash/unleash-client-go/v4/internal/api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"gopkg.in/h2non/gock.v1"
