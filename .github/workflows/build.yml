@@ -15,7 +15,7 @@ jobs:
         name: Checkout client specifications
         with:
           repository: Unleash/client-specification
-          ref: refs/tags/v5.0.2
+          ref: refs/tags/v5.1.0
           path: testdata/client-specification
       - uses: actions/setup-go@v2
         name: Setup go
