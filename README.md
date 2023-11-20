@@ -46,6 +46,9 @@ func init() {
 		unleash.WithUrl("http://unleash.herokuapp.com/api/"),
 		unleash.WithCustomHeaders(http.Header{"Authorization": {"<API token>"}}),
 	)
+
+        // The line below will block until the default client is ready or returns immediately. You can wait for readiness in a different way but this is good for new joiners
+        unleash.WaitForReady()
 }
 ```
 
