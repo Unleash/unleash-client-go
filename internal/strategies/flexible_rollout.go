@@ -62,6 +62,6 @@ func (s flexibleRolloutStrategy) IsEnabled(params map[string]interface{}, ctx *c
 		return false
 	}
 
-	normalizedID := normalizedRolloutValue(stickinessID, groupID)
+	normalizedID := normalizedValue(stickinessID, groupID)
 	return percentage > 0 && float64(normalizedID) <= percentage
 }

@@ -53,14 +53,9 @@ func TestParameterAsFloat64(t *testing.T) {
 	}
 }
 
-func TestNormalizedRolloutValue(t *testing.T) {
-	assert.Equal(t, uint32(73), normalizedRolloutValue("123", "gr1"))
-	assert.Equal(t, uint32(25), normalizedRolloutValue("999", "groupX"))
-}
-
-func TestNormalizedVariantValue(t *testing.T) {
-	assert.Equal(t, uint32(96), NormalizedVariantValue("123", "gr1", 100, VariantNormalizationSeed))
-	assert.Equal(t, uint32(60), NormalizedVariantValue("999", "groupX", 100, VariantNormalizationSeed))
+func TestNormalizedValue(t *testing.T) {
+	assert.Equal(t, uint32(73), normalizedValue("123", "gr1"))
+	assert.Equal(t, uint32(25), normalizedValue("999", "groupX"))
 }
 
 func TestCoalesce(t *testing.T) {
@@ -114,14 +109,14 @@ func BenchmarkNormalizedValue(b *testing.B) {
 	b.Run("value less than 32 bytes", func(b *testing.B) {
 		b.ReportAllocs()
 		for i := 0; i < b.N; i++ {
-			_ = normalizedRolloutValue(smallId, smallGroup)
+			_ = normalizedValue(smallId, smallGroup)
 		}
 	})
 
 	b.Run("value greater than 32 bytes", func(b *testing.B) {
 		b.ReportAllocs()
 		for i := 0; i < b.N; i++ {
-			_ = normalizedRolloutValue(largeId, largeGroup)
+			_ = normalizedValue(largeId, largeGroup)
 		}
 	})
 }

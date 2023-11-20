@@ -38,7 +38,7 @@ func (s gradualRolloutSessionId) IsEnabled(params map[string]interface{}, ctx *c
 		return false
 	}
 
-	normalizedId := normalizedRolloutValue(ctx.SessionId, groupId)
+	normalizedId := normalizedValue(ctx.SessionId, groupId)
 
 	return percentage > 0.0 && float64(normalizedId) <= percentage
 }
