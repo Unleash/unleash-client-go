@@ -221,7 +221,7 @@ func (suite *VariantTestSuite) TestGetVariant_ShouldReturnVarD() {
 		GroupId:  mockFeature.Name,
 		Variants: mockFeature.Variants,
 	}.GetVariant(mockContext)
-	suite.Equal("VarE", variantSetup.Name, "Should return VarE")
+	suite.Equal("VarD", variantSetup.Name, "Should return VarD")
 	suite.Equal(true, variantSetup.Enabled, "Should be equal")
 }
 
@@ -238,7 +238,7 @@ func (suite *VariantTestSuite) TestGetVariant_ShouldReturnVarE() {
 		GroupId:  mockFeature.Name,
 		Variants: mockFeature.Variants,
 	}.GetVariant(mockContext)
-	suite.Equal("VarF", variantSetup.Name, "Should return VarF")
+	suite.Equal("VarE", variantSetup.Name, "Should return VarE")
 	suite.Equal(true, variantSetup.Enabled, "Should be equal")
 }
 
@@ -255,7 +255,7 @@ func (suite *VariantTestSuite) TestGetVariant_ShouldReturnVarF() {
 		GroupId:  mockFeature.Name,
 		Variants: mockFeature.Variants,
 	}.GetVariant(mockContext)
-	suite.Equal("VarE", variantSetup.Name, "Should return VarE")
+	suite.Equal("VarF", variantSetup.Name, "Should return VarF")
 	suite.Equal(true, variantSetup.Enabled, "Should be equal")
 }
 
