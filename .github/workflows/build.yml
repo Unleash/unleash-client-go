@@ -26,6 +26,7 @@ jobs:
       - name: Go vet
         run: go vet ./...
       - name: Run all tests
+        timeout-minutes: 1
         run: go test -race -covermode atomic -coverprofile=profile.cov -v ./...
       - name: Send coverage
         uses: shogo82148/actions-goveralls@v1
