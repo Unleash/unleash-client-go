@@ -34,6 +34,7 @@ go get github.com/Unleash/unleash-client-go
 
 The easiest way to get started with Unleash is to initialize it early in your application code:
 
+**Asynchronous initialization example:**
 ```go
 import (
 	"github.com/Unleash/unleash-client-go/v4"
@@ -46,6 +47,26 @@ func init() {
 		unleash.WithUrl("http://unleash.herokuapp.com/api/"),
 		unleash.WithCustomHeaders(http.Header{"Authorization": {"<API token>"}}),
 	)
+}
+```
+
+**Synchronous initialization example:**
+
+```go
+import (
+	"github.com/Unleash/unleash-client-go/v4"
+)
+
+func init() {
+	unleash.Initialize(
+		unleash.WithListener(&unleash.DebugListener{}),
+		unleash.WithAppName("my-application"),
+		unleash.WithUrl("http://unleash.herokuapp.com/api/"),
+		unleash.WithCustomHeaders(http.Header{"Authorization": {"<API token>"}}),
+	)
+
+	// Note this will block until the default client is ready
+	unleash.WaitForReady()
 }
 ```
 
