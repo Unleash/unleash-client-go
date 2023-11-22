@@ -358,7 +358,7 @@ func (uc *Client) isParentDependencySatisfied(feature *api.Feature, context cont
 
 		enabledResult := uc.isEnabled(parent.Feature, WithContext(context))
 		// According to the schema, if the enabled property is absent we assume it's true.
-		if parent.Enabled == nil {
+		if parent.Enabled == nil || *parent.Enabled == true {
 			if parent.Variants != nil && len(*parent.Variants) > 0 && enabledResult.Variant != nil {
 				return enabledResult.Enabled && contains(*parent.Variants, enabledResult.Variant.Name)
 			}
