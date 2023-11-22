@@ -1,3 +1,5 @@
+// +build spec
+
 package unleash
 
 import (

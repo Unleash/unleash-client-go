@@ -25,9 +25,11 @@ jobs:
         run: go get -t -v ./...
       - name: Go vet
         run: go vet ./...
-      - name: Run all tests
+      - name: Run spec tests
+        run: go test -v ./... -tags='spec'
+      - name: Run all tests with race detection
         timeout-minutes: 1
-        run: go test -race -covermode atomic -coverprofile=profile.cov -v ./...
+        run: go test -race -covermode atomic -coverprofile=profile.cov -v ./... -tags='!spec'
       - name: Send coverage
         uses: shogo82148/actions-goveralls@v1
         with:
