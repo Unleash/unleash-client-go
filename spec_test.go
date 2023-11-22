@@ -1,3 +1,5 @@
+// +build norace
+
 package unleash
 
 import (
