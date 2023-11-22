@@ -1,4 +1,4 @@
-// +build spec
+// +build norace
 
 package unleash
 

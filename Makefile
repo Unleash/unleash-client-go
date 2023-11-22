@@ -25,4 +25,4 @@ test: check
 	go test ./...
 
 test-race: check
-	go test -race ./... -tags='!spec'
+	go test -race ./... -tags='!norace'
