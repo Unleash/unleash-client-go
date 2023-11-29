@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"net/url"
 	"sync"
@@ -26,6 +27,9 @@ type repository struct {
 	isReady       bool
 	refreshTicker *time.Ticker
 	segments      map[int][]api.Constraint
+	errors        float64
+	maxSkips      float64
+	skips         float64
 }
 
 func newRepository(options repositoryOptions, channels repositoryChannels) *repository {
@@ -36,6 +40,9 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 		closed:             make(chan struct{}),
 		refreshTicker:      time.NewTicker(options.refreshInterval),
 		segments:           map[int][]api.Constraint{},
+		errors:             0,
+		maxSkips:           10,
+		skips:              0,
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	repo.ctx = ctx
@@ -80,9 +87,31 @@ func (r *repository) sync() {
 			close(r.closed)
 			return
 		case <-r.refreshTicker.C:
-			r.fetchAndReportError()
+			if r.skips == 0 {
+				r.fetchAndReportError()
+			} else {
+				r.decrementSkips()
+			}
 		}
 	}
+}
+
+func (r *repository) backoff() {
+	r.errors = math.Min(r.maxSkips, r.errors+1)
+	r.skips = r.errors
+}
+
+func (r *repository) successfulFetch() {
+	r.errors = math.Max(0, r.errors-1)
+	r.skips = r.errors
+}
+
+func (r *repository) decrementSkips() {
+	r.skips = math.Max(0, r.skips-1)
+}
+func (r *repository) configurationError() {
+	r.errors = r.maxSkips
+	r.skips = r.errors
 }
 
 func (r *repository) fetch() error {
@@ -119,7 +148,7 @@ func (r *repository) fetch() error {
 	if resp.StatusCode == http.StatusNotModified {
 		return nil
 	}
-	if err := statusIsOK(resp); err != nil {
+	if err := r.statusIsOK(resp); err != nil {
 		return err
 	}
 
@@ -133,14 +162,21 @@ func (r *repository) fetch() error {
 	r.etag = resp.Header.Get("Etag")
 	r.segments = featureResp.SegmentsMap()
 	r.options.storage.Reset(featureResp.FeatureMap(), true)
+	r.successfulFetch()
 	r.Unlock()
 	return nil
 }
 
-func statusIsOK(resp *http.Response) error {
+func (r *repository) statusIsOK(resp *http.Response) error {
 	s := resp.StatusCode
 	if 200 <= s && s < 300 {
 		return nil
+	} else if s == 401 || s == 403 || s == 404 {
+		r.configurationError()
+		return fmt.Errorf("%s %s returned status code %d your SDK is most likely misconfigured, backing off to maximum (%f times our interval)", resp.Request.Method, resp.Request.URL, s, r.maxSkips)
+	} else if s == 429 || s >= 500 {
+		r.backoff()
+		return fmt.Errorf("%s %s returned status code %d, backing off (%f times our interval)", resp.Request.Method, resp.Request.URL, s, r.errors)
 	}
 
 	return fmt.Errorf("%s %s returned status code %d", resp.Request.Method, resp.Request.URL, s)
