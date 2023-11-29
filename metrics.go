@@ -81,6 +81,7 @@ func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
 		closed:          make(chan struct{}),
 		maxSkips:        10,
 		errors:          0,
+		skips:           0,
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	m.ctx = ctx
