@@ -188,12 +188,12 @@ func (m *metrics) sendMetrics() {
 	defer resp.Body.Close()
 
 	if resp.StatusCode < http.StatusOK || resp.StatusCode > http.StatusMultipleChoices {
-		m.warn(fmt.Errorf("%s return %d", u.String(), resp.StatusCode))
 		if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden || resp.StatusCode == http.StatusNotFound {
 			m.configurationError()
-		} else if resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode > http.StatusInternalServerError {
+		} else if resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode >= http.StatusInternalServerError {
 			m.backoff()
 		}
+		m.warn(fmt.Errorf("%s return %d", u.String(), resp.StatusCode))
 		// The post failed, re-add the metrics we attempted to send so
 		// they are included in the next post.
 		for name, tc := range bucket.Toggles {
