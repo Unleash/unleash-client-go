@@ -118,7 +118,7 @@ func (m *metrics) sync() {
 	for {
 		select {
 		case <-m.ticker.C:
-			if m.errors == 0 {
+			if m.skips == 0 {
 				m.sendMetrics()
 			} else {
 				m.decrementSkip()
