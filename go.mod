@@ -11,4 +11,4 @@ require (
 	github.com/twmb/murmur3 v1.1.8
 )
 
-go 1.13
+go 1.19
