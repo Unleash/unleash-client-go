@@ -12,15 +12,15 @@ jobs:
            - "1.20"
            - "1.21"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         name: Checkout code
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         name: Checkout client specifications
         with:
           repository: Unleash/client-specification
           ref: refs/tags/v5.1.0
           path: testdata/client-specification
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v4
         name: Setup go
         with:
           go-version: ${{ matrix.version }}
