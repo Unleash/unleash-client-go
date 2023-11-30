@@ -328,13 +328,13 @@ func TestMetrics_ShouldNotCountMetricsForParentToggles(t *testing.T) {
 		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
-
+	assert.Nil(err, "client should not return an error")
 	client.WaitForReady()
 	client.IsEnabled("child")
 
 	assert.EqualValues(client.metrics.bucket.Toggles["child"].Yes, 1)
 	assert.EqualValues(client.metrics.bucket.Toggles["parent"].Yes, 0)
-	client.Close()
+	err = client.Close()
 
 	assert.Nil(err, "client should not return an error")
 	assert.True(gock.IsDone(), "there should be no more mocks")
@@ -381,8 +381,8 @@ func TestMetrics_ShouldBackoffOn500(t *testing.T) {
 	client.IsEnabled("baz")
 
 	time.Sleep(320 * time.Millisecond)
-	assert.Equal(float64(3), client.metrics.errors)
 	err = client.Close()
+	assert.Equal(float64(3), client.metrics.errors)
 	assert.Nil(err, "Client should close without a problem")
 
 }
@@ -406,24 +406,12 @@ func TestMetrics_ErrorCountShouldDecreaseIfSuccessful(t *testing.T) {
 		Post("/client/metrics").
 		Persist().
 		Reply(200)
-	mockListener := &MockedListener{}
-	mockListener.On("OnReady").Return()
-	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData")).Return()
-	mockListener.On("OnCount", "foo", false).Return()
-	mockListener.On("OnCount", "bar", false).Return()
-	mockListener.On("OnCount", "baz", false).Return()
-	mockListener.On("OnWarning", mock.MatchedBy(func(e error) bool {
-		return strings.HasSuffix(e.Error(), "http://foo.com/client/metrics return 500")
-	})).Return()
-	mockListener.On("OnError", mock.Anything).Return()
-	mockListener.On("OnSent", mock.Anything).Return()
 
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithMetricsInterval(50*time.Millisecond),
 		WithAppName(mockAppName),
 		WithInstanceId(mockInstanceId),
-		WithListener(mockListener),
 	)
 	assert.Nil(err, "client should not return an error")
 
@@ -434,7 +422,7 @@ func TestMetrics_ErrorCountShouldDecreaseIfSuccessful(t *testing.T) {
 	time.Sleep(360 * time.Millisecond)
 	client.IsEnabled("foo")
 	time.Sleep(100 * time.Millisecond)
-	assert.Equal(float64(0), client.metrics.errors)
 	err = client.Close()
+	assert.Equal(float64(0), client.metrics.errors)
 	assert.Nil(err, "Client should close without a problem")
 }

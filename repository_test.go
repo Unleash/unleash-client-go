@@ -129,6 +129,7 @@ func TestRepository_ParseAPIResponse(t *testing.T) {
 	assert.Equal(0, len(response.Segments))
 }
 
+
 func TestRepository_backs_off_on_http_statuses(t *testing.T) {
 	a := assert.New(t)
 	testCases := []struct {
@@ -157,12 +158,11 @@ func TestRepository_backs_off_on_http_statuses(t *testing.T) {
 		)
 		a.Nil(err)
 		time.Sleep(20 * time.Millisecond)
-		a.Equal(tc.errorCount, client.repository.errors)
 		err = client.Close()
+		a.Equal(tc.errorCount, client.repository.errors)
 		a.Nil(err)
 	}
 }
-
 func TestRepository_back_offs_are_gradually_reduced_on_success(t *testing.T) {
 	a := assert.New(t)
 	defer gock.Off()
@@ -183,7 +183,7 @@ func TestRepository_back_offs_are_gradually_reduced_on_success(t *testing.T) {
 	)
 	a.Nil(err)
 	client.WaitForReady()
-	a.Equal(float64(3), client.repository.errors) // 4 failures, and then one success, should reduce error count to 3
 	err = client.Close()
+	a.Equal(float64(3), client.repository.errors) // 4 failures, and then one success, should reduce error count to 3
 	a.Nil(err)
 }
