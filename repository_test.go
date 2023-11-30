@@ -3,6 +3,7 @@ package unleash
 import (
 	"bytes"
 	"encoding/json"
+	"gopkg.in/h2non/gock.v1"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -126,4 +127,63 @@ func TestRepository_ParseAPIResponse(t *testing.T) {
 
 	assert.Equal(2, len(response.Features))
 	assert.Equal(0, len(response.Segments))
+}
+
+func TestRepository_backs_off_on_http_statuses(t *testing.T) {
+	a := assert.New(t)
+	testCases := []struct {
+		statusCode int
+		errorCount float64
+	}{
+		{ 401, 10},
+		{ 403, 10},
+		{ 404, 10},
+		{ 429, 1},
+		{ 500, 1},
+		{ 502, 1},
+		{ 503, 1},
+	}
+	defer gock.Off()
+	for _, tc := range testCases {
+		gock.New(mockerServer).
+			Get("/client/features").
+			Reply(tc.statusCode)
+		client, err := NewClient(
+			WithUrl(mockerServer),
+			WithAppName(mockAppName),
+			WithDisableMetrics(true),
+			WithInstanceId(mockInstanceId),
+			WithRefreshInterval(time.Millisecond * 15),
+		)
+		a.Nil(err)
+		time.Sleep(20 * time.Millisecond)
+		a.Equal(tc.errorCount, client.repository.errors)
+		err = client.Close()
+		a.Nil(err)
+	}
+}
+
+func TestRepository_back_offs_are_gradually_reduced_on_success(t *testing.T) {
+	a := assert.New(t)
+	defer gock.Off()
+	gock.New(mockerServer).
+	    Get("/client/features").
+	    Times(4).
+		Reply(429)
+	gock.New(mockerServer).
+		Get("/client/features").
+		Reply(200).
+		BodyString(`{ "version": 2, "features": []}`)
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithDisableMetrics(true),
+		WithInstanceId(mockInstanceId),
+		WithRefreshInterval(time.Millisecond * 10),
+	)
+	a.Nil(err)
+	client.WaitForReady()
+	a.Equal(float64(3), client.repository.errors) // 4 failures, and then one success, should reduce error count to 3
+	err = client.Close()
+	a.Nil(err)
 }
