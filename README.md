@@ -9,7 +9,7 @@ Unleash Client for Go. Read more about the [Unleash project](https://github.com/
 
 ## Go Version
 
-The client is currently tested against Go 1.10.x and 1.13.x. These versions will be updated
+The client is currently tested against Go 1.19.x, 1.20.x and 1.21.x. These versions will be updated
 as new versions of Go are released.
 
 The client may work on older versions of Go as well, but is not actively tested.
