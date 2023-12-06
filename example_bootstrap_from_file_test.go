@@ -2,7 +2,7 @@ package unleash_test
 
 import (
 	"fmt"
-	"io"
+	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -24,7 +24,7 @@ func Test_bootstrapFromFile(t *testing.T) {
 		Persist().
 		Reply(200)
 		// Read the file into a byte slice
-	byteValue, _ := io.ReadAll(demoReader)
+	byteValue, _ := ioutil.ReadAll(demoReader)
 	// Convert the byte slice to a string
 	jsonStr := string(byteValue)
 

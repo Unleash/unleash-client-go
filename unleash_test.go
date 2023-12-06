@@ -2,7 +2,7 @@ package unleash_test
 
 import (
 	"fmt"
-	"io"
+	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -21,7 +21,7 @@ func Test_withVariants(t *testing.T) {
 		Post("/client/register").
 		Reply(200)
 		// Read the file into a byte slice
-	byteValue, _ := io.ReadAll(demoReader)
+	byteValue, _ := ioutil.ReadAll(demoReader)
 	// Convert the byte slice to a string
 	jsonStr := string(byteValue)
 
@@ -71,7 +71,7 @@ func Test_withVariantsAndANonExistingStrategyName(t *testing.T) {
 		Post("/client/register").
 		Reply(200)
 
-	byteValue, _ := io.ReadAll(demoReader)
+	byteValue, _ := ioutil.ReadAll(demoReader)
 	// Convert the byte slice to a string
 	jsonStr := string(byteValue)
 
