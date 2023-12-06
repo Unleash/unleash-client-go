@@ -24,7 +24,11 @@ func Test_bootstrapFromFile(t *testing.T) {
 		Persist().
 		Reply(200)
 		// Read the file into a byte slice
-	byteValue, _ := ioutil.ReadAll(demoReader)
+	featuresReader, err := os.Open("demo_app_toggles.json")
+	if err != nil {
+		t.Fail()
+	}
+	byteValue, _ := ioutil.ReadAll(featuresReader)
 	// Convert the byte slice to a string
 	jsonStr := string(byteValue)
 

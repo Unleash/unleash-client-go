@@ -15,15 +15,20 @@ import (
 func Test_withVariants(t *testing.T) {
 	a := assert.New(t)
 	demoReader, err := os.Open("demo_app_toggles.json")
+	if err != nil {
+		t.Fail()
+	}
 	defer gock.OffAll()
+	defer demoReader.Close()
 
 	gock.New("http://foo.com").
 		Post("/client/register").
 		Reply(200)
-		// Read the file into a byte slice
-	byteValue, _ := ioutil.ReadAll(demoReader)
-	// Convert the byte slice to a string
-	jsonStr := string(byteValue)
+
+	jsonStr, err := read_demo_app_toggles()
+	if err != nil {
+		t.Fail()
+	}
 
 	// Use the string as the body of the Gock request
 	gock.New("http://foo.com").
@@ -59,6 +64,16 @@ func Test_withVariants(t *testing.T) {
 	a.Nil(err)
 }
 
+func read_demo_app_toggles() (string, error) {
+	demoReader, err := os.Open("demo_app_toggles.json")
+	if err != nil {
+		return "", err
+	}
+	defer demoReader.Close()
+	byteValue, _ := ioutil.ReadAll(demoReader)
+	return string(byteValue), nil
+}
+
 func Test_withVariantsAndANonExistingStrategyName(t *testing.T) {
 	a := assert.New(t)
 	demoReader, err := os.Open("demo_app_toggles.json")
@@ -70,10 +85,10 @@ func Test_withVariantsAndANonExistingStrategyName(t *testing.T) {
 	gock.New("http://foo.com").
 		Post("/client/register").
 		Reply(200)
-
-	byteValue, _ := ioutil.ReadAll(demoReader)
-	// Convert the byte slice to a string
-	jsonStr := string(byteValue)
+	jsonStr, err := read_demo_app_toggles()
+	if err != nil {
+		t.Fail()
+	}
 
 	// Use the string as the body of the Gock request
 	gock.New("http://foo.com").
