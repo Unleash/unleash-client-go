@@ -89,6 +89,7 @@ func (vc VariantCollection) GetVariant(ctx *context.Context) *Variant {
 			variant = &v.Variant
 		}
 		variant.Enabled = true
+		variant.FeatureEnabled = true
 		return variant
 	}
 	return DISABLED_VARIANT

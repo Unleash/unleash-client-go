@@ -31,6 +31,14 @@ var defaultStrategies = []strategy.Strategy{
 	*s.NewFlexibleRolloutStrategy(),
 }
 
+// disabledVariantFeatureEnabled is similar to api.DISABLED_VARIANT but we want
+// to discourage public usage so it's internal until there's a need to expose it.
+var disabledVariantFeatureEnabled = &api.Variant{
+	Name:           "disabled",
+	Enabled:        false,
+	FeatureEnabled: true,
+}
+
 // Client is a structure representing an API client of an Unleash server.
 type Client struct {
 	errorChannels
@@ -381,7 +389,7 @@ func (uc *Client) isParentDependencySatisfied(feature *api.Feature, context cont
 func (uc *Client) GetVariant(feature string, options ...VariantOption) *api.Variant {
 	variant := uc.getVariantWithoutMetrics(feature, options...)
 	defer func() {
-		uc.metrics.countVariants(feature, variant.Enabled, variant.Name)
+		uc.metrics.countVariants(feature, variant.FeatureEnabled, variant.Name)
 	}()
 	return variant
 }
@@ -436,7 +444,7 @@ func (uc *Client) getVariantWithoutMetrics(feature string, options ...VariantOpt
 	}
 
 	if len(f.Variants) == 0 {
-		return defaultVariant
+		return disabledVariantFeatureEnabled
 	}
 
 	return api.VariantCollection{
