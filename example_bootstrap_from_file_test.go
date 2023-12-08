@@ -14,6 +14,7 @@ import (
 
 func Test_bootstrapFromFile(t *testing.T) {
 	a := assert.New(t)
+	defer gock.OffAll()
 	demoReader, err := os.Open("demo_app_toggles.json")
 	if err != nil {
 		t.Fail()
