@@ -117,7 +117,7 @@ func TestMetrics_DoPost(t *testing.T) {
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
 		WithInstanceId(mockInstanceId),
-		WithListener(mockListener),
+		WithListener(&DebugListener{}),
 	)
 
 	assert.Nil(err, "client should not return an error")

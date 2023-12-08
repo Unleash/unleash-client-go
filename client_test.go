@@ -35,6 +35,7 @@ func TestClientWithoutListener(t *testing.T) {
 	assert.Nil(err, "client should not return an error")
 
 	go func() {
+		timeout := time.After(1 * time.Second)
 		for {
 			select {
 			case e := <-client.Errors():
@@ -45,6 +46,8 @@ func TestClientWithoutListener(t *testing.T) {
 				return
 			case <-client.Count():
 			case <-client.Sent():
+			case <-timeout:
+				return
 			}
 		}
 	}()
