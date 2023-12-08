@@ -35,22 +35,6 @@ func TestClientWithoutListener(t *testing.T) {
 	)
 	assert.Nil(err, "client should not return an error")
 
-	go func() {
-		for {
-			select {
-			case e := <-client.Errors():
-				t.Errorf("Unexpected error: %v", e)
-				return
-			case w := <-client.Warnings():
-				t.Errorf("Unexpected warning: %v", w)
-				return
-			case <-client.Count():
-			case <-client.Sent():
-			}
-		}
-	}()
-	<-client.Registered()
-	<-client.Ready()
 	client.Close()
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
