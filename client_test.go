@@ -53,7 +53,8 @@ func TestClientWithoutListener(t *testing.T) {
 	}()
 	<-client.Registered()
 	<-client.Ready()
-	client.Close()
+	err = client.Close()
+	assert.Nil(err)
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
 
