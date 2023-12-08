@@ -1,7 +1,6 @@
 package unleash_test
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -49,7 +48,6 @@ func Test_bootstrapFromFile(t *testing.T) {
 	}
 
 	enabled := unleash.IsEnabled("DateExample", unleash.WithContext(context.Context{}))
-	fmt.Printf("feature is enabled? %v\n", enabled)
 	a.True(enabled)
 	err = unleash.Close()
 	a.Nil(err)

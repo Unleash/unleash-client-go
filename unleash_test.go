@@ -1,7 +1,6 @@
 package unleash_test
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -50,7 +49,6 @@ func Test_withVariants(t *testing.T) {
 	}
 
 	feature := unleash.GetVariant("Demo")
-	fmt.Printf("feature is %v\n", feature)
 	if feature.Enabled == false {
 		t.Fatalf("Expected feature to be enabled")
 	}
@@ -107,7 +105,6 @@ func Test_withVariantsAndANonExistingStrategyName(t *testing.T) {
 	}
 
 	feature := unleash.GetVariant("AuditLog")
-	fmt.Printf("feature is %v\n", feature)
 	if feature.Enabled == true {
 		t.Fatalf("Expected feature to be disabled because Environment does not exist as strategy")
 	}
