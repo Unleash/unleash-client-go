@@ -130,11 +130,11 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 	}()
 
 	if uc.options.url == "" {
-		return nil, fmt.Errorf("Unleash server URL missing")
+		return nil, fmt.Errorf("unleash server URL missing")
 	}
 
 	if strings.HasSuffix(uc.options.url, deprecatedSuffix) {
-		uc.warn(fmt.Errorf("Unleash server URL %s should no longer link directly to /features", uc.options.url))
+		uc.warn(fmt.Errorf("unleash server URL %s should no longer link directly to /features", uc.options.url))
 		uc.options.url = strings.TrimSuffix(uc.options.url, deprecatedSuffix)
 	}
 
@@ -148,7 +148,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 	}
 
 	if uc.options.appName == "" {
-		return nil, fmt.Errorf("Unleash client appName missing")
+		return nil, fmt.Errorf("unleash client appName missing")
 	}
 
 	if uc.options.instanceId == "" {
@@ -358,7 +358,7 @@ func (uc *Client) isParentDependencySatisfied(feature *api.Feature, context cont
 
 		enabledResult := uc.isEnabled(parent.Feature, WithContext(context))
 		// According to the schema, if the enabled property is absent we assume it's true.
-		if parent.Enabled == nil || *parent.Enabled == true {
+		if parent.Enabled == nil || *parent.Enabled {
 			if parent.Variants != nil && len(*parent.Variants) > 0 && enabledResult.Variant != nil {
 				return enabledResult.Enabled && contains(*parent.Variants, enabledResult.Variant.Name)
 			}
@@ -372,11 +372,7 @@ func (uc *Client) isParentDependencySatisfied(feature *api.Feature, context cont
 		return dependenciesSatisfied(parent.(api.Dependency))
 	})
 
-	if !allDependenciesSatisfied {
-		return false
-	}
-
-	return true
+	return allDependenciesSatisfied
 }
 
 // GetVariant queries a variant as the specified feature is enabled.

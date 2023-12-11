@@ -1,7 +1,6 @@
 package unleash_test
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -15,6 +14,7 @@ import (
 
 func Test_bootstrapFromFile(t *testing.T) {
 	a := assert.New(t)
+	defer gock.OffAll()
 	demoReader, err := os.Open("demo_app_toggles.json")
 	if err != nil {
 		t.Fail()
@@ -49,7 +49,6 @@ func Test_bootstrapFromFile(t *testing.T) {
 	}
 
 	enabled := unleash.IsEnabled("DateExample", unleash.WithContext(context.Context{}))
-	fmt.Printf("feature is enabled? %v\n", enabled)
 	a.True(enabled)
 	err = unleash.Close()
 	a.Nil(err)

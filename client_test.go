@@ -1,7 +1,6 @@
 package unleash
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/Unleash/unleash-client-go/v4/api"
@@ -35,7 +34,8 @@ func TestClientWithoutListener(t *testing.T) {
 	)
 	assert.Nil(err, "client should not return an error")
 
-	client.Close()
+	err = client.Close()
+	assert.Nil(err)
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
 
@@ -619,8 +619,6 @@ func TestClient_WithMultipleSegments(t *testing.T) {
 	assert.NoError(err)
 	client.WaitForReady()
 
-	fmt.Printf("%v", client.repository.segments)
-
 	isEnabled := client.IsEnabled(feature, WithContext(context.Context{
 		Properties: map[string]string{"custom-id": "custom-ctx", "semver": "3.2.2", "age": "18", "domain": "unleashtest"},
 	}))
@@ -736,8 +734,6 @@ func TestClient_VariantShouldRespectConstraint(t *testing.T) {
 	assert.NoError(err)
 	client.WaitForReady()
 
-	fmt.Printf("%v", client.repository.segments)
-
 	variant := client.GetVariant(feature, WithVariantContext(context.Context{
 		Properties: map[string]string{"custom-id": "custom-ctx", "semver": "3.2.2", "age": "18", "domain": "unleashtest"},
 	}))
@@ -852,8 +848,6 @@ func TestClient_VariantShouldFailWhenSegmentConstraintsDontMatch(t *testing.T) {
 
 	assert.NoError(err)
 	client.WaitForReady()
-
-	fmt.Printf("%v", client.repository.segments)
 
 	variant := client.GetVariant(feature, WithVariantContext(context.Context{
 		Properties: map[string]string{"custom-id": "custom-ctx", "semver": "3.2.2", "age": "18", "domain": "unleashtest"},
