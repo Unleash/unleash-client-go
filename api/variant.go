@@ -3,8 +3,9 @@ package api
 import "github.com/Unleash/unleash-client-go/v4/context"
 
 var DISABLED_VARIANT = &Variant{
-	Name:    "disabled",
-	Enabled: false,
+	Name:           "disabled",
+	Enabled:        false,
+	FeatureEnabled: false,
 }
 
 type Payload struct {
@@ -26,8 +27,11 @@ type Variant struct {
 	Name string `json:"name"`
 	// Payload is the value of the variant payload
 	Payload Payload `json:"payload"`
-	// Enabled indicates whether the feature which is extend by this variant was enabled or not.
+	// Enabled indicates whether the variant is enabled. This is only false when
+	// it's a default variant.
 	Enabled bool `json:"enabled"`
+	// FeatureEnabled indicates whether the Feature for this variant is enabled.
+	FeatureEnabled bool `json:"featureEnabled"`
 }
 
 type VariantInternal struct {
@@ -81,7 +85,10 @@ func (o Override) matchValue(ctx *context.Context) bool {
 	return false
 }
 
-// Get default variant if no variant is found
+// Get default variant if feature is not found or if the feature is disabled.
+//
+// Rather than checking against this particular variant you should be checking
+// the returned variant's Enabled and FeatureEnabled properties.
 func GetDefaultVariant() *Variant {
 	return DISABLED_VARIANT
 }
