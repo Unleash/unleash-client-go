@@ -26,6 +26,9 @@ type Feature struct {
 	// Name is the name of the feature toggle.
 	Name string `json:"name"`
 
+	// Type is the type of the feature toggle.
+	Type string `json:"type"`
+
 	// Description is a description of the feature toggle.
 	Description string `json:"description"`
 
