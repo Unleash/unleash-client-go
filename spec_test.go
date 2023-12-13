@@ -36,11 +36,18 @@ type TestCase struct {
 	ExpectedResult bool            `json:"expectedResult"`
 }
 
+type expectedVariantResult struct {
+	api.Variant
+	// SpecFeatureEnabled represents the spec's feature_enabled field which has a
+	// different JSON field name than api.Variant
+	SpecFeatureEnabled bool `json:"feature_enabled"`
+}
+
 type VariantTestCase struct {
-	Description    string          `json:"description"`
-	Context        context.Context `json:"context"`
-	ToggleName     string          `json:"toggleName"`
-	ExpectedResult *api.Variant    `json:"expectedResult"`
+	Description    string                 `json:"description"`
+	Context        context.Context        `json:"context"`
+	ToggleName     string                 `json:"toggleName"`
+	ExpectedResult *expectedVariantResult `json:"expectedResult"`
 }
 
 type Runner interface {
@@ -88,7 +95,9 @@ func (vtc VariantTestCase) RunWithClient(client *Client) func(*testing.T) {
 		result := client.GetVariant(vtc.ToggleName, WithVariantContext(vtc.Context))
 		wg.Wait()
 		assert.Equal(t, vtc.ExpectedResult.Enabled, result.Enabled)
-		assert.Equal(t, vtc.ExpectedResult, client.GetVariant(vtc.ToggleName))
+		// copy over the FeatureEnabled field with different JSON tag
+		vtc.ExpectedResult.FeatureEnabled = vtc.ExpectedResult.SpecFeatureEnabled
+		assert.Equal(t, &vtc.ExpectedResult.Variant, result)
 	}
 }
 
