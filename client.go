@@ -245,12 +245,13 @@ func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled b
 		uc.metrics.count(feature, enabled)
 	}()
 
-	return uc.isEnabled(feature, options...).Enabled
+	result, _ := uc.isEnabled(feature, options...)
+	return result.Enabled
 }
 
 // isEnabled abstracts away the details of checking if a toggle is turned on or off
 // without metrics
-func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.StrategyResult {
+func (uc *Client) isEnabled(feature string, options ...FeatureOption) (api.StrategyResult, *api.Feature) {
 	var opts featureOption
 	for _, o := range options {
 		o(&opts)
@@ -264,7 +265,7 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.Strate
 	}
 
 	if f == nil {
-		return handleFallback(opts, feature, ctx)
+		return handleFallback(opts, feature, ctx), nil
 	}
 
 	if f.Dependencies != nil && len(*f.Dependencies) > 0 {
@@ -273,20 +274,20 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.Strate
 		if !dependenciesSatisfied {
 			return api.StrategyResult{
 				Enabled: false,
-			}
+			}, f
 		}
 	}
 
 	if !f.Enabled {
 		return api.StrategyResult{
 			Enabled: false,
-		}
+		}, f
 	}
 
 	if len(f.Strategies) == 0 {
 		return api.StrategyResult{
 			Enabled: f.Enabled,
-		}
+		}, f
 	}
 
 	for _, s := range f.Strategies {
@@ -302,7 +303,7 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.Strate
 			uc.errors <- err
 			return api.StrategyResult{
 				Enabled: false,
-			}
+			}, f
 		}
 
 		allConstraints := make([]api.Constraint, 0)
@@ -318,7 +319,7 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.Strate
 				if !ok {
 					return api.StrategyResult{
 						Enabled: false,
-					}
+					}, f
 				}
 
 				return api.StrategyResult{
@@ -327,18 +328,18 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) api.Strate
 						GroupId:  groupId,
 						Variants: s.Variants,
 					}.GetVariant(ctx),
-				}
+				}, f
 			} else {
 				return api.StrategyResult{
 					Enabled: true,
-				}
+				}, f
 			}
 		}
 	}
 
 	return api.StrategyResult{
 		Enabled: false,
-	}
+	}, f
 }
 
 func (uc *Client) isParentDependencySatisfied(feature *api.Feature, context context.Context) bool {
@@ -356,7 +357,7 @@ func (uc *Client) isParentDependencySatisfied(feature *api.Feature, context cont
 			return false
 		}
 
-		enabledResult := uc.isEnabled(parent.Feature, WithContext(context))
+		enabledResult, _ := uc.isEnabled(parent.Feature, WithContext(context))
 		// According to the schema, if the enabled property is absent we assume it's true.
 		if parent.Enabled == nil || *parent.Enabled {
 			if parent.Variants != nil && len(*parent.Variants) > 0 && enabledResult.Variant != nil {
@@ -400,22 +401,15 @@ func (uc *Client) getVariantWithoutMetrics(feature string, options ...VariantOpt
 	}
 
 	var strategyResult api.StrategyResult
-
+	var f *api.Feature
 	if opts.resolver != nil {
-		strategyResult = uc.isEnabled(feature, WithContext(*ctx), WithResolver(opts.resolver))
+		strategyResult, f = uc.isEnabled(feature, WithContext(*ctx), WithResolver(opts.resolver))
 	} else {
-		strategyResult = uc.isEnabled(feature, WithContext(*ctx))
+		strategyResult, f = uc.isEnabled(feature, WithContext(*ctx))
 	}
 
 	if !strategyResult.Enabled {
 		return defaultVariant
-	}
-
-	var f *api.Feature
-	if opts.resolver != nil {
-		f = opts.resolver(feature)
-	} else {
-		f = uc.repository.getToggle(feature)
 	}
 
 	if f == nil {
