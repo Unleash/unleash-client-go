@@ -48,17 +48,14 @@ func Test_withVariants(t *testing.T) {
 		t.Fail()
 	}
 
-	variant := unleash.GetVariant("Demo")
-	if variant.Enabled == false {
-		t.Fatalf("Expected variant to be enabled")
-	}
-	if variant.FeatureEnabled == false {
+	feature := unleash.GetVariant("Demo")
+	if feature.Enabled == false {
 		t.Fatalf("Expected feature to be enabled")
 	}
-	if variant.Name != "small" && variant.Name != "medium" {
+	if feature.Name != "small" && feature.Name != "medium" {
 		t.Fatalf("Expected one of the variant names")
 	}
-	if variant.Payload.Value != "35" && variant.Payload.Value != "55" {
+	if feature.Payload.Value != "35" && feature.Payload.Value != "55" {
 		t.Fatalf("Expected one of the variant payloads")
 	}
 	err = unleash.Close()
