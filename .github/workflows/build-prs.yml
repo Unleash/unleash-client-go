@@ -1,9 +1,7 @@
-name: Build
+name: Build PRs
 
 on:
-  push:
-    branches:
-      - main
+  pull_request:
 
 jobs:
   build:
@@ -12,15 +10,15 @@ jobs:
       matrix:
         version: [1.13, 1.15, 1.16]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v2
         name: Checkout code
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v2
         name: Checkout client specifications
         with:
           repository: Unleash/client-specification
           ref: refs/tags/v5.1.0
           path: testdata/client-specification
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v2
         name: Setup go
         with:
           go-version: ${{ matrix.version }}
@@ -39,7 +37,6 @@ jobs:
           path-to-profile: profile.cov
           flag-name: Go-${{ matrix.version }}
           parallel: true
-    # notifies that all test jobs are finished.
   finish:
     needs: build
     runs-on: ubuntu-latest
