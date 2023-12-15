@@ -26,6 +26,9 @@ type Feature struct {
 	// Name is the name of the feature toggle.
 	Name string `json:"name"`
 
+	// Type is the type of the feature toggle.
+	Type string `json:"type"`
+
 	// Description is a description of the feature toggle.
 	Description string `json:"description"`
 
@@ -89,6 +92,7 @@ func (vc VariantCollection) GetVariant(ctx *context.Context) *Variant {
 			variant = &v.Variant
 		}
 		variant.Enabled = true
+		variant.FeatureEnabled = true
 		return variant
 	}
 	return DISABLED_VARIANT

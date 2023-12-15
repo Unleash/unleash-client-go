@@ -1,29 +1,24 @@
-name: Build
+name: Build PRs
 
 on:
-  push:
-    branches:
-      - main
+  pull_request:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        version:
-           - "1.19"
-           - "1.20"
-           - "1.21"
+        version: [1.13, 1.15, 1.16]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v2
         name: Checkout code
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v2
         name: Checkout client specifications
         with:
           repository: Unleash/client-specification
           ref: refs/tags/v5.1.0
           path: testdata/client-specification
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v2
         name: Setup go
         with:
           go-version: ${{ matrix.version }}
@@ -34,15 +29,14 @@ jobs:
       - name: Run spec tests
         run: go test -v ./... -tags='norace'
       - name: Run all tests with race detection
-        run: go test -race -covermode atomic -coverprofile=profile.cov -v ./... -tags='!norace'
         timeout-minutes: 1
+        run: go test -race -covermode atomic -coverprofile=profile.cov -v ./... -tags='!norace'
       - name: Send coverage
         uses: shogo82148/actions-goveralls@v1
         with:
           path-to-profile: profile.cov
           flag-name: Go-${{ matrix.version }}
           parallel: true
-    # notifies that all test jobs are finished.
   finish:
     needs: build
     runs-on: ubuntu-latest

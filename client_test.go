@@ -1,7 +1,6 @@
 package unleash
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/Unleash/unleash-client-go/v4/api"
@@ -35,23 +34,8 @@ func TestClientWithoutListener(t *testing.T) {
 	)
 	assert.Nil(err, "client should not return an error")
 
-	go func() {
-		for {
-			select {
-			case e := <-client.Errors():
-				t.Errorf("Unexpected error: %v", e)
-				return
-			case w := <-client.Warnings():
-				t.Errorf("Unexpected warning: %v", w)
-				return
-			case <-client.Count():
-			case <-client.Sent():
-			}
-		}
-	}()
-	<-client.Registered()
-	<-client.Ready()
-	client.Close()
+	err = client.Close()
+	assert.Nil(err)
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
 
@@ -635,8 +619,6 @@ func TestClient_WithMultipleSegments(t *testing.T) {
 	assert.NoError(err)
 	client.WaitForReady()
 
-	fmt.Printf("%v", client.repository.segments)
-
 	isEnabled := client.IsEnabled(feature, WithContext(context.Context{
 		Properties: map[string]string{"custom-id": "custom-ctx", "semver": "3.2.2", "age": "18", "domain": "unleashtest"},
 	}))
@@ -752,13 +734,13 @@ func TestClient_VariantShouldRespectConstraint(t *testing.T) {
 	assert.NoError(err)
 	client.WaitForReady()
 
-	fmt.Printf("%v", client.repository.segments)
-
 	variant := client.GetVariant(feature, WithVariantContext(context.Context{
 		Properties: map[string]string{"custom-id": "custom-ctx", "semver": "3.2.2", "age": "18", "domain": "unleashtest"},
 	}))
 
 	assert.True(variant.Enabled)
+
+	assert.True(variant.FeatureEnabled)
 
 	variantFromResolver := client.GetVariant(feature, WithVariantContext(context.Context{
 		Properties: map[string]string{"custom-id": "custom-ctx", "semver": "3.2.2", "age": "18", "domain": "unleashtest"},
@@ -772,6 +754,8 @@ func TestClient_VariantShouldRespectConstraint(t *testing.T) {
 	}))
 
 	assert.True(variantFromResolver.Enabled)
+
+	assert.True(variantFromResolver.FeatureEnabled)
 
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
@@ -869,13 +853,13 @@ func TestClient_VariantShouldFailWhenSegmentConstraintsDontMatch(t *testing.T) {
 	assert.NoError(err)
 	client.WaitForReady()
 
-	fmt.Printf("%v", client.repository.segments)
-
 	variant := client.GetVariant(feature, WithVariantContext(context.Context{
 		Properties: map[string]string{"custom-id": "custom-ctx", "semver": "3.2.2", "age": "18", "domain": "unleashtest"},
 	}))
 
 	assert.False(variant.Enabled)
+
+	assert.False(variant.FeatureEnabled)
 
 	variantFromResolver := client.GetVariant(feature, WithVariantContext(context.Context{
 		Properties: map[string]string{"custom-id": "custom-ctx", "semver": "3.2.2", "age": "18", "domain": "unleashtest"},
@@ -889,6 +873,8 @@ func TestClient_VariantShouldFailWhenSegmentConstraintsDontMatch(t *testing.T) {
 	}))
 
 	assert.False(variantFromResolver.Enabled)
+
+	assert.False(variantFromResolver.FeatureEnabled)
 
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
@@ -974,6 +960,8 @@ func TestClient_ShouldFavorStrategyVariantOverFeatureVariant(t *testing.T) {
 	strategyVariant := client.GetVariant("feature-x")
 
 	assert.True(strategyVariant.Enabled)
+
+	assert.True(strategyVariant.FeatureEnabled)
 
 	assert.Equal("strategyVariantName", strategyVariant.Name)
 
@@ -1073,7 +1061,86 @@ func TestClient_ShouldReturnOldVariantForNonMatchingStrategyVariant(t *testing.T
 
 	assert.True(strategyVariant.Enabled)
 
+	assert.True(strategyVariant.FeatureEnabled)
+
 	assert.Equal("willBeSelected", strategyVariant.Name)
+
+	assert.True(gock.IsDone(), "there should be no more mocks")
+}
+
+func TestClient_VariantFromEnabledFeatureWithNoVariants(t *testing.T) {
+	assert := assert.New(t)
+	defer gock.OffAll()
+
+	gock.New(mockerServer).
+		Post("/client/register").
+		MatchHeader("UNLEASH-APPNAME", mockAppName).
+		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
+		Reply(200)
+
+	feature := "feature-no-variants"
+	features := []api.Feature{
+		{
+			Name:        feature,
+			Description: "feature-desc",
+			Enabled:     true,
+			CreatedAt:   time.Date(1974, time.May, 19, 1, 2, 3, 4, time.UTC),
+			Strategy:    "default-strategy",
+			Strategies: []api.Strategy{
+				{
+					Id:   1,
+					Name: "default",
+				},
+			},
+		},
+	}
+
+	gock.New(mockerServer).
+		Get("/client/features").
+		Reply(200).
+		JSON(api.FeatureResponse{
+			Features: features,
+			Segments: []api.Segment{},
+		})
+
+	mockListener := &MockedListener{}
+	mockListener.On("OnReady").Return()
+	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("OnCount", feature, true).Return()
+	mockListener.On("OnError").Return()
+
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithListener(mockListener),
+	)
+
+	assert.NoError(err)
+	client.WaitForReady()
+
+	variant := client.GetVariant(feature, WithVariantContext(context.Context{}))
+
+	assert.False(variant.Enabled)
+
+	assert.True(variant.FeatureEnabled)
+
+	assert.Equal(disabledVariantFeatureEnabled, variant)
+
+	variantFromResolver := client.GetVariant(feature, WithVariantContext(context.Context{}), WithVariantResolver(func(featureName string) *api.Feature {
+		if featureName == features[0].Name {
+			return &features[0]
+		} else {
+			t.Fatalf("the feature name passed %s was not the expected one %s", featureName, features[0].Name)
+			return nil
+		}
+	}))
+
+	assert.False(variantFromResolver.Enabled)
+
+	assert.True(variantFromResolver.FeatureEnabled)
+
+	assert.Equal(disabledVariantFeatureEnabled, variantFromResolver)
 
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
