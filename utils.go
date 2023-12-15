@@ -66,7 +66,7 @@ func every(slice interface{}, condition func(interface{}) bool) bool {
 		return false
 	}
 
-	if (sliceValue.Len() == 0) {
+	if sliceValue.Len() == 0 {
 		return false
 	}
 

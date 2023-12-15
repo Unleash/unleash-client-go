@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"net/url"
 	"sync"
@@ -66,6 +67,9 @@ type metrics struct {
 	closed   chan struct{}
 	ctx      context.Context
 	cancel   func()
+	maxSkips float64
+	errors   float64
+	skips    float64
 }
 
 func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
@@ -75,6 +79,9 @@ func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
 		started:         time.Now(),
 		close:           make(chan struct{}),
 		closed:          make(chan struct{}),
+		maxSkips:        10,
+		errors:          0,
+		skips:           0,
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	m.ctx = ctx
@@ -111,7 +118,11 @@ func (m *metrics) sync() {
 	for {
 		select {
 		case <-m.ticker.C:
-			m.sendMetrics()
+			if m.skips == 0 {
+				m.sendMetrics()
+			} else {
+				m.decrementSkip()
+			}
 		case <-m.close:
 			close(m.closed)
 			return
@@ -136,7 +147,24 @@ func (m *metrics) registerInstance() {
 
 	m.registered <- payload
 }
+func (m *metrics) backoff() {
+	m.errors = math.Min(m.maxSkips, m.errors+1)
+	m.skips = m.errors
+}
 
+func (m *metrics) configurationError() {
+	m.errors = m.maxSkips
+	m.skips = m.errors
+}
+
+func (m *metrics) successfulPost() {
+	m.errors = math.Max(0, m.errors-1)
+	m.skips = m.errors
+}
+
+func (m *metrics) decrementSkip() {
+	m.skips = math.Max(0, m.skips-1)
+}
 func (m *metrics) sendMetrics() {
 	m.bucketMu.Lock()
 	bucket := m.resetBucket()
@@ -160,6 +188,11 @@ func (m *metrics) sendMetrics() {
 	defer resp.Body.Close()
 
 	if resp.StatusCode < http.StatusOK || resp.StatusCode > http.StatusMultipleChoices {
+		if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden || resp.StatusCode == http.StatusNotFound {
+			m.configurationError()
+		} else if resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode >= http.StatusInternalServerError {
+			m.backoff()
+		}
 		m.warn(fmt.Errorf("%s return %d", u.String(), resp.StatusCode))
 		// The post failed, re-add the metrics we attempted to send so
 		// they are included in the next post.
@@ -174,6 +207,7 @@ func (m *metrics) sendMetrics() {
 		m.bucket.Start = bucket.Start
 		m.bucketMu.Unlock()
 	} else {
+		m.successfulPost()
 		m.sent <- payload
 	}
 }
