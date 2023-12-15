@@ -169,12 +169,12 @@ func (r *repository) fetch() error {
 
 func (r *repository) statusIsOK(resp *http.Response) error {
 	s := resp.StatusCode
-	if 200 <= s && s < 300 {
+	if http.StatusOK <= s && s < http.StatusMultipleChoices {
 		return nil
-	} else if s == 401 || s == 403 || s == 404 {
+	} else if s == http.StatusUnauthorized || s == http.StatusForbidden || s == http.StatusNotFound {
 		r.configurationError()
 		return fmt.Errorf("%s %s returned status code %d your SDK is most likely misconfigured, backing off to maximum (%f times our interval)", resp.Request.Method, resp.Request.URL, s, r.maxSkips)
-	} else if s == 429 || s >= 500 {
+	} else if s == http.StatusTooManyRequests || s >= http.StatusInternalServerError {
 		r.backoff()
 		return fmt.Errorf("%s %s returned status code %d, backing off (%f times our interval)", resp.Request.Method, resp.Request.URL, s, r.errors)
 	}
