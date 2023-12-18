@@ -1151,7 +1151,7 @@ func TestClient_VariantFromEnabledFeatureWithNoVariants(t *testing.T) {
 // 3. feature is enabled but no variants -> FeatureEnabled : true
 // 4. test strategy variants too
 
-func TestGetVariantWithFallbackVariant(t *testing.T) {
+func TestGetVariantWithFallbackVariantWhenFeatureDisabled(t *testing.T) {
 	assert := assert.New(t)
 	defer gock.OffAll()
 
