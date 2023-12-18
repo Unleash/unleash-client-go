@@ -1224,3 +1224,77 @@ func TestGetVariantWithFallbackVariantWhenFeatureDisabled(t *testing.T) {
 
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
+
+func TestGetVariantWithFallbackVariantWhenFeatureEnabledButNoVariants(t *testing.T) {
+	assert := assert.New(t)
+	defer gock.OffAll()
+
+	gock.New(mockerServer).
+		Post("/client/register").
+		MatchHeader("UNLEASH-APPNAME", mockAppName).
+		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
+		Reply(200)
+
+	feature := "feature-no-variants"
+	features := []api.Feature{
+		{
+			Name:        feature,
+			Description: "feature-desc",
+			Enabled:     true,
+			CreatedAt:   time.Date(1974, time.May, 19, 1, 2, 3, 4, time.UTC),
+			Strategy:    "default-strategy",
+			Strategies: []api.Strategy{
+				{
+					Id:   1,
+					Name: "default",
+				},
+			},
+		},
+	}
+
+	gock.New(mockerServer).
+		Get("/client/features").
+		Reply(200).
+		JSON(api.FeatureResponse{
+			Features: features,
+			Segments: []api.Segment{},
+		})
+
+	mockListener := &MockedListener{}
+	mockListener.On("OnReady").Return()
+	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("OnCount", feature, true).Return()
+	mockListener.On("OnError").Return()
+
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithListener(mockListener),
+	)
+
+	assert.NoError(err)
+	client.WaitForReady()
+
+	fallbackVariant := api.Variant{
+		Name: "fallback-variant",
+	}
+
+	variant := client.GetVariant(feature, WithVariantFallback(&fallbackVariant))
+
+	assert.False(variant.Enabled)
+
+	assert.True(variant.FeatureEnabled)
+
+	assert.Equal(fallbackVariant, *variant)
+
+	fallbackFunc := func(feature string, ctx *context.Context) *api.Variant {
+		return &fallbackVariant
+	}
+
+	variantWithFallbackFunc := client.GetVariant(feature, WithVariantFallbackFunc(fallbackFunc))
+
+	assert.Equal(fallbackVariant, *variantWithFallbackFunc)
+
+	assert.True(gock.IsDone(), "there should be no more mocks")
+}

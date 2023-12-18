@@ -449,6 +449,16 @@ func (uc *Client) getVariantWithoutMetrics(feature string, options ...VariantOpt
 	}
 
 	if len(f.Variants) == 0 {
+		if opts.variantFallbackFunc != nil {
+			variant := opts.variantFallbackFunc(feature, ctx)
+			if variant != nil {
+				variant.FeatureEnabled = true
+			}
+			return variant
+		} else if opts.variantFallback != nil {
+			opts.variantFallback.FeatureEnabled = true
+			return opts.variantFallback
+		}
 		return disabledVariantFeatureEnabled
 	}
 
