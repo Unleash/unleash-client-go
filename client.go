@@ -416,7 +416,7 @@ func (uc *Client) getVariantWithoutMetrics(feature string, options ...VariantOpt
 		strategyResult, f = uc.isEnabled(feature, WithContext(*ctx))
 	}
 
-	getFallbackWithFeatureEnabled := func(featureEnabled bool) *api.Variant {
+	getFallbackVariant := func(featureEnabled bool) *api.Variant {
 		if opts.variantFallbackFunc != nil {
 			variant := opts.variantFallbackFunc(feature, ctx)
 			if variant != nil {
@@ -435,11 +435,11 @@ func (uc *Client) getVariantWithoutMetrics(feature string, options ...VariantOpt
 	}
 
 	if !strategyResult.Enabled {
-		return getFallbackWithFeatureEnabled(false)
+		return getFallbackVariant(false)
 	}
 
 	if f == nil || !f.Enabled {
-		return getFallbackWithFeatureEnabled(false)
+		return getFallbackVariant(false)
 	}
 
 	if strategyResult.Variant != nil {
@@ -447,7 +447,7 @@ func (uc *Client) getVariantWithoutMetrics(feature string, options ...VariantOpt
 	}
 
 	if len(f.Variants) == 0 {
-		return getFallbackWithFeatureEnabled(true)
+		return getFallbackVariant(true)
 	}
 
 	return api.VariantCollection{
