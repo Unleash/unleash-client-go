@@ -214,16 +214,20 @@ type variantOption struct {
 // VariantOption provides options for querying if a variant is found or not.
 type VariantOption func(*variantOption)
 
-// WithVariantFallback specifies what the value should be if the variant is not found on the
-// unleash service.
+// WithVariantFallback specifies what the value should be if the
+// variant is not found on the unleash service. This could be because
+// the feature doesn't exist, because it is disabled, or because it
+// has no variants.
 func WithVariantFallback(variantFallback *api.Variant) VariantOption {
 	return func(opts *variantOption) {
 		opts.variantFallback = variantFallback
 	}
 }
 
-// WithVariantFallbackFunc specifies a fallback function to evaluate a variant
-// is not found on the service.
+// WithVariantFallbackFunc specifies a fallback function to evaluate
+// to a variant when a variant is not found for a feature. This could
+// be because the feature doesn't exist, because it is disabled, or
+// because it has no variants.
 func WithVariantFallbackFunc(variantFallbackFunc VariantFallbackFunc) VariantOption {
 	return func(opts *variantOption) {
 		opts.variantFallbackFunc = variantFallbackFunc
