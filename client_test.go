@@ -1198,6 +1198,7 @@ func TestGetVariantWithFallbackVariantWhenFeatureDisabled(t *testing.T) {
 
 	fallbackVariant := api.Variant{
 		Name: "fallback-variant",
+                FeatureEnabled: true,
 	}
 
 	variant := client.GetVariant(feature, WithVariantFallback(&fallbackVariant))
@@ -1272,6 +1273,7 @@ func TestGetVariantWithFallbackVariantWhenFeatureEnabledButNoVariants(t *testing
 
 	fallbackVariant := api.Variant{
 		Name: "fallback-variant",
+                FeatureEnabled: false,
 	}
 
 	variant := client.GetVariant(feature, WithVariantFallback(&fallbackVariant))
@@ -1292,9 +1294,6 @@ func TestGetVariantWithFallbackVariantWhenFeatureEnabledButNoVariants(t *testing
 
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
-
-// test cases (each with fallback and fallbackfunc):
-// 4. test strategy variants too
 
 func TestGetVariantWithFallbackVariantWhenFeatureDoesntExist(t *testing.T) {
 	assert := assert.New(t)
@@ -1337,6 +1336,7 @@ func TestGetVariantWithFallbackVariantWhenFeatureDoesntExist(t *testing.T) {
 
 	fallbackVariant := api.Variant{
 		Name: "fallback-variant",
+                FeatureEnabled: true,
 	}
 
 	variant := client.GetVariant(feature, WithVariantFallback(&fallbackVariant))

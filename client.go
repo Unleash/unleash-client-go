@@ -417,8 +417,13 @@ func (uc *Client) getVariantWithoutMetrics(feature string, options ...VariantOpt
 
 	if !strategyResult.Enabled {
 		if opts.variantFallbackFunc != nil {
-			return opts.variantFallbackFunc(feature, ctx)
+			variant := opts.variantFallbackFunc(feature, ctx)
+			if variant != nil {
+				variant.FeatureEnabled = false
+			}
+			return variant
 		} else if opts.variantFallback != nil {
+			opts.variantFallback.FeatureEnabled = false
 			return opts.variantFallback
 		}
 		return defaultVariant
@@ -431,18 +436,20 @@ func (uc *Client) getVariantWithoutMetrics(feature string, options ...VariantOpt
 		f = uc.repository.getToggle(feature)
 	}
 
-	if f == nil {
+	if f == nil || !f.Enabled {
 		if opts.variantFallbackFunc != nil {
-			return opts.variantFallbackFunc(feature, ctx)
+			variant := opts.variantFallbackFunc(feature, ctx)
+			if variant != nil {
+				variant.FeatureEnabled = false
+			}
+			return variant
 		} else if opts.variantFallback != nil {
+			opts.variantFallback.FeatureEnabled = false
 			return opts.variantFallback
 		}
 		return defaultVariant
 	}
 
-	if !f.Enabled {
-		return defaultVariant
-	}
 
 	if strategyResult.Variant != nil {
 		return strategyResult.Variant
