@@ -415,18 +415,27 @@ func (uc *Client) getVariantWithoutMetrics(feature string, options ...VariantOpt
 		strategyResult = uc.isEnabled(feature, WithContext(*ctx))
 	}
 
-	if !strategyResult.Enabled {
+	getFallbackWithFeatureEnabled := func(featureEnabled bool) *api.Variant {
 		if opts.variantFallbackFunc != nil {
 			variant := opts.variantFallbackFunc(feature, ctx)
 			if variant != nil {
-				variant.FeatureEnabled = false
+				variant.FeatureEnabled = featureEnabled
 			}
 			return variant
 		} else if opts.variantFallback != nil {
-			opts.variantFallback.FeatureEnabled = false
+			opts.variantFallback.FeatureEnabled = featureEnabled
 			return opts.variantFallback
 		}
+
+		if featureEnabled {
+			return disabledVariantFeatureEnabled
+		}
 		return defaultVariant
+
+	}
+
+	if !strategyResult.Enabled {
+		return getFallbackWithFeatureEnabled(false)
 	}
 
 	var f *api.Feature
@@ -437,36 +446,15 @@ func (uc *Client) getVariantWithoutMetrics(feature string, options ...VariantOpt
 	}
 
 	if f == nil || !f.Enabled {
-		if opts.variantFallbackFunc != nil {
-			variant := opts.variantFallbackFunc(feature, ctx)
-			if variant != nil {
-				variant.FeatureEnabled = false
-			}
-			return variant
-		} else if opts.variantFallback != nil {
-			opts.variantFallback.FeatureEnabled = false
-			return opts.variantFallback
-		}
-		return defaultVariant
+		return getFallbackWithFeatureEnabled(false)
 	}
-
 
 	if strategyResult.Variant != nil {
 		return strategyResult.Variant
 	}
 
 	if len(f.Variants) == 0 {
-		if opts.variantFallbackFunc != nil {
-			variant := opts.variantFallbackFunc(feature, ctx)
-			if variant != nil {
-				variant.FeatureEnabled = true
-			}
-			return variant
-		} else if opts.variantFallback != nil {
-			opts.variantFallback.FeatureEnabled = true
-			return opts.variantFallback
-		}
-		return disabledVariantFeatureEnabled
+		return getFallbackWithFeatureEnabled(true)
 	}
 
 	return api.VariantCollection{
