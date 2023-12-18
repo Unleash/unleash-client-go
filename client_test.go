@@ -1144,3 +1144,91 @@ func TestClient_VariantFromEnabledFeatureWithNoVariants(t *testing.T) {
 
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
+
+// test cases (each with fallback and fallbackfunc):
+// 1. feature is disabled -> FeatureEnabled : false
+// 2. feature doesn't exist -> FeatureEnabled : false
+// 3. feature is enabled but no variants -> FeatureEnabled : true
+// 4. test strategy variants too
+
+
+func TestGetVariantWithFallbackVariant(t *testing.T) {
+	assert := assert.New(t)
+	defer gock.OffAll()
+
+	gock.New(mockerServer).
+		Post("/client/register").
+		MatchHeader("UNLEASH-APPNAME", mockAppName).
+		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
+		Reply(200)
+
+	feature := "feature-disabled"
+	features := []api.Feature{
+		{
+			Name:        feature,
+			Description: "feature-desc",
+			Enabled:     false,
+			CreatedAt:   time.Date(1974, time.May, 19, 1, 2, 3, 4, time.UTC),
+			Strategy:    "default-strategy",
+			Strategies: []api.Strategy{
+				{
+					Id:   1,
+					Name: "default",
+				},
+			},
+		},
+	}
+
+	gock.New(mockerServer).
+		Get("/client/features").
+		Reply(200).
+		JSON(api.FeatureResponse{
+			Features: features,
+			Segments: []api.Segment{},
+		})
+
+	mockListener := &MockedListener{}
+	mockListener.On("OnReady").Return()
+	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("OnCount", feature, false).Return()
+	mockListener.On("OnError").Return()
+
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithListener(mockListener),
+	)
+
+	assert.NoError(err)
+	client.WaitForReady()
+
+	fallbackVariant := api.Variant{
+		Name: "fallback-variant",
+	}
+
+	variant := client.GetVariant(feature, WithVariantFallback(&fallbackVariant))
+
+	assert.False(variant.Enabled)
+
+	assert.False(variant.FeatureEnabled)
+
+	assert.Equal(fallbackVariant, *variant)
+
+	variantFromResolver := client.GetVariant(feature, WithVariantFallback(&fallbackVariant), WithVariantResolver(func(featureName string) *api.Feature {
+		if featureName == features[0].Name {
+			return &features[0]
+		} else {
+			t.Fatalf("the feature name passed %s was not the expected one %s", featureName, features[0].Name)
+			return nil
+		}
+	}))
+
+	assert.False(variantFromResolver.Enabled)
+
+	assert.False(variantFromResolver.FeatureEnabled)
+
+	assert.Equal(fallbackVariant, *variantFromResolver)
+
+	assert.True(gock.IsDone(), "there should be no more mocks")
+}

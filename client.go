@@ -416,6 +416,11 @@ func (uc *Client) getVariantWithoutMetrics(feature string, options ...VariantOpt
 	}
 
 	if !strategyResult.Enabled {
+		if opts.variantFallbackFunc != nil {
+			return opts.variantFallbackFunc(feature, ctx)
+		} else if opts.variantFallback != nil {
+			return opts.variantFallback
+		}
 		return defaultVariant
 	}
 
