@@ -1151,7 +1151,6 @@ func TestClient_VariantFromEnabledFeatureWithNoVariants(t *testing.T) {
 // 3. feature is enabled but no variants -> FeatureEnabled : true
 // 4. test strategy variants too
 
-
 func TestGetVariantWithFallbackVariant(t *testing.T) {
 	assert := assert.New(t)
 	defer gock.OffAll()
@@ -1215,20 +1214,13 @@ func TestGetVariantWithFallbackVariant(t *testing.T) {
 
 	assert.Equal(fallbackVariant, *variant)
 
-	variantFromResolver := client.GetVariant(feature, WithVariantFallback(&fallbackVariant), WithVariantResolver(func(featureName string) *api.Feature {
-		if featureName == features[0].Name {
-			return &features[0]
-		} else {
-			t.Fatalf("the feature name passed %s was not the expected one %s", featureName, features[0].Name)
-			return nil
-		}
-	}))
+	fallbackFunc := func(feature string, ctx *context.Context) *api.Variant {
+		return &fallbackVariant
+	}
 
-	assert.False(variantFromResolver.Enabled)
+	variantWithFallbackFunc := client.GetVariant(feature, WithVariantFallbackFunc(fallbackFunc))
 
-	assert.False(variantFromResolver.FeatureEnabled)
-
-	assert.Equal(fallbackVariant, *variantFromResolver)
+	assert.Equal(fallbackVariant, *variantWithFallbackFunc)
 
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
