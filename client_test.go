@@ -1180,17 +1180,11 @@ func TestGetVariantWithFallbackVariantWhenFeatureDisabled(t *testing.T) {
 			Segments: []api.Segment{},
 		})
 
-	mockListener := &MockedListener{}
-	mockListener.On("OnReady").Return()
-	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
-	mockListener.On("OnCount", feature, false).Return()
-	mockListener.On("OnError").Return()
-
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
 		WithInstanceId(mockInstanceId),
-		WithListener(mockListener),
+		WithListener(&NoopListener{}),
 	)
 
 	assert.NoError(err)
@@ -1255,17 +1249,11 @@ func TestGetVariantWithFallbackVariantWhenFeatureEnabledButNoVariants(t *testing
 			Segments: []api.Segment{},
 		})
 
-	mockListener := &MockedListener{}
-	mockListener.On("OnReady").Return()
-	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
-	mockListener.On("OnCount", feature, true).Return()
-	mockListener.On("OnError").Return()
-
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
 		WithInstanceId(mockInstanceId),
-		WithListener(mockListener),
+		WithListener(&NoopListener{}),
 	)
 
 	assert.NoError(err)
@@ -1318,17 +1306,11 @@ func TestGetVariantWithFallbackVariantWhenFeatureDoesntExist(t *testing.T) {
 			Segments: []api.Segment{},
 		})
 
-	mockListener := &MockedListener{}
-	mockListener.On("OnReady").Return()
-	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
-	mockListener.On("OnCount", feature, false).Return()
-	mockListener.On("OnError").Return()
-
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
 		WithInstanceId(mockInstanceId),
-		WithListener(mockListener),
+		WithListener(&NoopListener{}),
 	)
 
 	assert.NoError(err)
