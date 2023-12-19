@@ -1292,9 +1292,7 @@ func TestGetVariantWithFallbackVariantWhenFeatureDoesntExist(t *testing.T) {
 		Reply(200)
 
 	feature := "feature-no-variants"
-	features := []api.Feature{
-		{},
-	}
+	features := []api.Feature{}
 
 	gock.New(mockerServer).
 		Get("/client/features").
