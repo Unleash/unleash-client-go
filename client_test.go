@@ -1192,7 +1192,6 @@ func TestGetVariantWithFallbackVariantWhenFeatureDisabled(t *testing.T) {
 
 	fallbackVariant := api.Variant{
 		Name: "fallback-variant",
-                FeatureEnabled: true,
 	}
 
 	variant := client.GetVariant(feature, WithVariantFallback(&fallbackVariant))
@@ -1261,14 +1260,13 @@ func TestGetVariantWithFallbackVariantWhenFeatureEnabledButNoVariants(t *testing
 
 	fallbackVariant := api.Variant{
 		Name: "fallback-variant",
-                FeatureEnabled: false,
 	}
 
 	variant := client.GetVariant(feature, WithVariantFallback(&fallbackVariant))
 
 	assert.False(variant.Enabled)
 
-	assert.True(variant.FeatureEnabled)
+	assert.False(variant.FeatureEnabled)
 
 	assert.Equal(fallbackVariant, *variant)
 
@@ -1318,7 +1316,6 @@ func TestGetVariantWithFallbackVariantWhenFeatureDoesntExist(t *testing.T) {
 
 	fallbackVariant := api.Variant{
 		Name: "fallback-variant",
-                FeatureEnabled: true,
 	}
 
 	variant := client.GetVariant(feature, WithVariantFallback(&fallbackVariant))
