@@ -218,6 +218,11 @@ type VariantOption func(*variantOption)
 // variant is not found on the unleash service. This could be because
 // the feature doesn't exist, because it is disabled, or because it
 // has no variants.
+//
+// If you specify a fallback variant, note that its `FeatureEnabled`
+// field will be set to whatever you pass in or `false` by default. In
+// other words, it will not reflect the feature's actual enabled
+// state.
 func WithVariantFallback(variantFallback *api.Variant) VariantOption {
 	return func(opts *variantOption) {
 		opts.variantFallback = variantFallback
@@ -228,6 +233,11 @@ func WithVariantFallback(variantFallback *api.Variant) VariantOption {
 // to a variant when a variant is not found for a feature. This could
 // be because the feature doesn't exist, because it is disabled, or
 // because it has no variants.
+//
+// If you specify a fallback variant, note that its `FeatureEnabled`
+// field will be set to whatever you pass in or `false` by default. In
+// other words, it will not reflect the feature's actual enabled
+// state.
 func WithVariantFallbackFunc(variantFallbackFunc VariantFallbackFunc) VariantOption {
 	return func(opts *variantOption) {
 		opts.variantFallbackFunc = variantFallbackFunc
