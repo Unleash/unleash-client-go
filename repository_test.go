@@ -3,13 +3,14 @@ package unleash
 import (
 	"bytes"
 	"encoding/json"
-	"gopkg.in/h2non/gock.v1"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"gopkg.in/h2non/gock.v1"
 
 	"github.com/Unleash/unleash-client-go/v4/api"
 	"github.com/stretchr/testify/assert"
@@ -59,7 +60,6 @@ func TestRepository_GetFeaturesFail(t *testing.T) {
 	client, err := NewClient(
 		WithUrl(srv.URL),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 		WithRefreshInterval(time.Millisecond),
 	)
@@ -153,7 +153,6 @@ func TestRepository_backs_off_on_http_statuses(t *testing.T) {
 			WithUrl(mockerServer),
 			WithAppName(mockAppName),
 			WithDisableMetrics(true),
-			WithInstanceId(mockInstanceId),
 			WithRefreshInterval(time.Millisecond * 15),
 		)
 		a.Nil(err)
@@ -178,7 +177,6 @@ func TestRepository_back_offs_are_gradually_reduced_on_success(t *testing.T) {
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
 		WithDisableMetrics(true),
-		WithInstanceId(mockInstanceId),
 		WithRefreshInterval(time.Millisecond * 10),
 	)
 	a.Nil(err)

@@ -54,14 +54,6 @@ func WithEnvironment(env string) ConfigOption {
 	}
 }
 
-// WithInstanceId specifies the instance identifier of the current instance. If not provided,
-// one will be generated based on various parameters such as current user and hostname.
-func WithInstanceId(instanceId string) ConfigOption {
-	return func(o *configOption) {
-		o.instanceId = instanceId
-	}
-}
-
 // WithUrl specifies the url of the unleash server the user is connecting to.
 func WithUrl(url string) ConfigOption {
 	return func(o *configOption) {
