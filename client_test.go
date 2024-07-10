@@ -30,7 +30,6 @@ func TestClientWithoutListener(t *testing.T) {
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 	)
 	assert.Nil(err, "client should not return an error")
 
@@ -46,7 +45,6 @@ func TestClient_WithFallbackFunc(t *testing.T) {
 	gock.New(mockerServer).
 		Post("/client/register").
 		MatchHeader("UNLEASH-APPNAME", mockAppName).
-		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
 		Reply(200)
 
 	gock.New(mockerServer).
@@ -65,7 +63,6 @@ func TestClient_WithFallbackFunc(t *testing.T) {
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
 
@@ -90,7 +87,6 @@ func TestClient_WithResolver(t *testing.T) {
 	gock.New(mockerServer).
 		Post("/client/register").
 		MatchHeader("UNLEASH-APPNAME", mockAppName).
-		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
 		Reply(200)
 
 	gock.New(mockerServer).
@@ -109,7 +105,6 @@ func TestClient_WithResolver(t *testing.T) {
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
 
@@ -198,7 +193,6 @@ func TestClient_ListFeatures(t *testing.T) {
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
 
@@ -232,7 +226,6 @@ func TestClientWithProjectName(t *testing.T) {
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithProjectName(projectName),
 		WithListener(mockListener),
 	)
@@ -265,7 +258,6 @@ func TestClientWithoutProjectName(t *testing.T) {
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
 
@@ -342,7 +334,6 @@ func TestClientWithVariantContext(t *testing.T) {
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
 
@@ -381,7 +372,6 @@ func TestClient_WithSegment(t *testing.T) {
 	gock.New(mockerServer).
 		Post("/client/register").
 		MatchHeader("UNLEASH-APPNAME", mockAppName).
-		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
 		Reply(200)
 
 	feature := "feature-segment"
@@ -430,7 +420,6 @@ func TestClient_WithSegment(t *testing.T) {
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
 
@@ -466,7 +455,6 @@ func TestClient_WithNonExistingSegment(t *testing.T) {
 	gock.New(mockerServer).
 		Post("/client/register").
 		MatchHeader("UNLEASH-APPNAME", mockAppName).
-		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
 		Reply(200)
 
 	feature := "feature-segment-non-existing"
@@ -508,7 +496,6 @@ func TestClient_WithNonExistingSegment(t *testing.T) {
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
 
@@ -545,7 +532,6 @@ func TestClient_WithMultipleSegments(t *testing.T) {
 	gock.New(mockerServer).
 		Post("/client/register").
 		MatchHeader("UNLEASH-APPNAME", mockAppName).
-		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
 		Reply(200)
 
 	feature := "feature-segment-multiple"
@@ -612,7 +598,6 @@ func TestClient_WithMultipleSegments(t *testing.T) {
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
 
@@ -648,7 +633,6 @@ func TestClient_VariantShouldRespectConstraint(t *testing.T) {
 	gock.New(mockerServer).
 		Post("/client/register").
 		MatchHeader("UNLEASH-APPNAME", mockAppName).
-		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
 		Reply(200)
 
 	feature := "feature-segment-multiple"
@@ -727,7 +711,6 @@ func TestClient_VariantShouldRespectConstraint(t *testing.T) {
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
 
@@ -767,7 +750,6 @@ func TestClient_VariantShouldFailWhenSegmentConstraintsDontMatch(t *testing.T) {
 	gock.New(mockerServer).
 		Post("/client/register").
 		MatchHeader("UNLEASH-APPNAME", mockAppName).
-		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
 		Reply(200)
 
 	feature := "feature-segment-multiple"
@@ -846,7 +828,6 @@ func TestClient_VariantShouldFailWhenSegmentConstraintsDontMatch(t *testing.T) {
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
 
@@ -949,7 +930,6 @@ func TestClient_ShouldFavorStrategyVariantOverFeatureVariant(t *testing.T) {
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
 
@@ -1049,7 +1029,6 @@ func TestClient_ShouldReturnOldVariantForNonMatchingStrategyVariant(t *testing.T
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
 
@@ -1075,7 +1054,6 @@ func TestClient_VariantFromEnabledFeatureWithNoVariants(t *testing.T) {
 	gock.New(mockerServer).
 		Post("/client/register").
 		MatchHeader("UNLEASH-APPNAME", mockAppName).
-		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
 		Reply(200)
 
 	feature := "feature-no-variants"
@@ -1112,7 +1090,6 @@ func TestClient_VariantFromEnabledFeatureWithNoVariants(t *testing.T) {
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
 
@@ -1152,7 +1129,6 @@ func TestGetVariantWithFallbackVariantWhenFeatureDisabled(t *testing.T) {
 	gock.New(mockerServer).
 		Post("/client/register").
 		MatchHeader("UNLEASH-APPNAME", mockAppName).
-		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
 		Reply(200)
 
 	feature := "feature-disabled"
@@ -1183,7 +1159,6 @@ func TestGetVariantWithFallbackVariantWhenFeatureDisabled(t *testing.T) {
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithListener(&NoopListener{}),
 	)
 
@@ -1220,7 +1195,6 @@ func TestGetVariantWithFallbackVariantWhenFeatureEnabledButNoVariants(t *testing
 	gock.New(mockerServer).
 		Post("/client/register").
 		MatchHeader("UNLEASH-APPNAME", mockAppName).
-		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
 		Reply(200)
 
 	feature := "feature-no-variants"
@@ -1251,7 +1225,6 @@ func TestGetVariantWithFallbackVariantWhenFeatureEnabledButNoVariants(t *testing
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithListener(&NoopListener{}),
 	)
 
@@ -1292,7 +1265,6 @@ func TestGetVariantWithFallbackVariantWhenFeatureDoesntExist(t *testing.T) {
 	gock.New(mockerServer).
 		Post("/client/register").
 		MatchHeader("UNLEASH-APPNAME", mockAppName).
-		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
 		Reply(200)
 
 	feature := "feature-no-variants"
@@ -1309,7 +1281,6 @@ func TestGetVariantWithFallbackVariantWhenFeatureDoesntExist(t *testing.T) {
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithListener(&NoopListener{}),
 	)
 
@@ -1346,7 +1317,6 @@ func TestGetVariant_FallbackVariantFeatureEnabledSettingIsLeftUnchanged(t *testi
 	gock.New(mockerServer).
 		Post("/client/register").
 		MatchHeader("UNLEASH-APPNAME", mockAppName).
-		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
 		Reply(200)
 
 	enabledFeatureNoVariants := "enabled-feature"
@@ -1391,7 +1361,6 @@ func TestGetVariant_FallbackVariantFeatureEnabledSettingIsLeftUnchanged(t *testi
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithListener(&NoopListener{}),
 	)
 

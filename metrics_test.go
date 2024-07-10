@@ -26,7 +26,6 @@ func TestMetrics_RegisterInstance(t *testing.T) {
 	gock.New(mockerServer).
 		Post("/client/register").
 		MatchHeader("UNLEASH-APPNAME", mockAppName).
-		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
 		Reply(200)
 
 	gock.New(mockerServer).
@@ -41,7 +40,6 @@ func TestMetrics_RegisterInstance(t *testing.T) {
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
 
@@ -60,7 +58,6 @@ func TestMetrics_VariantsCountToggles(t *testing.T) {
 	gock.New(mockerServer).
 		Post("/client/register").
 		MatchHeader("UNLEASH-APPNAME", mockAppName).
-		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
 		Reply(200)
 
 	gock.New(mockerServer).
@@ -76,7 +73,6 @@ func TestMetrics_VariantsCountToggles(t *testing.T) {
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
 
@@ -106,7 +102,6 @@ func TestMetrics_DoPost(t *testing.T) {
 	gock.New(mockerServer).
 		Post("").
 		MatchHeader("UNLEASH-APPNAME", mockAppName).
-		MatchHeader("UNLEASH-INSTANCEID", mockInstanceId).
 		Reply(200)
 
 	mockListener := &MockedListener{}
@@ -116,7 +111,6 @@ func TestMetrics_DoPost(t *testing.T) {
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithListener(&DebugListener{}),
 	)
 
@@ -150,7 +144,6 @@ func TestMetrics_DisabledMetrics(t *testing.T) {
 		WithDisableMetrics(true),
 		WithMetricsInterval(100*time.Millisecond),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
 	assert.Nil(err, "client should not return an error")
@@ -221,7 +214,6 @@ func TestMetrics_SendMetricsFail(t *testing.T) {
 	client, err := NewClient(
 		WithUrl(srv.URL),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 		WithMetricsInterval(time.Millisecond),
 	)
@@ -325,7 +317,6 @@ func TestMetrics_ShouldNotCountMetricsForParentToggles(t *testing.T) {
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
 	assert.Nil(err, "client should not return an error")
@@ -370,7 +361,6 @@ func TestMetrics_ShouldBackoffOn500(t *testing.T) {
 		WithUrl(mockerServer),
 		WithMetricsInterval(50*time.Millisecond),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
 	assert.Nil(err, "client should not return an error")
@@ -411,7 +401,6 @@ func TestMetrics_ErrorCountShouldDecreaseIfSuccessful(t *testing.T) {
 		WithUrl(mockerServer),
 		WithMetricsInterval(50*time.Millisecond),
 		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
 	)
 	assert.Nil(err, "client should not return an error")
 

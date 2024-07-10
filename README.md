@@ -35,6 +35,7 @@ go get github.com/Unleash/unleash-client-go
 The easiest way to get started with Unleash is to initialize it early in your application code:
 
 **Asynchronous initialization example:**
+
 ```go
 import (
 	"github.com/Unleash/unleash-client-go/v4"
@@ -69,6 +70,10 @@ func init() {
 	unleash.WaitForReady()
 }
 ```
+
+#### instanceId
+
+Starting from version 5.0.0, `instanceId` is automatically generated and can no longer be set manually.
 
 #### Preloading feature toggles
 
@@ -272,8 +277,6 @@ you can add the following to your apps `go.mod`:
 ```mod
     replace github.com/Unleash/unleash-client-go/v4 => ../unleash-client-go/
 ```
-
-
 
 ## Steps to release
 

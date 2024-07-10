@@ -3,6 +3,7 @@ module github.com/Unleash/unleash-client-go/v4
 require (
 	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/google/uuid v1.6.0
 	github.com/nbio/st v0.0.0-20140626010706-e9e8d9816f32 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.1.1 // indirect

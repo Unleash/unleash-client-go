@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/Unleash/unleash-client-go/v4/api"
 	"github.com/Unleash/unleash-client-go/v4/context"
 	"github.com/Unleash/unleash-client-go/v4/internal/constraints"
@@ -159,9 +161,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		return nil, fmt.Errorf("unleash client appName missing")
 	}
 
-	if uc.options.instanceId == "" {
-		uc.options.instanceId = generateInstanceId()
-	}
+	uc.options.instanceId = uuid.New().String()
 
 	uc.repository = newRepository(
 		repositoryOptions{
