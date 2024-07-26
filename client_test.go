@@ -10,8 +10,8 @@ import (
 
 	"testing"
 
+	"github.com/h2non/gock"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/h2non/gock.v1"
 )
 
 func TestClientWithoutListener(t *testing.T) {
@@ -1399,12 +1399,12 @@ func TestGetVariant_FallbackVariantFeatureEnabledSettingIsLeftUnchanged(t *testi
 	client.WaitForReady()
 
 	fallbackVariantFeatureEnabled := api.Variant{
-		Name: "fallback-variant-feature-enabled",
-                FeatureEnabled: true,
+		Name:           "fallback-variant-feature-enabled",
+		FeatureEnabled: true,
 	}
 	fallbackVariantFeatureDisabled := api.Variant{
-		Name: "fallback-variant-feature-disabled",
-                FeatureEnabled: false,
+		Name:           "fallback-variant-feature-disabled",
+		FeatureEnabled: false,
 	}
 
 	variantForEnabledFeatureNoVariants := client.GetVariant(enabledFeatureNoVariants, WithVariantFallback(&fallbackVariantFeatureDisabled))

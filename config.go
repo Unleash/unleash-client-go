@@ -25,6 +25,7 @@ type configOption struct {
 	storage         Storage
 	httpClient      *http.Client
 	customHeaders   http.Header
+	started         *time.Time
 }
 
 // ConfigOption represents a option for configuring the client.
@@ -105,6 +106,11 @@ func WithBackupPath(backupPath string) ConfigOption {
 func WithStrategies(strategies ...strategy.Strategy) ConfigOption {
 	return func(o *configOption) {
 		o.strategies = strategies
+	}
+}
+func WithStarted(startedAt time.Time) ConfigOption {
+	return func(o *configOption) {
+		o.started = &startedAt
 	}
 }
 
@@ -265,4 +271,5 @@ type metricsOptions struct {
 	disableMetrics  bool
 	httpClient      *http.Client
 	customHeaders   http.Header
+	started         *time.Time
 }

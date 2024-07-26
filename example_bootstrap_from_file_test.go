@@ -8,8 +8,8 @@ import (
 
 	"github.com/Unleash/unleash-client-go/v4"
 	"github.com/Unleash/unleash-client-go/v4/context"
+	"github.com/h2non/gock"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/h2non/gock.v1"
 )
 
 func Test_bootstrapFromFile(t *testing.T) {

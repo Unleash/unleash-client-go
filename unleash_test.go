@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/Unleash/unleash-client-go/v4"
+	"github.com/h2non/gock"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/h2non/gock.v1"
 )
 
 func Test_withVariants(t *testing.T) {

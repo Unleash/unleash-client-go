@@ -12,10 +12,10 @@ import (
 
 	"github.com/Unleash/unleash-client-go/v4/api"
 	"github.com/Unleash/unleash-client-go/v4/context"
+	"github.com/h2non/gock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
-	"gopkg.in/h2non/gock.v1"
 )
 
 const mockHost = "http://unleash-apu"

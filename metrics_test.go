@@ -2,11 +2,13 @@ package unleash
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"reflect"
+	"runtime"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -14,9 +16,10 @@ import (
 
 	"github.com/Unleash/unleash-client-go/v4/api"
 	internalapi "github.com/Unleash/unleash-client-go/v4/internal/api"
+	"github.com/h2non/gock"
+	"github.com/nbio/st"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"gopkg.in/h2non/gock.v1"
 )
 
 func TestMetrics_RegisterInstance(t *testing.T) {
@@ -425,4 +428,129 @@ func TestMetrics_ErrorCountShouldDecreaseIfSuccessful(t *testing.T) {
 	err = client.Close()
 	assert.Equal(float64(0), client.metrics.errors)
 	assert.Nil(err, "Client should close without a problem")
+}
+
+func TestMetrics_ClientDataIncludesNewMetadata(t *testing.T) {
+	defaultStrategies := []string{
+		"default",
+		"applicationHostname",
+		"gradualRolloutRandom",
+		"gradualRolloutSessionId",
+		"gradualRolloutUserId",
+		"remoteAddress",
+		"userWithId",
+		"flexibleRollout",
+	}
+	assert := assert.New(t)
+	started := time.Now()
+	defer gock.OffAll()
+	gock.New(mockerServer).
+		Post("/client/register").
+		JSON(ClientData{
+			AppName:          mockAppName,
+			InstanceID:       mockInstanceId,
+			SDKVersion:       fmt.Sprintf("%s:%s", clientName, clientVersion),
+			Strategies:       defaultStrategies,
+			Started:          started,
+			Interval:         0,
+			PlatformVersion:  runtime.Version(),
+			PlatformName:     "go",
+			YggdrasilVersion: nil,
+		}).
+		Reply(200)
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithMetricsInterval(50*time.Millisecond),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithStarted(started),
+	)
+
+	assert.Nil(err, "Client should open without a problem")
+
+	time.Sleep(100 * time.Millisecond)
+
+	err = client.Close()
+
+	assert.Nil(err, "Client should close without errors")
+
+	st.Expect(t, gock.IsDone(), true)
+}
+
+func TestMetrics_metricsData_includes_new_metadata(t *testing.T) {
+	assert := assert.New(t)
+	defer gock.OffAll()
+
+	gock.Observe(gock.DumpRequest)
+
+	gock.New(mockerServer).Post("/client/register").Reply(200)
+	gock.New(mockerServer).
+		Post("/client/metrics").
+		BodyString(`.*platformVersion.*`).
+		Reply(200)
+	gock.New(mockerServer).
+		Get("/client/features").
+		Reply(200).
+		JSON(api.FeatureResponse{
+			Features: []api.Feature{
+				{
+					Name:        "parent",
+					Enabled:     true,
+					Description: "parent toggle",
+					Strategies: []api.Strategy{
+						{
+							Id:          1,
+							Name:        "flexibleRollout",
+							Constraints: []api.Constraint{},
+							Parameters: map[string]interface{}{
+								"rollout":    100,
+								"stickiness": "default",
+							},
+						},
+					},
+				},
+				{
+					Name:        "child",
+					Enabled:     true,
+					Description: "parent toggle",
+					Strategies: []api.Strategy{
+						{
+							Id:          1,
+							Name:        "flexibleRollout",
+							Constraints: []api.Constraint{},
+							Parameters: map[string]interface{}{
+								"rollout":    100,
+								"stickiness": "default",
+							},
+						},
+					},
+					Dependencies: &[]api.Dependency{
+						{
+							Feature: "parent",
+						},
+					},
+				},
+			},
+		})
+
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithMetricsInterval(50*time.Millisecond),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithDisableMetrics(false),
+	)
+	assert.Nil(err, "Client should open without a problem")
+
+	client.WaitForReady()
+	client.IsEnabled("foo")
+	client.IsEnabled("bar")
+	client.IsEnabled("baz")
+
+	time.Sleep(320 * time.Millisecond)
+	err = client.Close()
+
+	assert.Nil(err, "Client should close without errors")
+
+	st.Expect(t, gock.IsDone(), true)
 }
