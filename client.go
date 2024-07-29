@@ -199,7 +199,6 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 			httpClient:      uc.options.httpClient,
 			customHeaders:   uc.options.customHeaders,
 			disableMetrics:  uc.options.disableMetrics,
-			started:         uc.options.started,
 		},
 		metricsChannels{
 			errorChannels: errChannels,

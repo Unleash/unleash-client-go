@@ -22,12 +22,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func WithStarted(startedAt time.Time) ConfigOption {
-	return func(o *configOption) {
-		o.started = &startedAt
-	}
-}
-
 func TestMetrics_RegisterInstance(t *testing.T) {
 	assert := assert.New(t)
 	defer gock.OffAll()
@@ -436,7 +430,7 @@ func TestMetrics_ErrorCountShouldDecreaseIfSuccessful(t *testing.T) {
 	assert.Nil(err, "Client should close without a problem")
 }
 
-func TestMetrics_ClientDataIncludesNewMetadata(t *testing.T) {
+func clientDataMatcher() func(req *http.Request, ereq *gock.Request) (bool, error) {
 	defaultStrategies := []string{
 		"default",
 		"applicationHostname",
@@ -447,30 +441,67 @@ func TestMetrics_ClientDataIncludesNewMetadata(t *testing.T) {
 		"userWithId",
 		"flexibleRollout",
 	}
-	assert := assert.New(t)
-	started := time.Now()
-	defer gock.OffAll()
-	gock.New(mockerServer).
-		Post("/client/register").
-		JSON(ClientData{
+	return func(req *http.Request, ereq *gock.Request) (bool, error) {
+		var data ClientData
+		err := json.NewDecoder(req.Body).Decode(&data)
+		if err != nil {
+			return false, err
+		}
+
+		if data.Started.IsZero() {
+			return false, nil
+		}
+
+		expectedData := ClientData{
 			AppName:          mockAppName,
 			InstanceID:       mockInstanceId,
 			SDKVersion:       fmt.Sprintf("%s:%s", clientName, clientVersion),
 			Strategies:       defaultStrategies,
-			Started:          started,
 			Interval:         0,
 			PlatformVersion:  runtime.Version(),
 			PlatformName:     "go",
 			YggdrasilVersion: nil,
 			SpecVersion:      specVersion,
-		}).
+		}
+
+		return data.AppName == expectedData.AppName &&
+			data.InstanceID == expectedData.InstanceID &&
+			data.SDKVersion == expectedData.SDKVersion &&
+			compareStringSlices(data.Strategies, expectedData.Strategies) &&
+			data.Interval == expectedData.Interval &&
+			data.PlatformVersion == expectedData.PlatformVersion &&
+			data.PlatformName == expectedData.PlatformName &&
+			data.YggdrasilVersion == expectedData.YggdrasilVersion &&
+			data.SpecVersion == expectedData.SpecVersion, nil
+	}
+}
+
+func compareStringSlices(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func TestMetrics_ClientDataIncludesNewMetadata(t *testing.T) {
+	assert := assert.New(t)
+	defer gock.OffAll()
+
+	gock.New(mockerServer).
+		Post("/client/register").
+		AddMatcher(clientDataMatcher()).
 		Reply(200)
+
 	client, err := NewClient(
 		WithUrl(mockerServer),
 		WithMetricsInterval(50*time.Millisecond),
 		WithAppName(mockAppName),
 		WithInstanceId(mockInstanceId),
-		WithStarted(started),
 	)
 
 	assert.Nil(err, "Client should open without a problem")

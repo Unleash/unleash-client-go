@@ -25,7 +25,6 @@ type configOption struct {
 	storage         Storage
 	httpClient      *http.Client
 	customHeaders   http.Header
-	started         *time.Time
 }
 
 // ConfigOption represents a option for configuring the client.
