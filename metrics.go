@@ -98,14 +98,10 @@ type metrics struct {
 }
 
 func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
-	started := time.Now()
-	if options.started != nil {
-		started = *options.started
-	}
 	m := &metrics{
 		metricsChannels: channels,
 		options:         options,
-		started:         started,
+		started:         time.Now(),
 		close:           make(chan struct{}),
 		closed:          make(chan struct{}),
 		maxSkips:        10,
