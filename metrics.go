@@ -37,6 +37,9 @@ type MetricsData struct {
 
 	// Optional field that describes the sdk version (name:version)
 	SDKVersion string `json:"sdkVersion"`
+
+	// Which version of the Unleash-Client-Spec is this SDK validated against
+	SpecVersion string `json:"specVersion"`
 }
 
 // ClientData represents the data sent to the unleash during registration.
@@ -65,6 +68,9 @@ type ClientData struct {
 	PlatformName string `json:"platformName"`
 
 	YggdrasilVersion *string `json:"yggdrasilVersion"`
+
+	// Which version of the Unleash-Client-Spec is this SDK validated against
+	SpecVersion string `json:"specVersion"`
 }
 
 type metric struct {
@@ -204,6 +210,7 @@ func (m *metrics) sendMetrics() {
 		PlatformName:     "go",
 		PlatformVersion:  runtime.Version(),
 		YggdrasilVersion: nil,
+		SpecVersion:      specVersion,
 	}
 
 	u, _ := m.options.url.Parse("./client/metrics")
@@ -335,5 +342,6 @@ func (m *metrics) getClientData() ClientData {
 		runtime.Version(),
 		"go",
 		nil,
+		specVersion,
 	}
 }

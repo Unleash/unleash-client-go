@@ -456,6 +456,7 @@ func TestMetrics_ClientDataIncludesNewMetadata(t *testing.T) {
 			PlatformVersion:  runtime.Version(),
 			PlatformName:     "go",
 			YggdrasilVersion: nil,
+			SpecVersion:      specVersion,
 		}).
 		Reply(200)
 	client, err := NewClient(
