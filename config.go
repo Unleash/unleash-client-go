@@ -108,11 +108,6 @@ func WithStrategies(strategies ...strategy.Strategy) ConfigOption {
 		o.strategies = strategies
 	}
 }
-func WithStarted(startedAt time.Time) ConfigOption {
-	return func(o *configOption) {
-		o.started = &startedAt
-	}
-}
 
 // WithStorage specifies which storage implementation the repository should use for storing feature
 // toggles.

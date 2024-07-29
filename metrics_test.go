@@ -22,6 +22,12 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+func WithStarted(startedAt time.Time) ConfigOption {
+	return func(o *configOption) {
+		o.started = &startedAt
+	}
+}
+
 func TestMetrics_RegisterInstance(t *testing.T) {
 	assert := assert.New(t)
 	defer gock.OffAll()
