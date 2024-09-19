@@ -96,8 +96,8 @@ func (r *rng) string() string {
 	return strconv.Itoa(n)
 }
 
-// newRng creates a new random number generator for numbers between 1-100
-// and uses a mutex internally to ensure safe concurrent reads.
+// newRng creates a new random number generator and uses a mutex
+// internally to ensure safe concurrent reads.
 func newRng() *rng {
 	seed := time.Now().UnixNano() + int64(os.Getpid())
 	return &rng{random: rand.New(rand.NewSource(seed))}
