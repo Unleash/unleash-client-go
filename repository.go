@@ -130,7 +130,7 @@ func (r *repository) fetch() error {
 	// global segments
 	req.Header.Add("Unleash-Client-Spec", SEGMENT_CLIENT_SPEC_VERSION)
 
-	for k, v := range r.options.customHeaders {
+	for k, v := range r.options.headers {
 		req.Header[k] = v
 	}
 

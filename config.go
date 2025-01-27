@@ -253,7 +253,7 @@ type repositoryOptions struct {
 	refreshInterval time.Duration
 	storage         Storage
 	httpClient      *http.Client
-	customHeaders   http.Header
+	headers         http.Header
 }
 
 type metricsOptions struct {
@@ -264,6 +264,6 @@ type metricsOptions struct {
 	metricsInterval time.Duration
 	disableMetrics  bool
 	httpClient      *http.Client
-	customHeaders   http.Header
+	headers         http.Header
 	started         *time.Time
 }

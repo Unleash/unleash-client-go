@@ -164,6 +164,11 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		uc.options.instanceId = generateInstanceId()
 	}
 
+	headers := uc.options.customHeaders
+	headers.Set("x-unleash-appname", uc.options.appName)
+	headers.Set("x-unleash-sdk", fmt.Sprintf("%s:%s", clientName, clientVersion))
+	headers.Set("x-unleash-connection-id", getConnectionId())
+
 	uc.repository = newRepository(
 		repositoryOptions{
 			backupPath:      uc.options.backupPath,
@@ -174,7 +179,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 			refreshInterval: uc.options.refreshInterval,
 			storage:         uc.options.storage,
 			httpClient:      uc.options.httpClient,
-			customHeaders:   uc.options.customHeaders,
+			headers:         headers,
 		},
 		repositoryChannels{
 			errorChannels: errChannels,
@@ -197,7 +202,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 			metricsInterval: uc.options.metricsInterval,
 			url:             *parsedUrl,
 			httpClient:      uc.options.httpClient,
-			customHeaders:   uc.options.customHeaders,
+			headers:         headers,
 			disableMetrics:  uc.options.disableMetrics,
 		},
 		metricsChannels{
