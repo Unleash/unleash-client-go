@@ -1417,3 +1417,36 @@ func TestGetVariant_FallbackVariantFeatureEnabledSettingIsLeftUnchanged(t *testi
 
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
+
+func TestSendIdentificationHeaders(t *testing.T) {
+	assert := assert.New(t)
+	defer gock.OffAll()
+
+	gock.New(mockerServer).
+		Post("/client/register").
+		MatchHeader("X-UNLEASH-APPNAME", mockAppName).
+		MatchHeader("X-UNLEASH-SDK", `unleash-client-go:\d+\.\d+\.\d+`).
+		MatchHeader("X-UNLEASH-CONNECTION-ID", `[0-9a-f\-]{36}`).
+		Reply(200)
+
+	gock.New(mockerServer).
+		Get("/client/features").
+		MatchHeader("X-UNLEASH-APPNAME", mockAppName).
+		MatchHeader("X-UNLEASH-SDK", `unleash-client-go:\d+\.\d+\.\d+`).
+		MatchHeader("X-UNLEASH-CONNECTION-ID", `[0-9a-f\-]{36}`).
+		Reply(200).
+		JSON(api.FeatureResponse{})
+
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithListener(&NoopListener{}),
+	)
+
+	assert.NoError(err)
+
+	client.WaitForReady()
+
+	assert.True(gock.IsDone(), "there should be no more mocks")
+}
