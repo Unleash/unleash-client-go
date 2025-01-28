@@ -116,3 +116,35 @@ func TestContains(t *testing.T) {
 		}
 	})
 }
+
+func TestGetConnectionId(t *testing.T) {
+	for i := 0; i < 100; i++ {
+		uuid := getConnectionId()
+
+		t.Run("Correct length", func(t *testing.T) {
+			if len(uuid) != 36 {
+				t.Errorf("Expected UUID length to be 36, but got %d in %s", len(uuid), uuid)
+			}
+		})
+
+		t.Run("UUIDv4 version", func(t *testing.T) {
+			if uuid[14] != '4' {
+				t.Errorf("Expected version 4, but got %c in %s", uuid[14], uuid)
+			}
+		})
+
+		t.Run("UUIDv4 variant", func(t *testing.T) {
+			variant := uuid[19]
+			if variant != '8' && variant != '9' && variant != 'a' && variant != 'b' {
+				t.Errorf("Expected variant 10xx, but got %c in %s", variant, uuid)
+			}
+		})
+
+		t.Run("Uniqueness", func(t *testing.T) {
+			uuid2 := getConnectionId()
+			if uuid == uuid2 {
+				t.Errorf("Generated UUIDs are not unique: '%s' and '%s'", uuid, uuid2)
+			}
+		})
+	}
+}
