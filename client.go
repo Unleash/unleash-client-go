@@ -3,6 +3,7 @@ package unleash
 import (
 	"fmt"
 
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
@@ -164,7 +165,10 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		uc.options.instanceId = generateInstanceId()
 	}
 
-	headers := uc.options.customHeaders
+	headers := make(http.Header)
+	if uc.options.customHeaders != nil {
+		headers = uc.options.customHeaders
+	}
 	headers.Set("x-unleash-appname", uc.options.appName)
 	headers.Set("x-unleash-sdk", fmt.Sprintf("%s:%s", clientName, clientVersion))
 	headers.Set("x-unleash-connection-id", getConnectionId())
