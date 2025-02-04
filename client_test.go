@@ -1424,16 +1424,16 @@ func TestSendIdentificationHeaders(t *testing.T) {
 
 	gock.New(mockerServer).
 		Post("/client/register").
-		MatchHeader("X-UNLEASH-APPNAME", mockAppName).
-		MatchHeader("X-UNLEASH-SDK", `unleash-client-go:\d+\.\d+\.\d+`).
-		MatchHeader("X-UNLEASH-CONNECTION-ID", `[0-9a-f\-]{36}`).
+		MatchHeader("UNLEASH-APPNAME", mockAppName).
+		MatchHeader("UNLEASH-SDK", `unleash-client-go:\d+\.\d+\.\d+`).
+		MatchHeader("UNLEASH-CONNECTION-ID", `[0-9a-f\-]{36}`).
 		Reply(200)
 
 	gock.New(mockerServer).
 		Get("/client/features").
-		MatchHeader("X-UNLEASH-APPNAME", mockAppName).
-		MatchHeader("X-UNLEASH-SDK", `unleash-client-go:\d+\.\d+\.\d+`).
-		MatchHeader("X-UNLEASH-CONNECTION-ID", `[0-9a-f\-]{36}`).
+		MatchHeader("UNLEASH-APPNAME", mockAppName).
+		MatchHeader("UNLEASH-SDK", `unleash-client-go:\d+\.\d+\.\d+`).
+		MatchHeader("UNLEASH-CONNECTION-ID", `[0-9a-f\-]{36}`).
 		Reply(200).
 		JSON(api.FeatureResponse{})
 

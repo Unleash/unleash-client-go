@@ -169,9 +169,9 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 	if uc.options.customHeaders != nil {
 		headers = uc.options.customHeaders
 	}
-	headers.Set("x-unleash-appname", uc.options.appName)
-	headers.Set("x-unleash-sdk", fmt.Sprintf("%s:%s", clientName, clientVersion))
-	headers.Set("x-unleash-connection-id", getConnectionId())
+	headers.Set("unleash-appname", uc.options.appName)
+	headers.Set("unleash-sdk", fmt.Sprintf("%s:%s", clientName, clientVersion))
+	headers.Set("unleash-connection-id", getConnectionId())
 
 	uc.repository = newRepository(
 		repositoryOptions{
