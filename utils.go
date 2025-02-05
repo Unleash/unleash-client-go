@@ -31,6 +31,8 @@ func generateInstanceId() string {
 	return prefix
 }
 
+// https://github.com/google/uuid/blob/2d3c2a9cc518326daf99a383f07c4d3c44317e4d/version4.go#L47-L56
+// https://github.com/hprose/hprose-go/blob/83de97da5004027694d321ca38c80fca3fac98c2/uuid.go#L91-L98
 func getConnectionId() string {
 	b := make([]byte, 16)
 	cryptoRand.Read(b)
