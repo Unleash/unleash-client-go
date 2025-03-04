@@ -1491,7 +1491,7 @@ func TestConnectionAndIntervalHeadersAndBody(t *testing.T) {
 
 	client.IsEnabled("foo")
 
-	time.Sleep(320 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	err = client.Close()
 
 	assert.True(gock.IsDone(), "there should be no more mocks")
