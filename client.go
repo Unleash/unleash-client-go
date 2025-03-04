@@ -165,13 +165,15 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		uc.options.instanceId = generateInstanceId()
 	}
 
+	connectionId := getConnectionId()
+
 	headers := make(http.Header)
 	if uc.options.customHeaders != nil {
 		headers = uc.options.customHeaders
 	}
 	headers.Set("unleash-appname", uc.options.appName)
 	headers.Set("unleash-sdk", fmt.Sprintf("%s:%s", clientName, clientVersion))
-	headers.Set("unleash-connection-id", getConnectionId())
+	headers.Set("unleash-connection-id", connectionId)
 
 	uc.repository = newRepository(
 		repositoryOptions{
@@ -202,6 +204,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		metricsOptions{
 			appName:         uc.options.appName,
 			instanceId:      uc.options.instanceId,
+			connectionId:    connectionId,
 			strategies:      strategyNames,
 			metricsInterval: uc.options.metricsInterval,
 			url:             *parsedUrl,

@@ -259,6 +259,7 @@ type repositoryOptions struct {
 type metricsOptions struct {
 	appName         string
 	instanceId      string
+	connectionId    string
 	url             url.URL
 	strategies      []string
 	metricsInterval time.Duration

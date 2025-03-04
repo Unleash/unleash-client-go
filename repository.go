@@ -125,6 +125,7 @@ func (r *repository) fetch() error {
 
 	req.Header.Add("UNLEASH-APPNAME", r.options.appName)
 	req.Header.Add("UNLEASH-INSTANCEID", r.options.instanceId)
+	req.Header.Add("Unleash-Interval", fmt.Sprintf("%d", r.options.refreshInterval.Milliseconds()))
 	req.Header.Add("User-Agent", r.options.appName)
 	// Needs to reference a version of the client specifications that include
 	// global segments

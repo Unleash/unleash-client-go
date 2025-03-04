@@ -23,6 +23,9 @@ type MetricsData struct {
 	// InstanceID is the instance identifier.
 	InstanceID string `json:"instanceId"`
 
+	// ConnectionId is the connection id for instance.
+	ConnectionId string `json:"connectionId"`
+
 	// Bucket is the payload data sent to the server.
 	Bucket api.Bucket `json:"bucket"`
 
@@ -49,6 +52,9 @@ type ClientData struct {
 
 	// InstanceID is the instance identifier.
 	InstanceID string `json:"instanceId"`
+
+	// ConnectionId is the connection id for instance.
+	ConnectionId string `json:"connectionId"`
 
 	// Optional field that describes the sdk version (name:version)
 	SDKVersion string `json:"sdkVersion"`
@@ -201,6 +207,7 @@ func (m *metrics) sendMetrics() {
 	payload := MetricsData{
 		AppName:          m.options.appName,
 		InstanceID:       m.options.instanceId,
+		ConnectionId:     m.options.connectionId,
 		Bucket:           bucket,
 		SDKVersion:       fmt.Sprintf("%s:%s", clientName, clientVersion),
 		PlatformName:     "go",
@@ -258,6 +265,7 @@ func (m *metrics) doPost(url *url.URL, payload interface{}) (*http.Response, err
 	req.Header.Add("UNLEASH-APPNAME", m.options.appName)
 	req.Header.Add("UNLEASH-INSTANCEID", m.options.instanceId)
 	req.Header.Add("User-Agent", m.options.appName)
+	req.Header.Add("Unleash-Interval", fmt.Sprintf("%d", m.options.metricsInterval.Milliseconds()))
 
 	for k, v := range m.options.headers {
 		req.Header[k] = v
@@ -331,6 +339,7 @@ func (m *metrics) getClientData() ClientData {
 	return ClientData{
 		m.options.appName,
 		m.options.instanceId,
+		m.options.connectionId,
 		fmt.Sprintf("%s:%s", clientName, clientVersion),
 		m.options.strategies,
 		m.started,
