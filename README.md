@@ -279,6 +279,7 @@ you can add the following to your apps `go.mod`:
 
 - Update the clientVersion in `client.go`
 - Tag the repository with the new tag
+- Create the release manually in Github
 
 ## Adding client specifications
 
