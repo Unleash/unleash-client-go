@@ -15,6 +15,10 @@ func (l NoopListener) OnWarning(warning error) {
 func (l NoopListener) OnReady() {
 }
 
+// The repository was refreshed.
+func (l NoopListener) OnUpdate() {
+}
+
 // The feature is queried.
 func (l NoopListener) OnCount(name string, enabled bool) {
 }

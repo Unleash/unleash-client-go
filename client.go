@@ -53,6 +53,8 @@ type Client struct {
 	repositoryListener RepositoryListener
 	ready              chan bool
 	onReady            chan struct{}
+	update             chan bool
+	onUpdate           chan struct{}
 	close              chan struct{}
 	closed             chan struct{}
 	count              chan metric
@@ -76,7 +78,8 @@ func (ec errorChannels) err(err error) {
 
 type repositoryChannels struct {
 	errorChannels
-	ready chan bool
+	ready  chan bool
+	update chan bool
 }
 
 type metricsChannels struct {
@@ -106,6 +109,8 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		errorChannels: errChannels,
 		onReady:       make(chan struct{}),
 		ready:         make(chan bool, 1),
+		onUpdate:      make(chan struct{}),
+		update:        make(chan bool, 1),
 		count:         make(chan metric),
 		sent:          make(chan MetricsData),
 		registered:    make(chan ClientData, 1),
@@ -190,6 +195,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		repositoryChannels{
 			errorChannels: errChannels,
 			ready:         uc.ready,
+			update:        uc.update,
 		},
 	)
 
@@ -238,6 +244,11 @@ func (uc *Client) sync() {
 			close(uc.onReady)
 			if uc.repositoryListener != nil {
 				uc.repositoryListener.OnReady()
+			}
+		case <-uc.update:
+			close(uc.onUpdate)
+			if uc.repositoryListener != nil {
+				uc.repositoryListener.OnUpdate()
 			}
 		case m := <-uc.count:
 			if uc.metricsListener != nil {
