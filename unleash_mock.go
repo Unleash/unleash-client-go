@@ -29,6 +29,10 @@ func (l *MockedListener) OnReady() {
 	l.Called()
 }
 
+func (l *MockedListener) OnUpdate() {
+	l.Called()
+}
+
 func (l *MockedListener) OnCount(name string, enabled bool) {
 	l.Called(name, enabled)
 }

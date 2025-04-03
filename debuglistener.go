@@ -24,6 +24,11 @@ func (l DebugListener) OnReady() {
 	fmt.Printf("READY\n")
 }
 
+// OnUpdate prints to the console when the repository is updated.
+func (l DebugListener) OnUpdate() {
+	fmt.Printf("UPDATE\n")
+}
+
 // OnCount prints to the console when the feature is queried.
 func (l DebugListener) OnCount(name string, enabled bool) {
 	fmt.Printf("Counted '%s'  as enabled? %v\n", name, enabled)

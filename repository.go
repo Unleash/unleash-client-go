@@ -73,6 +73,8 @@ func (r *repository) fetchAndReportError() {
 	if !r.isReady && err == nil {
 		r.isReady = true
 		r.ready <- true
+	} else if err == nil {
+		r.update <- true
 	}
 }
 
