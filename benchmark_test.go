@@ -9,7 +9,7 @@ import (
 	"github.com/Unleash/unleash-client-go/v4"
 )
 
-type NoOpListener struct{}
+type NoOpListener struct{} // TODO: Can use the one from nooplistener instead?
 
 func (l *NoOpListener) OnReady()                                {}
 func (l *NoOpListener) OnError(err error)                       {}
@@ -17,6 +17,7 @@ func (l *NoOpListener) OnWarning(warning error)                 {}
 func (l *NoOpListener) OnCount(name string, enabled bool)       {}
 func (l *NoOpListener) OnSent(payload unleash.MetricsData)      {}
 func (l *NoOpListener) OnRegistered(payload unleash.ClientData) {}
+func (l *NoOpListener) OnImpression(event unleash.ImpressionEvent) {}
 
 func BenchmarkFeatureToggleEvaluation(b *testing.B) {
 	unleash.Initialize(

@@ -41,6 +41,10 @@ func (l *MockedListener) OnRegistered(payload ClientData) {
 	l.Called(payload)
 }
 
+func (l *MockedListener) OnImpression(event ImpressionEvent) {
+	l.Called(event)
+}
+
 func writeJSON(rw http.ResponseWriter, x interface{}) {
 	enc := json.NewEncoder(rw)
 	if err := enc.Encode(x); err != nil {

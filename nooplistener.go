@@ -26,3 +26,7 @@ func (l NoopListener) OnSent(payload MetricsData) {
 // The client has registered.
 func (l NoopListener) OnRegistered(payload ClientData) {
 }
+
+// User impression (IsEnabled / GetVariant)
+func (l NoopListener) OnImpression(event ImpressionEvent) {
+}

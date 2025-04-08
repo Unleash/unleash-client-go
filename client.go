@@ -51,6 +51,7 @@ type Client struct {
 	errorListener      ErrorListener
 	metricsListener    MetricListener
 	repositoryListener RepositoryListener
+	impressionListener ImpressionListener
 	ready              chan bool
 	onReady            chan struct{}
 	close              chan struct{}
@@ -58,6 +59,7 @@ type Client struct {
 	count              chan metric
 	sent               chan MetricsData
 	registered         chan ClientData
+	impression         chan ImpressionEvent
 	staticContext      *context.Context
 }
 
@@ -109,6 +111,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		count:         make(chan metric),
 		sent:          make(chan MetricsData),
 		registered:    make(chan ClientData, 1),
+		impression:    make(chan ImpressionEvent),
 		close:         make(chan struct{}),
 		closed:        make(chan struct{}),
 	}
@@ -135,6 +138,10 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 	if mListener, ok := uc.options.listener.(MetricListener); ok {
 		uc.metricsListener = mListener
 	}
+	if iListener, ok := uc.options.listener.(ImpressionListener); ok {
+		uc.impressionListener = iListener
+	}
+
 	defer func() {
 		go uc.sync()
 	}()
@@ -251,6 +258,10 @@ func (uc *Client) sync() {
 			if uc.metricsListener != nil {
 				uc.metricsListener.OnRegistered(cd)
 			}
+		case ie := <-uc.impression:
+			if uc.impressionListener != nil {
+				uc.impressionListener.OnImpression(ie)
+			}
 		case <-uc.close:
 			close(uc.closed)
 			return
@@ -262,12 +273,32 @@ func (uc *Client) sync() {
 //
 // It is safe to call this method from multiple goroutines concurrently.
 func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled bool) {
+	result, f := uc.isEnabled(feature, options...)
+	enabled = result.Enabled
+
 	defer func() {
 		uc.metrics.count(feature, enabled)
+
+		if f != nil && f.ImpressionData && uc.impressionListener != nil {
+			var opts featureOption
+			for _, o := range options {
+				o(&opts)
+			}
+			ctx := uc.staticContext
+			if opts.ctx != nil {
+				ctx = ctx.Override(*opts.ctx)
+			}
+
+			uc.impressionListener.OnImpression(ImpressionEvent{
+				FeatureName: feature,
+				EventType:   ImpressionEventTypeIsEnabled,
+				Enabled:     enabled,
+				Context:     ctx,
+			})
+		}
 	}()
 
-	result, _ := uc.isEnabled(feature, options...)
-	return result.Enabled
+	return
 }
 
 // isEnabled abstracts away the details of checking if a toggle is turned on or off
@@ -400,12 +431,33 @@ func (uc *Client) isParentDependencySatisfied(feature *api.Feature, context cont
 // GetVariant queries a variant as the specified feature is enabled.
 //
 // It is safe to call this method from multiple goroutines concurrently.
-func (uc *Client) GetVariant(feature string, options ...VariantOption) *api.Variant {
-	variant := uc.getVariantWithoutMetrics(feature, options...)
+func (uc *Client) GetVariant(feature string, options ...VariantOption) (variant *api.Variant) {
+	variant = uc.getVariantWithoutMetrics(feature, options...)
+
 	defer func() {
 		uc.metrics.countVariants(feature, variant.FeatureEnabled, variant.Name)
+		
+		f := uc.repository.getToggle(feature)
+		if f != nil && f.ImpressionData && uc.impressionListener != nil {
+			var opts variantOption
+			for _, o := range options {
+				o(&opts)
+			}
+			ctx := uc.staticContext
+			if opts.ctx != nil {
+				ctx = ctx.Override(*opts.ctx)
+			}
+
+			uc.impressionListener.OnImpression(ImpressionEvent{
+				FeatureName: feature,
+				EventType:   ImpressionEventTypeGetVariant,
+				Enabled:     variant.FeatureEnabled,
+				Variant:     variant.Name,
+				Context:     ctx,
+			})
+		}
 	}()
-	return variant
+	return
 }
 
 // getVariantWithoutMetrics abstracts away the logic for resolving a variant without metrics
@@ -502,6 +554,11 @@ func (uc *Client) Count() <-chan metric {
 // metrics service.
 func (uc *Client) Registered() <-chan ClientData {
 	return uc.registered
+}
+
+// Impression returns the impression channel which gives an update when a feature with impression data has been evaluated.
+func (uc *Client) Impression() <-chan ImpressionEvent {
+	return uc.impression
 }
 
 // Sent returns the sent channel which receives data whenever the client has successfully sent metrics to

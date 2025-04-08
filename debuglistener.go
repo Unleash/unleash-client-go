@@ -38,3 +38,8 @@ func (l DebugListener) OnSent(payload MetricsData) {
 func (l DebugListener) OnRegistered(payload ClientData) {
 	fmt.Printf("Registered: %+v\n", payload)
 }
+
+// OnImpression prints to the console for every user impression (IsEnabled / GetVariant)
+func (l DebugListener) OnImpression(event ImpressionEvent) {
+	fmt.Printf("Impression: %+v\n", event)
+}

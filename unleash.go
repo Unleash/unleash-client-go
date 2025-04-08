@@ -35,6 +35,13 @@ type RepositoryListener interface {
 	OnReady()
 }
 
+// ImpressionListener defines an interface that can be implemented in order to receive
+// impression events when a feature with impression data is evaluated.
+type ImpressionListener interface {
+	// OnImpression is called whenever a feature with impression data is evaluated.
+	OnImpression(ImpressionEvent)
+}
+
 // IsEnabled queries the default client whether or not the specified feature is enabled or not.
 func IsEnabled(feature string, options ...FeatureOption) bool {
 	if defaultClient == nil {
