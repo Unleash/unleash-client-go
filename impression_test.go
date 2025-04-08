@@ -1,6 +1,7 @@
 package unleash
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/Unleash/unleash-client-go/v4/api"
@@ -71,6 +72,8 @@ func TestImpression_Off(t *testing.T) {
 func TestImpression_IsEnabled(t *testing.T) {
 	defer gock.OffAll()
 	assert := assert.New(t)
+	var wg sync.WaitGroup
+	wg.Add(1)
 
 	gock.New(mockerServer).
 		Post("/client/register").
@@ -110,11 +113,14 @@ func TestImpression_IsEnabled(t *testing.T) {
 		return e.FeatureName == feature &&
 			e.EventType == ImpressionEventTypeIsEnabled &&
 			e.Enabled == true
-	})).Once()
+	})).Run(func(args mock.Arguments) {
+		wg.Done()
+	}).Once()
 
 	client := setupClient(t, mockListener)
 	client.IsEnabled(feature)
 
+	wg.Wait()
 	assert.NoError(client.Close())
 	mockListener.AssertExpectations(t)
 	assert.True(gock.IsDone(), "there should be no more mocks")
@@ -123,6 +129,8 @@ func TestImpression_IsEnabled(t *testing.T) {
 func TestImpression_GetVariant(t *testing.T) {
 	defer gock.OffAll()
 	assert := assert.New(t)
+	var wg sync.WaitGroup
+	wg.Add(1)
 
 	gock.New(mockerServer).
 		Post("/client/register").
@@ -177,11 +185,14 @@ func TestImpression_GetVariant(t *testing.T) {
 			e.EventType == ImpressionEventTypeGetVariant &&
 			e.Enabled == true &&
 			e.Variant == variant
-	})).Once()
+	})).Run(func(args mock.Arguments) {
+		wg.Done()
+	}).Once()
 
 	client := setupClient(t, mockListener)
 	client.GetVariant(feature)
 
+	wg.Wait()
 	assert.NoError(client.Close())
 	mockListener.AssertExpectations(t)
 	assert.True(gock.IsDone(), "there should be no more mocks")
@@ -190,6 +201,8 @@ func TestImpression_GetVariant(t *testing.T) {
 func TestImpression_WithContext(t *testing.T) {
 	defer gock.OffAll()
 	assert := assert.New(t)
+	var wg sync.WaitGroup
+	wg.Add(1)
 
 	gock.New(mockerServer).
 		Post("/client/register").
@@ -252,11 +265,14 @@ func TestImpression_WithContext(t *testing.T) {
 			e.Context.UserId == ctxUserId &&
 			e.Context.SessionId == ctxSessionId &&
 			e.Context.Properties[ctxPropertyId] == ctxPropertyValue
-	})).Once()
+	})).Run(func(args mock.Arguments) {
+		wg.Done()
+	}).Once()
 
 	client := setupClient(t, mockListener)
 	client.IsEnabled(feature, WithContext(userCtx))
 
+	wg.Wait()
 	assert.NoError(client.Close())
 	mockListener.AssertExpectations(t)
 	assert.True(gock.IsDone(), "there should be no more mocks")
@@ -265,6 +281,8 @@ func TestImpression_WithContext(t *testing.T) {
 func TestImpression_WithContextAndMultipleEvents(t *testing.T) {
 	defer gock.OffAll()
 	assert := assert.New(t)
+	var wg sync.WaitGroup
+	wg.Add(2)
 
 	gock.New(mockerServer).
 		Post("/client/register").
@@ -328,14 +346,18 @@ func TestImpression_WithContextAndMultipleEvents(t *testing.T) {
 			e.Context.UserId == ctxUserId &&
 			e.Context.SessionId == ctxSessionId &&
 			e.Context.Properties[ctxPropertyId] == ctxPropertyValue
-	})).Once()
+	})).Run(func(args mock.Arguments) {
+		wg.Done()
+	}).Once()
 
 	mockListener.On("OnImpression", mock.MatchedBy(func(e ImpressionEvent) bool {
 		return e.FeatureName == feature &&
 			e.EventType == ImpressionEventTypeIsEnabled &&
 			e.Enabled == false &&
 			len(e.Context.Properties) == 0
-	})).Once()
+	})).Run(func(args mock.Arguments) {
+		wg.Done()
+	}).Once()
 
 	client := setupClient(t, mockListener)
 
@@ -345,6 +367,7 @@ func TestImpression_WithContextAndMultipleEvents(t *testing.T) {
 	resultWithoutCtx := client.IsEnabled(feature)
 	assert.False(resultWithoutCtx)
 
+	wg.Wait()
 	assert.NoError(client.Close())
 	mockListener.AssertExpectations(t)
 	assert.True(gock.IsDone(), "there should be no more mocks")
