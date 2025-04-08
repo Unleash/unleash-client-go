@@ -111,7 +111,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		count:         make(chan metric),
 		sent:          make(chan MetricsData),
 		registered:    make(chan ClientData, 1),
-		impression:    make(chan ImpressionEvent),
+		impression:    make(chan ImpressionEvent, 10),
 		close:         make(chan struct{}),
 		closed:        make(chan struct{}),
 	}
