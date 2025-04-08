@@ -289,12 +289,12 @@ func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled b
 				ctx = ctx.Override(*opts.ctx)
 			}
 
-			uc.impressionListener.OnImpression(ImpressionEvent{
+			uc.impression <- ImpressionEvent{
 				FeatureName: feature,
 				EventType:   ImpressionEventTypeIsEnabled,
 				Enabled:     enabled,
 				Context:     ctx,
-			})
+			}
 		}
 	}()
 
@@ -448,13 +448,13 @@ func (uc *Client) GetVariant(feature string, options ...VariantOption) (variant 
 				ctx = ctx.Override(*opts.ctx)
 			}
 
-			uc.impressionListener.OnImpression(ImpressionEvent{
+			uc.impression <- ImpressionEvent{
 				FeatureName: feature,
 				EventType:   ImpressionEventTypeGetVariant,
 				Enabled:     variant.FeatureEnabled,
 				Variant:     variant.Name,
 				Context:     ctx,
-			})
+			}
 		}
 	}()
 	return
