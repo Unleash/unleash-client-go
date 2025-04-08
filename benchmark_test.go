@@ -9,19 +9,9 @@ import (
 	"github.com/Unleash/unleash-client-go/v4"
 )
 
-type NoOpListener struct{} // TODO: Can use the one from nooplistener instead?
-
-func (l *NoOpListener) OnReady()                                {}
-func (l *NoOpListener) OnError(err error)                       {}
-func (l *NoOpListener) OnWarning(warning error)                 {}
-func (l *NoOpListener) OnCount(name string, enabled bool)       {}
-func (l *NoOpListener) OnSent(payload unleash.MetricsData)      {}
-func (l *NoOpListener) OnRegistered(payload unleash.ClientData) {}
-func (l *NoOpListener) OnImpression(event unleash.ImpressionEvent) {}
-
 func BenchmarkFeatureToggleEvaluation(b *testing.B) {
 	unleash.Initialize(
-		unleash.WithListener(&NoOpListener{}),
+		unleash.WithListener(&unleash.NoopListener{}),
 		unleash.WithAppName("go-benchmark"),
 		unleash.WithUrl("https://app.unleash-hosted.com/demo/api/"),
 		unleash.WithCustomHeaders(http.Header{"Authorization": {"Go-Benchmark:development.be6b5d318c8e77469efb58590022bb6416100261accf95a15046c04d"}}),
