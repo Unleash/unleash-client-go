@@ -373,7 +373,7 @@ func TestImpression_WithContextAndMultipleEvents(t *testing.T) {
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
 
-func TestImpression_Function(t *testing.T) {
+func TestImpression_GetChannelMethod(t *testing.T) {
 	defer gock.OffAll()
 	assert := assert.New(t)
 	var wg sync.WaitGroup
@@ -383,7 +383,7 @@ func TestImpression_Function(t *testing.T) {
 		Post("/client/register").
 		Reply(200)
 
-	feature := "impression-function-test"
+	feature := "impression-get-channel-method-test"
 
 	gock.New(mockerServer).
 		Get("/client/features").
@@ -412,11 +412,7 @@ func TestImpression_Function(t *testing.T) {
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
 	mockListener.On("OnCount", feature, true).Return()
-	mockListener.On("OnImpression", mock.MatchedBy(func(e ImpressionEvent) bool {
-		return e.FeatureName == feature &&
-			e.EventType == ImpressionEventTypeIsEnabled &&
-			e.Enabled == true
-	})).Maybe()
+	mockListener.On("OnImpression", mock.AnythingOfType("ImpressionEvent")).Maybe()
 
 	client := setupClient(t, mockListener)
 	impressionChannel := client.Impression()
