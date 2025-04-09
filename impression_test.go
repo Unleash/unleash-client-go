@@ -412,7 +412,12 @@ func TestImpression_Function(t *testing.T) {
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
 	mockListener.On("OnCount", feature, true).Return()
-	mockListener.On("OnImpression").Maybe()
+	mockListener.On("OnImpression", mock.MatchedBy(func(e ImpressionEvent) bool {
+		return e.FeatureName == feature &&
+			e.EventType == ImpressionEventTypeIsEnabled &&
+			e.Enabled == false &&
+			len(e.Context.Properties) == 0
+	})).Maybe()
 
 	client := setupClient(t, mockListener)
 	impressionChannel := client.Impression()
