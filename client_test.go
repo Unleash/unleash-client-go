@@ -1450,3 +1450,49 @@ func TestSendIdentificationHeaders(t *testing.T) {
 
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
+
+func TestConnectionAndIntervalHeadersAndBody(t *testing.T) {
+	assert := assert.New(t)
+	defer gock.OffAll()
+
+	gock.Observe(gock.DumpRequest)
+
+	gock.New(mockerServer).
+		Post("/client/register").
+		MatchHeader("UNLEASH-CONNECTION-ID", `[0-9a-f\-]{36}`).
+		BodyString(`.*connectionId.*`).
+		Reply(200)
+
+	gock.New(mockerServer).
+		Post("/client/metrics").
+		MatchHeader("UNLEASH-CONNECTION-ID", `[0-9a-f\-]{36}`).
+		MatchHeader("Unleash-Interval", "50").
+		BodyString(`.*connectionId.*`).
+		Reply(200)
+
+	gock.New(mockerServer).
+		Get("/client/features").
+		MatchHeader("UNLEASH-CONNECTION-ID", `[0-9a-f\-]{36}`).
+		MatchHeader("Unleash-Interval", "100").
+		Reply(200).
+		JSON(api.FeatureResponse{})
+
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithMetricsInterval(50*time.Millisecond),
+		WithRefreshInterval(100*time.Millisecond),
+		WithInstanceId(mockInstanceId),
+		WithListener(&NoopListener{}),
+		WithDisableMetrics(false),
+	)
+
+	assert.NoError(err)
+
+	client.IsEnabled("foo")
+
+	time.Sleep(100 * time.Millisecond)
+	err = client.Close()
+
+	assert.True(gock.IsDone(), "there should be no more mocks")
+}
