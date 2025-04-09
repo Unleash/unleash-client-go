@@ -9,7 +9,7 @@ Unleash Client for Go. Read more about the [Unleash project](https://github.com/
 
 ## Go Version
 
-The client is currently tested against Go 1.19.x, 1.20.x and 1.21.x. These versions will be updated
+The client is currently tested against Go 1.21.x, 1.22.x, 1.23.x and 1.24.x. These versions will be updated
 as new versions of Go are released.
 
 The client may work on older versions of Go as well, but is not actively tested.
@@ -266,7 +266,7 @@ unleash.IsEnabled("someToggle", unleash.WithContext(ctx), unleash.WithResolver(r
 
 ## Development
 
-To override dependency on unleash-client-go github repository to a local development folder (for instance when building a local test-app for the SDK),  
+To override dependency on unleash-client-go github repository to a local development folder (for instance when building a local test-app for the SDK),
 you can add the following to your apps `go.mod`:
 
 ```mod
