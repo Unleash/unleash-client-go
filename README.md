@@ -264,6 +264,31 @@ resolver := func(featureName string) *api.Feature {
 unleash.IsEnabled("someToggle", unleash.WithContext(ctx), unleash.WithResolver(resolver))
 ```
 
+### Impression data
+
+When impression data is enabled on a flag, the SDK will emit impression events during evaluation. You can hook into these with a custom listener to collect insights or integrate with analytics. You can [read more about impression data in Unleash's documentation](https://docs.getunleash.io/reference/impression-data).
+
+```go
+type MyListener struct {
+	unleash.DebugListener
+}
+
+func (l *MyListener) OnImpression(e unleash.ImpressionEvent) {
+	fmt.Printf("Custom Impression: %s = %v (%s)\n", e.FeatureName, e.Enabled, e.EventType)
+	if e.Context != nil {
+		fmt.Printf("Context: userId=%s sessionId=%s\n", e.Context.UserId, e.Context.SessionId)
+	}
+}
+
+func main() {
+	unleash.Initialize(
+		unleash.WithListener(&MyListener{}),
+		unleash.WithAppName("my-app"),
+		unleash.WithUrl("http://unleash.herokuapp.com/api/"),
+	)
+}
+```
+
 ## Development
 
 To override dependency on unleash-client-go github repository to a local development folder (for instance when building a local test-app for the SDK),  

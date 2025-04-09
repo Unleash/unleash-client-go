@@ -24,6 +24,8 @@ func Sync(client *unleash.Client) {
 			fmt.Printf("SENT: %+v\n", md)
 		case cd := <-client.Registered():
 			fmt.Printf("REGISTERED: %+v\n", cd)
+		case ie := <-client.Impression():
+			fmt.Printf("IMPRESSION: %+v\n", ie)
 		case <-timer.C:
 			fmt.Printf("ISENABLED: %v\n", client.IsEnabled("eid.enabled"))
 			timer.Reset(1 * time.Second)
