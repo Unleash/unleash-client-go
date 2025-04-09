@@ -372,3 +372,63 @@ func TestImpression_WithContextAndMultipleEvents(t *testing.T) {
 	mockListener.AssertExpectations(t)
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
+
+func TestImpression_Function(t *testing.T) {
+	defer gock.OffAll()
+	assert := assert.New(t)
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	gock.New(mockerServer).
+		Post("/client/register").
+		Reply(200)
+
+	feature := "impression-function-test"
+
+	gock.New(mockerServer).
+		Get("/client/features").
+		Reply(200).
+		JSON(api.FeatureResponse{
+			Features: []api.Feature{
+				{
+					Name:           feature,
+					Enabled:        true,
+					ImpressionData: true,
+					Strategies: []api.Strategy{
+						{
+							Id:   1,
+							Name: "flexibleRollout",
+							Parameters: map[string]interface{}{
+								"rollout":    100,
+								"stickiness": "default",
+							},
+						},
+					},
+				},
+			},
+		})
+
+	mockListener := &MockedListener{}
+	mockListener.On("OnReady").Return()
+	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("OnCount", feature, true).Return()
+
+	client := setupClient(t, mockListener)
+	impressionChannel := client.Impression()
+
+	go func() {
+		for impression := range impressionChannel {
+			if impression.FeatureName == feature && impression.EventType == ImpressionEventTypeIsEnabled && impression.Enabled {
+				wg.Done()
+				return
+			}
+		}
+	}()
+
+	client.IsEnabled(feature)
+
+	wg.Wait()
+	assert.NoError(client.Close())
+	mockListener.AssertExpectations(t)
+	assert.True(gock.IsDone(), "there should be no more mocks")
+}

@@ -331,3 +331,13 @@ func (suite *VariantTestSuite) TestGetVariant_OverrideOnEnvironment() {
 	suite.Equal(true, variantSetup.Enabled, "Should be equal")
 	suite.Equal(expectedPayload, variantSetup.Payload, "Should be equal")
 }
+
+func TestGetDefaultVariant(t *testing.T) {
+	defaultVariant := GetDefaultVariant()
+	if defaultVariant.Name != "disabled" {
+		t.Errorf("Expected default variant name to be 'disabled', got '%s'", defaultVariant.Name)
+	}
+	if defaultVariant.Enabled {
+		t.Error("Expected default variant to be disabled")
+	}
+}
