@@ -3,6 +3,7 @@ package unleash
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"net/http"
@@ -14,6 +15,10 @@ import (
 )
 
 var SEGMENT_CLIENT_SPEC_VERSION = "4.3.1"
+
+var (
+	errNoChange = errors.New("no change")
+)
 
 type repository struct {
 	repositoryChannels
@@ -64,16 +69,29 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 }
 
 func (r *repository) fetchAndReportError() {
-	err := r.fetch()
+	var (
+		isUnchanged bool
+		err         error
+	)
+
+	err = r.fetch()
+
+	// Extract unchanged error from error
+	if err != nil {
+		isUnchanged = errors.Is(err, errNoChange)
+		if isUnchanged {
+			err = nil
+		}
+	}
+
 	if err != nil {
 		if urlErr, ok := err.(*url.Error); !(ok && urlErr.Err == context.Canceled) {
 			r.err(err)
 		}
-	}
-	if !r.isReady && err == nil {
+	} else if !r.isReady {
 		r.isReady = true
 		r.ready <- true
-	} else if err == nil {
+	} else if !isUnchanged {
 		r.update <- true
 	}
 }
@@ -149,7 +167,7 @@ func (r *repository) fetch() error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotModified {
-		return nil
+		return errNoChange
 	}
 	if err := r.statusIsOK(resp); err != nil {
 		return err
