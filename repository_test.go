@@ -84,6 +84,72 @@ func TestRepository_GetFeaturesFail(t *testing.T) {
 	client.Close()
 }
 
+func TestRepository_OnUpdateCalledWhenFeaturesChangeOnly(t *testing.T) {
+	assert := assert.New(t)
+	featuresCalls := make(chan int, 10)
+	var sendStatus304 int32
+	prevStatus := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		switch req.Method + " " + req.URL.Path {
+		case "POST /client/register":
+		case "GET /client/features":
+			status304 := atomic.LoadInt32(&sendStatus304) == 1
+			status := 0
+			if status304 {
+				status = 304
+				rw.WriteHeader(304)
+			} else {
+				status = 200
+				rw.WriteHeader(200)
+				writeJSON(rw, api.FeatureResponse{})
+			}
+			if status != prevStatus {
+				featuresCalls <- status
+				prevStatus = status
+			}
+		case "POST /client/metrics":
+		default:
+			t.Fatalf("Unexpected request: %+v", req)
+		}
+	}))
+	defer srv.Close()
+
+	update := make(chan bool)
+	mockListener := &MockedListener{}
+	mockListener.On("OnUpdate").Run(func(args mock.Arguments) { update <- true }).Return()
+	mockListener.On("OnReady").Run(func(args mock.Arguments) {}).Return()
+	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("OnSent", mock.AnythingOfType("MetricsData")).Return()
+	client, err := NewClient(
+		WithUrl(srv.URL),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithListener(mockListener),
+		WithRefreshInterval(time.Millisecond),
+	)
+	assert.Nil(err, "client should not return an error")
+
+	assert.Equal(200, <-featuresCalls)
+
+	select {
+	case <-update:
+	case <-time.NewTimer(time.Second).C:
+		t.Fatal("client did not call OnUpdate")
+	}
+
+	atomic.StoreInt32(&sendStatus304, 1)
+	assert.Equal(304, <-featuresCalls)
+
+	select {
+	case <-update:
+		t.Fatal("client called OnUpdate but it shouldn't have")
+	case <-time.NewTimer(time.Second).C:
+	}
+
+	close(update)
+	client.Close()
+}
+
 func TestRepository_ParseAPIResponse(t *testing.T) {
 	assert := assert.New(t)
 	data := []byte(`{
