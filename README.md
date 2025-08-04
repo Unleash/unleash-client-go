@@ -1,11 +1,17 @@
-[![Build Status](https://github.com/Unleash/unleash-client-go/actions/workflows/build.yml/badge.svg)](https://github.com/Unleash/unleash-client-go/actions/workflows/build.yml) [![GoDoc](https://pkg.go.dev/badge/github.com/Unleash/unleash-client-go/v4?status.svg)](https://pkg.go.dev/github.com/Unleash/unleash-client-go/v4) [![Go Report Card](https://goreportcard.com/badge/github.com/Unleash/unleash-client-go)](https://goreportcard.com/report/github.com/Unleash/unleash-client-go)
+[![Build Status](https://github.com/Unleash/unleash-go-sdk/actions/workflows/build.yml/badge.svg)](https://github.com/Unleash/unleash-go-sdk/actions/workflows/build.yml) [![GoDoc](https://pkg.go.dev/badge/github.com/Unleash/unleash-client-go/v4?status.svg)](https://pkg.go.dev/github.com/Unleash/unleash-client-go/v4) [![Go Report Card](https://goreportcard.com/badge/github.com/Unleash/unleash-client-go)](https://goreportcard.com/report/github.com/Unleash/unleash-client-go)
 [![Coverage Status](https://coveralls.io/repos/github/Unleash/unleash-client-go/badge.svg?branch=v4)](https://coveralls.io/github/Unleash/unleash-client-go?branch=v4)
 
 # unleash-client-go
 
 Unleash Client for Go. Read more about the [Unleash project](https://github.com/Unleash/unleash)
 
+**Version 5 of the client changed the module name from `github.com/Unleash/unleash-client-go/v4` to `github.com/Unleash/unleash-go-sdk/v4`. Other than the module name change it should be a drop-in replacement for the previous version.** If you're using the v4 branch, consider migrating to v5 as soon as possible.
+
 **Version 3.x of the client requires `unleash-server` v4.x or higher.**
+
+Unleash is a private, secure, and scalable [feature management platform](https://www.getunleash.io/) built to reduce the risk of releasing new features and accelerate software development. This Backend Go SDK is designed to help you integrate with Unleash and evaluate feature flags inside your application.
+
+You can use this client with [Unleash Enterprise](https://www.getunleash.io/pricing?utm_source=readme&utm_medium=go) or [Unleash Open Source](https://github.com/Unleash/unleash).
 
 ## Go Version
 
@@ -15,6 +21,8 @@ as new versions of Go are released.
 The client may work on older versions of Go as well, but is not actively tested.
 
 ## Getting started
+
+**Note:** Since August 4th, 2025, the repository was renamed from github.com/Unleash/unleash-client-go to github.com/Unleash/unleash-go-sdk. The module name was changed in v5 branch but for v4 so you should still use the old module path: `go get github.com/Unleash/unleash-client-go/v4`.
 
 ### 1. Install unleash-client-go
 
@@ -44,7 +52,7 @@ func init() {
 	unleash.Initialize(
 		unleash.WithListener(&unleash.DebugListener{}),
 		unleash.WithAppName("my-application"),
-		unleash.WithUrl("http://unleash.herokuapp.com/api/"),
+		unleash.WithUrl("https://eu.app.unleash-hosted.com/demo/api/"),
 		unleash.WithCustomHeaders(http.Header{"Authorization": {"<API token>"}}),
 	)
 }
@@ -61,7 +69,7 @@ func init() {
 	unleash.Initialize(
 		unleash.WithListener(&unleash.DebugListener{}),
 		unleash.WithAppName("my-application"),
-		unleash.WithUrl("http://unleash.herokuapp.com/api/"),
+		unleash.WithUrl("https://eu.app.unleash-hosted.com/demo/api/"),
 		unleash.WithCustomHeaders(http.Header{"Authorization": {"<API token>"}}),
 	)
 
@@ -89,7 +97,7 @@ func init() {
 	unleash.Initialize(
 		unleash.WithListener(&unleash.DebugListener{}),
 		unleash.WithAppName("my-application"),
-		unleash.WithUrl("http://unleash.herokuapp.com/api/"),
+		unleash.WithUrl("https://eu.app.unleash-hosted.com/demo/api/"),
 		unleash.WithStorage(&BootstrapStorage{Reader: myBootstrap})
 	)
 }
@@ -164,7 +172,7 @@ func init() {
 	unleash.Initialize(
 		unleash.WithListener(&unleash.DebugListener{}),
 		unleash.WithAppName("my-application"),
-		unleash.WithUrl("http://unleash.herokuapp.com/api/"),
+		unleash.WithUrl("https://eu.app.unleash-hosted.com/demo/api/"),
 		unleash.WithStorage(&unleash.BootstrapStorage{Reader: reader})
 	)
 }
@@ -220,7 +228,7 @@ unleash.IsEnabled("someToggle", unleash.WithContext(ctx))
 
 ### Caveat
 
-This client uses go routines to report several events and doesn't drain the channel by default. So you need to either register a listener using `WithListener` or drain the channel "manually" (demonstrated in [this example](https://github.com/Unleash/unleash-client-go/blob/master/example_with_instance_test.go)).
+This client uses go routines to report several events and doesn't drain the channel by default. So you need to either register a listener using `WithListener` or drain the channel "manually" (demonstrated in [this example](https://github.com/Unleash/unleash-go-sdk/blob/v4/example_with_instance_test.go)).
 
 ### Feature Resolver
 
@@ -284,7 +292,7 @@ func main() {
 	unleash.Initialize(
 		unleash.WithListener(&MyListener{}),
 		unleash.WithAppName("my-app"),
-		unleash.WithUrl("http://unleash.herokuapp.com/api/"),
+		unleash.WithUrl("https://eu.app.unleash-hosted.com/demo/api/"),
 	)
 }
 ```
