@@ -5,7 +5,7 @@
 
 Unleash Client for Go. Read more about the [Unleash project](https://github.com/Unleash/unleash)
 
-**Version 5 of the client changed the module name from `github.com/Unleash/unleash-client-go/v4` to `github.com/Unleash/unleash-go-sdk/v4`. Other than the module name change it should be a drop-in replacement for the previous version.** If you're using the v4 branch, consider migrating to v5 as soon as possible.
+**Version 5 of the client changed the module name from `github.com/Unleash/unleash-client-go/v4` to `github.com/Unleash/unleash-go-sdk/v5`. Other than the module name change, it should be a drop-in replacement for the previous version.** If you're using the v4 branch, consider migrating to v5 as soon as possible.
 
 **Version 3.x of the client requires `unleash-server` v4.x or higher.**
 
