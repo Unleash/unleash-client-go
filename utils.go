@@ -6,7 +6,6 @@ import (
 	"math/rand/v2"
 	"os"
 	"os/user"
-	"reflect"
 	"sync"
 )
 
@@ -68,20 +67,13 @@ func (wo *WarnOnce) Warn(message string) {
 	})
 }
 
-func every(slice interface{}, condition func(interface{}) bool) bool {
-	sliceValue := reflect.ValueOf(slice)
-
-	if sliceValue.Kind() != reflect.Slice {
-		fmt.Println("Input is not a slice returning false")
+// every returns true iff condition returns true for all elements in the input slice.
+// This function will return false for empty slices (unlike the convention used in mathematical logic).
+func every[T any](slice []T, condition func(T) bool) bool {
+	if len(slice) == 0 {
 		return false
 	}
-
-	if sliceValue.Len() == 0 {
-		return false
-	}
-
-	for i := 0; i < sliceValue.Len(); i++ {
-		element := sliceValue.Index(i).Interface()
+	for _, element := range slice {
 		if !condition(element) {
 			return false
 		}

@@ -20,13 +20,8 @@ func TestGetFetchURLPath(t *testing.T) {
 func TestEvery(t *testing.T) {
 	t.Run("All Even Integers", func(t *testing.T) {
 		numbers := []int{2, 4, 6, 8, 10}
-		allEven := every(numbers, func(item interface{}) bool {
-			num, ok := item.(int)
-			if !ok {
-				t.Errorf("Expected an integer, got %T", item)
-				return false
-			}
-			return num%2 == 0
+		allEven := every(numbers, func(item int) bool {
+			return item%2 == 0
 		})
 		if !allEven {
 			t.Errorf("Expected all numbers to be even, but got false")
@@ -35,13 +30,8 @@ func TestEvery(t *testing.T) {
 
 	t.Run("All Long Strings", func(t *testing.T) {
 		words := []string{"apple", "banana", "cherry"}
-		allLong := every(words, func(item interface{}) bool {
-			str, ok := item.(string)
-			if !ok {
-				t.Errorf("Expected a string, got %T", item)
-				return false
-			}
-			return len(str) > 3
+		allLong := every(words, func(item string) bool {
+			return len(item) > 3
 		})
 		if !allLong {
 			t.Errorf("Expected all words to be long, but got false")
@@ -50,7 +40,7 @@ func TestEvery(t *testing.T) {
 
 	t.Run("Empty Slice", func(t *testing.T) {
 		emptySlice := []int{}
-		allEmpty := every(emptySlice, func(item interface{}) bool {
+		allEmpty := every(emptySlice, func(item int) bool {
 			// This condition should not be reached for an empty slice.
 			t.Errorf("Unexpected condition reached")
 			return false
@@ -61,27 +51,10 @@ func TestEvery(t *testing.T) {
 		}
 	})
 
-	t.Run("invalid inout", func(t *testing.T) {
-		invalidInput := "string"
-		result := every(invalidInput, func(item interface{}) bool {
-			// This condition should not be reached for an empty slice.
-			return true
-		})
-
-		if result == true {
-			t.Errorf("Expected result to be false")
-		}
-	})
-
 	t.Run("Result should be false if one doesn't match the predicate", func(t *testing.T) {
 		words := []string{"apple", "banana", "cherry", "he"}
-		allLong := every(words, func(item interface{}) bool {
-			str, ok := item.(string)
-			if !ok {
-				t.Errorf("Expected a string, got %T", item)
-				return false
-			}
-			return len(str) > 3
+		allLong := every(words, func(item string) bool {
+			return len(item) > 3
 		})
 		if allLong == true {
 			t.Errorf("Expected all words to be long, but got false")

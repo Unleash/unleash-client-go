@@ -432,8 +432,8 @@ func (uc *Client) isParentDependencySatisfied(feature *api.Feature, context cont
 		return !enabledResult.Enabled
 	}
 
-	allDependenciesSatisfied := every(*feature.Dependencies, func(parent interface{}) bool {
-		return dependenciesSatisfied(parent.(api.Dependency))
+	allDependenciesSatisfied := every(*feature.Dependencies, func(parent api.Dependency) bool {
+		return dependenciesSatisfied(parent)
 	})
 
 	return allDependenciesSatisfied
