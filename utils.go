@@ -3,12 +3,11 @@ package unleash
 import (
 	cryptoRand "crypto/rand"
 	"fmt"
-	"math/rand"
+	"math/rand/v2"
 	"os"
 	"os/user"
 	"reflect"
 	"sync"
-	"time"
 )
 
 func getTmpDirPath() string {
@@ -21,8 +20,7 @@ func generateInstanceId() string {
 	if user, err := user.Current(); err == nil && user.Username != "" {
 		prefix = user.Username
 	} else {
-		rand.Seed(time.Now().Unix())
-		prefix = fmt.Sprintf("generated-%d-%d", rand.Intn(1000000), os.Getpid())
+		prefix = fmt.Sprintf("generated-%d-%d", rand.N(1000000), os.Getpid())
 	}
 
 	if hostname, err := os.Hostname(); err == nil && hostname != "" {
