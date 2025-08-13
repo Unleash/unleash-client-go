@@ -369,7 +369,7 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) (api.Strat
 			}, f
 		}
 
-		allConstraints := make([]api.Constraint, 0)
+		allConstraints := make([]api.Constraint, 0, len(segmentConstraints)+len(s.Constraints))
 		allConstraints = append(allConstraints, segmentConstraints...)
 		allConstraints = append(allConstraints, s.Constraints...)
 
