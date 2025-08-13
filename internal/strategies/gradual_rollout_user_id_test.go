@@ -4,6 +4,7 @@
 package strategies
 
 import (
+	"math"
 	"strconv"
 	"testing"
 
@@ -95,7 +96,7 @@ func TestGradualRolloutUserId_IsEnabled(t *testing.T) {
 				}
 			}
 
-			actualPercentage := round(100.0 * float64(enabledCount) / float64(rounds))
+			actualPercentage := math.Round(100.0 * float64(enabledCount) / float64(rounds))
 
 			assert.InDelta(expectedPercentage, actualPercentage, 1.0)
 		}

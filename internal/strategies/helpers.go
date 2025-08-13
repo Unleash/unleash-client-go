@@ -12,16 +12,6 @@ import (
 
 var VariantNormalizationSeed uint32 = 86028157
 
-func round(f float64) int {
-	if f < -0.5 {
-		return int(f - 0.5)
-	}
-	if f > 0.5 {
-		return int(f + 0.5)
-	}
-	return 0
-}
-
 func resolveHostname() (string, error) {
 	var err error
 	hostname := os.Getenv("HOSTNAME")
