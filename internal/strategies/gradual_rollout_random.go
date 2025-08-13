@@ -20,7 +20,7 @@ func (s gradualRolloutRandomStrategy) Name() string {
 	return "gradualRolloutRandom"
 }
 
-func (s gradualRolloutRandomStrategy) IsEnabled(params map[string]interface{}, _ *context.Context) bool {
+func (s gradualRolloutRandomStrategy) IsEnabled(params map[string]any, _ *context.Context) bool {
 	value, found := params[strategy.ParamPercentage]
 	if !found {
 		return false

@@ -58,15 +58,6 @@ func getFetchURLPath(projectName string) string {
 	return "./client/features"
 }
 
-func contains(arr []string, str string) bool {
-	for _, item := range arr {
-		if item == str {
-			return true
-		}
-	}
-	return false
-}
-
 // WarnOnce is a type for handling warnings that should only be displayed once.
 type WarnOnce struct {
 	once sync.Once

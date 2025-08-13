@@ -2,6 +2,7 @@ package unleash
 
 import (
 	"fmt"
+	"slices"
 
 	"net/http"
 	"net/url"
@@ -375,7 +376,7 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) (api.Strat
 		if ok, err := constraints.Check(ctx, allConstraints); err != nil {
 			uc.errors <- err
 		} else if ok && foundStrategy.IsEnabled(s.Parameters, ctx) {
-			if s.Variants != nil && len(s.Variants) > 0 {
+			if len(s.Variants) > 0 {
 				groupIdValue := s.Parameters[strategy.ParamGroupId]
 				groupId, ok := groupIdValue.(string)
 				if !ok {
@@ -423,7 +424,7 @@ func (uc *Client) isParentDependencySatisfied(feature *api.Feature, context cont
 		// According to the schema, if the enabled property is absent we assume it's true.
 		if parent.Enabled == nil || *parent.Enabled {
 			if parent.Variants != nil && len(*parent.Variants) > 0 && enabledResult.Variant != nil {
-				return enabledResult.Enabled && contains(*parent.Variants, enabledResult.Variant.Name)
+				return enabledResult.Enabled && slices.Contains(*parent.Variants, enabledResult.Variant.Name)
 			}
 			return enabledResult.Enabled
 		}

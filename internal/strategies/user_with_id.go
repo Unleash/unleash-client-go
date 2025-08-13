@@ -17,7 +17,7 @@ func (s userWithIdStrategy) Name() string {
 	return "userWithId"
 }
 
-func (s userWithIdStrategy) IsEnabled(params map[string]interface{}, ctx *context.Context) bool {
+func (s userWithIdStrategy) IsEnabled(params map[string]any, ctx *context.Context) bool {
 	value, found := params[strategy.ParamUserIds]
 	if !found {
 		return false

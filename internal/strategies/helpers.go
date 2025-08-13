@@ -34,7 +34,7 @@ func resolveHostname() (string, error) {
 	return hostname, err
 }
 
-func parameterAsFloat64(param interface{}) (result float64, ok bool) {
+func parameterAsFloat64(param any) (result float64, ok bool) {
 	if f, isFloat := param.(float64); isFloat {
 		result, ok = f, true
 	} else if i, isInt := param.(int); isInt {

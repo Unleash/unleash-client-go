@@ -27,7 +27,7 @@ func TestResolveHostname(t *testing.T) {
 }
 
 func TestParameterAsFloat64(t *testing.T) {
-	goodData := map[interface{}]float64{
+	goodData := map[any]float64{
 		"30":    30.0,
 		"-0.01": -0.01,
 		42:      42.0,
@@ -42,7 +42,7 @@ func TestParameterAsFloat64(t *testing.T) {
 		assert.InDelta(t, actual, expected, 0.0000001)
 	}
 
-	badData := map[interface{}]float64{
+	badData := map[any]float64{
 		"pizza": -1.0,
 		"0.0.1": -1.0,
 	}
@@ -75,7 +75,7 @@ func TestNewRng(t *testing.T) {
 	wg := sync.WaitGroup{}
 
 	testGen := func(n int) {
-		for i := 0; i < n; i++ {
+		for range n {
 			randomInt := rng.int()
 			assert.True(t, randomInt >= 0 && randomInt <= 100)
 
@@ -90,7 +90,7 @@ func TestNewRng(t *testing.T) {
 
 	goRoutines := 20
 	wg.Add(goRoutines)
-	for j := 0; j < goRoutines; j++ {
+	for range goRoutines {
 		go testGen(100)
 	}
 	wg.Wait()

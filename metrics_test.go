@@ -288,7 +288,7 @@ func TestMetrics_ShouldNotCountMetricsForParentToggles(t *testing.T) {
 							Id:          1,
 							Name:        "flexibleRollout",
 							Constraints: []api.Constraint{},
-							Parameters: map[string]interface{}{
+							Parameters: map[string]any{
 								"rollout":    100,
 								"stickiness": "default",
 							},
@@ -304,7 +304,7 @@ func TestMetrics_ShouldNotCountMetricsForParentToggles(t *testing.T) {
 							Id:          1,
 							Name:        "flexibleRollout",
 							Constraints: []api.Constraint{},
-							Parameters: map[string]interface{}{
+							Parameters: map[string]any{
 								"rollout":    100,
 								"stickiness": "default",
 							},
@@ -540,7 +540,7 @@ func TestMetrics_metricsData_includes_new_metadata(t *testing.T) {
 							Id:          1,
 							Name:        "flexibleRollout",
 							Constraints: []api.Constraint{},
-							Parameters: map[string]interface{}{
+							Parameters: map[string]any{
 								"rollout":    100,
 								"stickiness": "default",
 							},
@@ -556,7 +556,7 @@ func TestMetrics_metricsData_includes_new_metadata(t *testing.T) {
 							Id:          1,
 							Name:        "flexibleRollout",
 							Constraints: []api.Constraint{},
-							Parameters: map[string]interface{}{
+							Parameters: map[string]any{
 								"rollout":    100,
 								"stickiness": "default",
 							},

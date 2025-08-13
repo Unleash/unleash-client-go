@@ -2,6 +2,7 @@ package unleash_test
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -15,7 +16,7 @@ func (s ActiveForUserWithEmailStrategy) Name() string {
 	return "ActiveForUserWithEmail"
 }
 
-func (s ActiveForUserWithEmailStrategy) IsEnabled(params map[string]interface{}, ctx *context.Context) bool {
+func (s ActiveForUserWithEmailStrategy) IsEnabled(params map[string]any, ctx *context.Context) bool {
 
 	if ctx == nil {
 		return false
@@ -30,13 +31,7 @@ func (s ActiveForUserWithEmailStrategy) IsEnabled(params map[string]interface{},
 		return false
 	}
 
-	for _, e := range strings.Split(emails, ",") {
-		if e == ctx.Properties["emails"] {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(strings.Split(emails, ","), ctx.Properties["emails"])
 }
 
 // ExampleCustomStrategy demonstrates using a custom strategy.

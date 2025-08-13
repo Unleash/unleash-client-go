@@ -1,6 +1,7 @@
 package unleash
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -92,7 +93,7 @@ func TestContains(t *testing.T) {
 	t.Run("Element is present in the slice", func(t *testing.T) {
 		arr := []string{"apple", "banana", "cherry", "date", "fig"}
 		str := "banana"
-		result := contains(arr, str)
+		result := slices.Contains(arr, str)
 		if !result {
 			t.Errorf("Expected '%s' to be in the slice, but it was not found", str)
 		}
@@ -101,7 +102,7 @@ func TestContains(t *testing.T) {
 	t.Run("Element is not present in the slice", func(t *testing.T) {
 		arr := []string{"apple", "banana", "cherry", "date", "fig"}
 		str := "grape"
-		result := contains(arr, str)
+		result := slices.Contains(arr, str)
 		if result {
 			t.Errorf("Expected '%s' not to be in the slice, but it was found", str)
 		}
@@ -110,7 +111,7 @@ func TestContains(t *testing.T) {
 	t.Run("Empty slice should return false", func(t *testing.T) {
 		arr := []string{}
 		str := "apple"
-		result := contains(arr, str)
+		result := slices.Contains(arr, str)
 		if result {
 			t.Errorf("Expected an empty slice to return false, but it returned true")
 		}
@@ -118,7 +119,7 @@ func TestContains(t *testing.T) {
 }
 
 func TestGetConnectionId(t *testing.T) {
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		uuid := getConnectionId()
 
 		t.Run("Correct length", func(t *testing.T) {
