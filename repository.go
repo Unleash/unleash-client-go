@@ -23,18 +23,20 @@ var (
 type repository struct {
 	repositoryChannels
 	sync.RWMutex
-	options       repositoryOptions
-	etag          string
-	close         chan struct{}
-	closed        chan struct{}
-	ctx           context.Context
-	cancel        func()
-	isReady       bool
-	refreshTicker *time.Ticker
-	segments      map[int][]api.Constraint
-	errors        float64
-	maxSkips      float64
-	skips         float64
+	options         repositoryOptions
+	etag            string
+	close           chan struct{}
+	closed          chan struct{}
+	ctx             context.Context
+	cancel          func()
+	isReady         bool
+	refreshTicker   *time.Ticker
+	segments        map[int][]api.Constraint
+	errors          float64
+	maxSkips        float64
+	skips           float64
+	streamingClient *streamingClient
+	isStreaming     bool
 }
 
 func newRepository(options repositoryOptions, channels repositoryChannels) *repository {
@@ -48,6 +50,7 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 		errors:             0,
 		maxSkips:           10,
 		skips:              0,
+		isStreaming:        options.isStreaming,
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	repo.ctx = ctx
@@ -62,6 +65,15 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 	}
 
 	repo.options.storage.Init(options.backupPath, options.appName)
+
+	// Initialize streaming client if streaming mode is enabled
+	if repo.isStreaming {
+		repo.streamingClient = newStreamingClient(
+			options,
+			channels,
+			channels.errorChannels,
+		)
+	}
 
 	go repo.sync()
 
@@ -97,20 +109,39 @@ func (r *repository) fetchAndReportError() {
 }
 
 func (r *repository) sync() {
-	r.fetchAndReportError()
+	// If streaming mode is enabled, start the streaming client
+	if r.isStreaming && r.streamingClient != nil {
+		if err := r.streamingClient.start(r.options.storage); err != nil {
+			r.err(fmt.Errorf("failed to start streaming client: %w", err))
+			// Fall back to polling mode
+			r.isStreaming = false
+		}
+	}
+
+	// For non-streaming mode or as a fallback, use polling
+	if !r.isStreaming {
+		r.fetchAndReportError()
+	}
+
 	for {
 		select {
 		case <-r.close:
+			if r.streamingClient != nil {
+				r.streamingClient.stop()
+			}
 			if err := r.options.storage.Persist(); err != nil {
 				r.err(err)
 			}
 			close(r.closed)
 			return
 		case <-r.refreshTicker.C:
-			if r.skips == 0 {
-				r.fetchAndReportError()
-			} else {
-				r.decrementSkips()
+			// Only poll if not in streaming mode
+			if !r.isStreaming {
+				if r.skips == 0 {
+					r.fetchAndReportError()
+				} else {
+					r.decrementSkips()
+				}
 			}
 		}
 	}
@@ -218,8 +249,18 @@ func (r *repository) getToggle(key string) *api.Feature {
 func (r *repository) resolveSegmentConstraints(strategy api.Strategy) ([]api.Constraint, error) {
 	segmentConstraints := []api.Constraint{}
 
+	var segments map[int][]api.Constraint
+	
+	// Check if storage supports DeltaStorage (used in streaming mode)
+	if deltaStorage, ok := r.options.storage.(DeltaStorage); ok {
+		segments = deltaStorage.GetSegments()
+	} else {
+		// Fallback to repository's segments for polling mode
+		segments = r.segments
+	}
+
 	for _, segmentId := range strategy.Segments {
-		if resolvedConstraints, ok := r.segments[segmentId]; ok {
+		if resolvedConstraints, ok := segments[segmentId]; ok {
 			segmentConstraints = append(segmentConstraints, resolvedConstraints...)
 		} else {
 			return segmentConstraints, fmt.Errorf("segment does not exist")
