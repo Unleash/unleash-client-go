@@ -57,68 +57,6 @@ func TestStreamingClient_Creation(t *testing.T) {
 	assert.False(t, client.isRunning())
 }
 
-func TestStreamingProcessor_ProcessFeatureResponse(t *testing.T) {
-	errChannels := errorChannels{
-		errors:   make(chan error, 10),
-		warnings: make(chan error, 10),
-	}
-	repoChannels := repositoryChannels{
-		errorChannels: errChannels,
-		ready:         make(chan bool, 1),
-		update:        make(chan bool, 1),
-	}
-
-	storage := &DefaultStorage{}
-	storage.Init("/tmp", "test-app")
-
-	processor := newStreamingProcessor(storage, repoChannels)
-
-	response := api.FeatureResponse{
-		Features: []api.Feature{
-			{
-				Name:    "feature1",
-				Enabled: true,
-			},
-			{
-				Name:    "feature2",
-				Enabled: false,
-			},
-		},
-		Segments: []api.Segment{
-			{
-				Id: 1,
-				Constraints: []api.Constraint{
-					{
-						ContextName: "userId",
-						Operator:    "IN",
-						Values:      []string{"user1", "user2"},
-					},
-				},
-			},
-		},
-	}
-
-	err := processor.processFeatureResponse(response)
-	assert.NoError(t, err)
-
-	feature1, found := storage.Get("feature1")
-	assert.True(t, found)
-	if f, ok := feature1.(api.Feature); ok {
-		assert.True(t, f.Enabled)
-	}
-
-	feature2, found := storage.Get("feature2")
-	assert.True(t, found)
-	if f, ok := feature2.(api.Feature); ok {
-		assert.False(t, f.Enabled)
-	}
-
-	select {
-	case <-repoChannels.ready:
-	default:
-		t.Error("Expected ready signal to be sent")
-	}
-}
 
 func TestStreamingClient_HandleEvents(t *testing.T) {
 	errChannels := errorChannels{
@@ -148,16 +86,22 @@ func TestStreamingClient_HandleEvents(t *testing.T) {
 
 	storage := &DefaultStorage{}
 	storage.Init("/tmp", "test-app")
-	client.processor = newStreamingProcessor(storage, repoChannels)
+	client.processor = newStreamingProcessor(storage, repo, repoChannels)
 
 	connectedData := map[string]interface{}{
-		"features": []map[string]interface{}{
+		"events": []map[string]interface{}{
 			{
-				"name":    "test-feature",
-				"enabled": true,
+				"type":     "hydration",
+				"eventId":  1,
+				"features": []map[string]interface{}{
+					{
+						"name":    "test-feature",
+						"enabled": true,
+					},
+				},
+				"segments": []interface{}{},
 			},
 		},
-		"segments": []interface{}{},
 	}
 	connectedJSON, _ := json.Marshal(connectedData)
 
@@ -174,13 +118,16 @@ func TestStreamingClient_HandleEvents(t *testing.T) {
 	}
 
 	updatedData := map[string]interface{}{
-		"features": []map[string]interface{}{
+		"events": []map[string]interface{}{
 			{
-				"name":    "test-feature",
-				"enabled": false,
+				"type":    "feature-updated",
+				"eventId": 2,
+				"feature": map[string]interface{}{
+					"name":    "test-feature",
+					"enabled": false,
+				},
 			},
 		},
-		"segments": []interface{}{},
 	}
 	updatedJSON, _ := json.Marshal(updatedData)
 

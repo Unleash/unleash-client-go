@@ -25,7 +25,7 @@ func TestStreamingDeltaIntegration(t *testing.T) {
 		},
 	}
 	
-	processor := newStreamingProcessor(storage, channels)
+	processor := newStreamingProcessor(storage, repo, channels)
 	
 	t.Run("process initial hydration", func(t *testing.T) {
 		hydrationJSON := `{
@@ -156,82 +156,5 @@ func TestStreamingDeltaIntegration(t *testing.T) {
 			t.Error("Expected update signal after incremental changes")
 		}
 	})
-	
-	t.Run("fallback for non-delta storage", func(t *testing.T) {
-		regularStorage := &DefaultStorage{}
-		regularStorage.Init("/tmp", "test-app-regular")
-		
-		regularProcessor := newStreamingProcessor(regularStorage, channels)
-		
-		updateJSON := `{
-			"events": [
-				{
-					"type": "feature-updated",
-					"eventId": 7,
-					"feature": {"name": "test-feature", "enabled": true, "strategies": []}
-				}
-			]
-		}`
-		
-		var delta api.ClientFeaturesDelta
-		err := json.Unmarshal([]byte(updateJSON), &delta)
-		if err != nil {
-			t.Fatalf("Failed to unmarshal: %v", err)
-		}
-		
-		err = regularProcessor.processDelta(&delta)
-		if err != nil {
-			t.Fatalf("Failed to process with regular storage: %v", err)
-		}
-		
-		if feature, exists := regularStorage.Get("test-feature"); !exists {
-			t.Error("Feature should exist even with regular storage")
-		} else if f, ok := feature.(api.Feature); ok && !f.Enabled {
-			t.Error("Feature should be enabled")
-		}
-	})
 }
 
-// TestDeltaEventBackwardCompatibility verifies backward compatibility
-func TestDeltaEventBackwardCompatibility(t *testing.T) {
-	storage := &DefaultStorage{}
-	storage.Init("/tmp", "test-app")
-	
-	repo := &repository{
-		segments: make(map[int][]api.Constraint),
-	}
-	
-	channels := repositoryChannels{
-		ready:  make(chan bool, 1),
-		update: make(chan bool, 1),
-		errorChannels: errorChannels{
-			errors:   make(chan error, 10),
-			warnings: make(chan error, 10),
-		},
-	}
-	
-	processor := newStreamingProcessor(storage, channels)
-	
-	legacyResponse := api.FeatureResponse{
-		Features: []api.Feature{
-			{Name: "legacy-feature", Enabled: true},
-		},
-		Segments: []api.Segment{
-			{Id: 1, Constraints: []api.Constraint{}},
-		},
-	}
-	
-	err := processor.processFeatureResponse(legacyResponse)
-	if err != nil {
-		t.Fatalf("Failed to process legacy format: %v", err)
-	}
-	
-	if _, exists := storage.Get("legacy-feature"); !exists {
-		t.Error("Legacy feature should exist")
-	}
-	
-	segments := repo.segments
-	if len(segments) != 1 {
-		t.Errorf("Expected 1 segment from legacy format, got %d", len(segments))
-	}
-}

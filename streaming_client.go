@@ -2,7 +2,6 @@ package unleash
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -148,86 +147,22 @@ func (sc *streamingClient) handleEvent(event eventsource.Event) {
 func (sc *streamingClient) handleConnectedEvent(event eventsource.Event) error {
 	eventData := []byte(event.Data())
 	delta, err := api.ParseDelta(eventData)
-	if err == nil && len(delta.Events) > 0 {
-		return sc.processor.processDelta(delta)
-	}
-	
-	var eventDataMap map[string]interface{}
-	if err := json.Unmarshal(eventData, &eventDataMap); err != nil {
+	if err != nil {
 		return fmt.Errorf("failed to parse connected event: %w", err)
 	}
-
-	if events, ok := eventDataMap["events"]; ok && events != nil {
-		delta, err := api.ParseDelta(eventData)
-		if err != nil {
-			return fmt.Errorf("failed to parse delta event: %w", err)
-		}
-		return sc.processor.processDelta(delta)
-	}
-
-	if features, ok := eventDataMap["features"]; ok {
-		featuresJSON, err := json.Marshal(map[string]interface{}{
-			"features": features,
-			"segments": eventDataMap["segments"],
-		})
-		if err != nil {
-			return err
-		}
-
-		var featureResp api.FeatureResponse
-		if err := json.Unmarshal(featuresJSON, &featureResp); err != nil {
-			return err
-		}
-
-		if err := sc.processor.processFeatureResponse(featureResp); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	
+	return sc.processor.processDelta(delta)
 }
 
 // handleUpdatedEvent processes feature update events
 func (sc *streamingClient) handleUpdatedEvent(event eventsource.Event) error {
 	eventData := []byte(event.Data())
 	delta, err := api.ParseDelta(eventData)
-	if err == nil && len(delta.Events) > 0 {
-		return sc.processor.processDelta(delta)
-	}
-	
-	var eventDataMap map[string]interface{}
-	if err := json.Unmarshal(eventData, &eventDataMap); err != nil {
+	if err != nil {
 		return fmt.Errorf("failed to parse updated event: %w", err)
 	}
-
-	if events, ok := eventDataMap["events"]; ok && events != nil {
-		delta, err := api.ParseDelta(eventData)
-		if err != nil {
-			return fmt.Errorf("failed to parse delta event: %w", err)
-		}
-		return sc.processor.processDelta(delta)
-	}
-
-	if features, ok := eventDataMap["features"]; ok {
-		featuresJSON, err := json.Marshal(map[string]interface{}{
-			"features": features,
-			"segments": eventDataMap["segments"],
-		})
-		if err != nil {
-			return err
-		}
-
-		var featureResp api.FeatureResponse
-		if err := json.Unmarshal(featuresJSON, &featureResp); err != nil {
-			return err
-		}
-
-		if err := sc.processor.processFeatureResponse(featureResp); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	
+	return sc.processor.processDelta(delta)
 }
 
 // stop closes the SSE connection

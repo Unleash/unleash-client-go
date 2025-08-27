@@ -26,37 +26,6 @@ func newStreamingProcessor(storage Storage, repo *repository, channels repositor
 	}
 }
 
-// processFeatureResponse processes a feature response from streaming events
-func (sp *streamingProcessor) processFeatureResponse(response api.FeatureResponse) error {
-	sp.mu.Lock()
-	defer sp.mu.Unlock()
-
-	// Update segments in repository
-	sp.repository.Lock()
-	for segmentId, constraints := range response.SegmentsMap() {
-		sp.repository.segments[segmentId] = constraints
-	}
-	sp.repository.Unlock()
-
-	// Update storage with new features
-	sp.storage.Reset(response.FeatureMap(), true)
-
-	// Signal ready or update
-	if !sp.isReady {
-		sp.isReady = true
-		select {
-		case sp.repositoryChannels.ready <- true:
-		default:
-		}
-	} else {
-		select {
-		case sp.repositoryChannels.update <- true:
-		default:
-		}
-	}
-
-	return nil
-}
 
 
 // processDelta processes a delta update from streaming events
