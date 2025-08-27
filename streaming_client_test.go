@@ -9,9 +9,19 @@ import (
 	"time"
 
 	"github.com/Unleash/unleash-go-sdk/v5/api"
-	"github.com/r3labs/sse/v2"
 	"github.com/stretchr/testify/assert"
 )
+
+// mockEvent implements the eventsource.Event interface for testing
+type mockEvent struct {
+	id    string
+	event string
+	data  string
+}
+
+func (m *mockEvent) Id() string    { return m.id }
+func (m *mockEvent) Event() string { return m.event }
+func (m *mockEvent) Data() string  { return m.data }
 
 func TestStreamingClient_Creation(t *testing.T) {
 	// Parse server URL
@@ -179,9 +189,9 @@ func TestStreamingClient_HandleEvents(t *testing.T) {
 	}
 	connectedJSON, _ := json.Marshal(connectedData)
 
-	err := client.handleConnectedEvent(&sse.Event{
-		Event: []byte("unleash-connected"),
-		Data:  connectedJSON,
+	err := client.handleConnectedEvent(&mockEvent{
+		event: "unleash-connected",
+		data:  string(connectedJSON),
 	})
 	assert.NoError(t, err)
 
@@ -204,9 +214,9 @@ func TestStreamingClient_HandleEvents(t *testing.T) {
 	}
 	updatedJSON, _ := json.Marshal(updatedData)
 
-	err = client.handleUpdatedEvent(&sse.Event{
-		Event: []byte("unleash-updated"),
-		Data:  updatedJSON,
+	err = client.handleUpdatedEvent(&mockEvent{
+		event: "unleash-updated",
+		data:  string(updatedJSON),
 	})
 	assert.NoError(t, err)
 
