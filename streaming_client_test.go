@@ -24,10 +24,8 @@ func (m *mockEvent) Event() string { return m.event }
 func (m *mockEvent) Data() string  { return m.data }
 
 func TestStreamingClient_Creation(t *testing.T) {
-	// Parse server URL
 	serverURL, _ := url.Parse("http://localhost:8080/")
 
-	// Create channels
 	errChannels := errorChannels{
 		errors:   make(chan error, 10),
 		warnings: make(chan error, 10),
@@ -38,7 +36,6 @@ func TestStreamingClient_Creation(t *testing.T) {
 		update:        make(chan bool, 1),
 	}
 
-	// Create repository options
 	options := repositoryOptions{
 		url:        *serverURL,
 		appName:    "test-app",
@@ -47,15 +44,12 @@ func TestStreamingClient_Creation(t *testing.T) {
 		headers:    make(http.Header),
 	}
 
-	// Create mock repository
 	repo := &repository{
 		segments: make(map[int][]api.Constraint),
 	}
 
-	// Create streaming client
 	client := newStreamingClient(options, repo, repoChannels, errChannels)
 
-	// Verify client was created correctly
 	assert.NotNil(t, client)
 	assert.Equal(t, "http://localhost:8080/client/streaming", client.url)
 	assert.Equal(t, "test-app", client.appName)
@@ -64,7 +58,6 @@ func TestStreamingClient_Creation(t *testing.T) {
 }
 
 func TestStreamingProcessor_ProcessFeatureResponse(t *testing.T) {
-	// Create channels
 	errChannels := errorChannels{
 		errors:   make(chan error, 10),
 		warnings: make(chan error, 10),
@@ -75,19 +68,11 @@ func TestStreamingProcessor_ProcessFeatureResponse(t *testing.T) {
 		update:        make(chan bool, 1),
 	}
 
-	// Create storage
 	storage := &DefaultStorage{}
 	storage.Init("/tmp", "test-app")
 
-	// Create mock repository
-	repo := &repository{
-		segments: make(map[int][]api.Constraint),
-	}
+	processor := newStreamingProcessor(storage, repoChannels)
 
-	// Create processor
-	processor := newStreamingProcessor(storage, repo, repoChannels)
-
-	// Create feature response
 	response := api.FeatureResponse{
 		Features: []api.Feature{
 			{
@@ -113,11 +98,9 @@ func TestStreamingProcessor_ProcessFeatureResponse(t *testing.T) {
 		},
 	}
 
-	// Process the response
 	err := processor.processFeatureResponse(response)
 	assert.NoError(t, err)
 
-	// Check if features were stored
 	feature1, found := storage.Get("feature1")
 	assert.True(t, found)
 	if f, ok := feature1.(api.Feature); ok {
@@ -130,20 +113,14 @@ func TestStreamingProcessor_ProcessFeatureResponse(t *testing.T) {
 		assert.False(t, f.Enabled)
 	}
 
-	// Check segments - they are stored in the repository
-	// Segments are handled directly by the repository for both polling and streaming modes
-
-	// Check that ready signal was sent
 	select {
 	case <-repoChannels.ready:
-		// Expected
 	default:
 		t.Error("Expected ready signal to be sent")
 	}
 }
 
 func TestStreamingClient_HandleEvents(t *testing.T) {
-	// Create channels
 	errChannels := errorChannels{
 		errors:   make(chan error, 10),
 		warnings: make(chan error, 10),
@@ -154,7 +131,6 @@ func TestStreamingClient_HandleEvents(t *testing.T) {
 		update:        make(chan bool, 1),
 	}
 
-	// Create repository options
 	options := repositoryOptions{
 		url:        url.URL{},
 		appName:    "test-app",
@@ -163,21 +139,17 @@ func TestStreamingClient_HandleEvents(t *testing.T) {
 		headers:    make(http.Header),
 	}
 
-	// Create mock repository
 	repo := &repository{
 		segments: make(map[int][]api.Constraint),
 	}
 
-	// Create streaming client
 	client := newStreamingClient(options, repo, repoChannels, errChannels)
 	client.ctx, client.cancel = context.WithCancel(context.Background())
 
-	// Create storage and processor
 	storage := &DefaultStorage{}
 	storage.Init("/tmp", "test-app")
-	client.processor = newStreamingProcessor(storage, repo, repoChannels)
+	client.processor = newStreamingProcessor(storage, repoChannels)
 
-	// Test connected event
 	connectedData := map[string]interface{}{
 		"features": []map[string]interface{}{
 			{
@@ -195,14 +167,12 @@ func TestStreamingClient_HandleEvents(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	// Check if feature was processed
 	feature, found := storage.Get("test-feature")
 	assert.True(t, found)
 	if f, ok := feature.(api.Feature); ok {
 		assert.True(t, f.Enabled)
 	}
 
-	// Test updated event
 	updatedData := map[string]interface{}{
 		"features": []map[string]interface{}{
 			{
@@ -220,7 +190,6 @@ func TestStreamingClient_HandleEvents(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	// Check if feature was updated
 	feature, found = storage.Get("test-feature")
 	assert.True(t, found)
 	if f, ok := feature.(api.Feature); ok {

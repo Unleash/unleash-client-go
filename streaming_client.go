@@ -59,29 +59,25 @@ func (sc *streamingClient) start(storage Storage) error {
 		return nil
 	}
 
-	// Initialize the processor with the storage and repository
 	sc.processor = newStreamingProcessor(storage, sc.repository, sc.repositoryChannels)
 
 	log.Print("Setting up client")
 
-	// Create HTTP request with custom headers
 	req, err := http.NewRequestWithContext(sc.ctx, "GET", sc.url, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 
-	// Copy custom headers
 	for key, values := range sc.headers {
 		for _, value := range values {
 			req.Header.Add(key, value)
 		}
 	}
 	
-	// Add Unleash-specific headers
 	req.Header.Set("UNLEASH-APPNAME", sc.appName)
 	req.Header.Set("UNLEASH-INSTANCEID", sc.instanceId)
+	req.Header.Add("Unleash-Client-Spec", SEGMENT_CLIENT_SPEC_VERSION)
 
-	// Create eventsource stream with options
 	stream, err := eventsource.SubscribeWithRequestAndOptions(req,
 		eventsource.StreamOptionReadTimeout(30*time.Second),
 		eventsource.StreamOptionUseBackoff(5*time.Minute),
@@ -97,7 +93,6 @@ func (sc *streamingClient) start(storage Storage) error {
 
 	sc.stream = stream
 
-	// Handle events in goroutine
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
@@ -145,30 +140,24 @@ func (sc *streamingClient) handleEvent(event eventsource.Event) {
 			sc.errorChannels.err(fmt.Errorf("error handling updated event: %w", err))
 		}
 	default:
-		// Unknown event type, log as warning
 		sc.errorChannels.warn(fmt.Errorf("unknown SSE event type: %s", eventType))
 	}
 }
 
 // handleConnectedEvent processes the initial connection event
 func (sc *streamingClient) handleConnectedEvent(event eventsource.Event) error {
-	// Try to parse as delta format first
 	eventData := []byte(event.Data())
 	delta, err := api.ParseDelta(eventData)
 	if err == nil && len(delta.Events) > 0 {
-		// Process as delta event
 		return sc.processor.processDelta(delta)
 	}
 	
-	// Fallback to legacy format for backward compatibility
 	var eventDataMap map[string]interface{}
 	if err := json.Unmarshal(eventData, &eventDataMap); err != nil {
 		return fmt.Errorf("failed to parse connected event: %w", err)
 	}
 
-	// Check if this is a delta format with events array
 	if events, ok := eventDataMap["events"]; ok && events != nil {
-		// This is delta format - parse and process it
 		delta, err := api.ParseDelta(eventData)
 		if err != nil {
 			return fmt.Errorf("failed to parse delta event: %w", err)
@@ -176,9 +165,7 @@ func (sc *streamingClient) handleConnectedEvent(event eventsource.Event) error {
 		return sc.processor.processDelta(delta)
 	}
 
-	// Legacy format: Extract features from the event data
 	if features, ok := eventDataMap["features"]; ok {
-		// Convert to FeatureResponse format
 		featuresJSON, err := json.Marshal(map[string]interface{}{
 			"features": features,
 			"segments": eventDataMap["segments"],
@@ -192,7 +179,6 @@ func (sc *streamingClient) handleConnectedEvent(event eventsource.Event) error {
 			return err
 		}
 
-		// Process the initial feature set
 		if err := sc.processor.processFeatureResponse(featureResp); err != nil {
 			return err
 		}
@@ -203,23 +189,18 @@ func (sc *streamingClient) handleConnectedEvent(event eventsource.Event) error {
 
 // handleUpdatedEvent processes feature update events
 func (sc *streamingClient) handleUpdatedEvent(event eventsource.Event) error {
-	// Try to parse as delta format first
 	eventData := []byte(event.Data())
 	delta, err := api.ParseDelta(eventData)
 	if err == nil && len(delta.Events) > 0 {
-		// Process as delta event
 		return sc.processor.processDelta(delta)
 	}
 	
-	// Fallback to legacy format for backward compatibility
 	var eventDataMap map[string]interface{}
 	if err := json.Unmarshal(eventData, &eventDataMap); err != nil {
 		return fmt.Errorf("failed to parse updated event: %w", err)
 	}
 
-	// Check if this is a delta format with events array
 	if events, ok := eventDataMap["events"]; ok && events != nil {
-		// This is delta format - parse and process it
 		delta, err := api.ParseDelta(eventData)
 		if err != nil {
 			return fmt.Errorf("failed to parse delta event: %w", err)
@@ -227,9 +208,7 @@ func (sc *streamingClient) handleUpdatedEvent(event eventsource.Event) error {
 		return sc.processor.processDelta(delta)
 	}
 
-	// Legacy format: Extract features from the event data
 	if features, ok := eventDataMap["features"]; ok {
-		// Convert to FeatureResponse format
 		featuresJSON, err := json.Marshal(map[string]interface{}{
 			"features": features,
 			"segments": eventDataMap["segments"],
@@ -243,7 +222,6 @@ func (sc *streamingClient) handleUpdatedEvent(event eventsource.Event) error {
 			return err
 		}
 
-		// Process the feature updates
 		if err := sc.processor.processFeatureResponse(featureResp); err != nil {
 			return err
 		}
@@ -262,7 +240,6 @@ func (sc *streamingClient) stop() {
 	}
 
 	sc.cancel()
-	// Close the eventsource stream
 	if sc.stream != nil {
 		sc.stream.Close()
 	}
