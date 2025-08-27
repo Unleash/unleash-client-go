@@ -9,9 +9,14 @@ import (
 
 // TestStreamingDeltaIntegration tests the full delta processing flow
 func TestStreamingDeltaIntegration(t *testing.T) {
-	// Create a DefaultDeltaStorage
-	storage := NewDefaultDeltaStorage()
+	// Create a DefaultStorage
+	storage := &DefaultStorage{}
 	storage.Init("/tmp", "test-app")
+	
+	// Create a mock repository
+	repo := &repository{
+		segments: make(map[int][]api.Constraint),
+	}
 	
 	// Create repository channels
 	channels := repositoryChannels{
@@ -24,7 +29,7 @@ func TestStreamingDeltaIntegration(t *testing.T) {
 	}
 	
 	// Create streaming processor
-	processor := newStreamingProcessor(storage, channels)
+	processor := newStreamingProcessor(storage, repo, channels)
 	
 	t.Run("process initial hydration", func(t *testing.T) {
 		// Create a hydration event
@@ -68,7 +73,7 @@ func TestStreamingDeltaIntegration(t *testing.T) {
 		}
 		
 		// Verify segments were added
-		segments := storage.GetSegments()
+		segments := repo.segments
 		if len(segments) != 2 {
 			t.Errorf("Expected 2 segments, got %d", len(segments))
 		}
@@ -146,7 +151,7 @@ func TestStreamingDeltaIntegration(t *testing.T) {
 		}
 		
 		// Verify segment changes
-		segments := storage.GetSegments()
+		segments := repo.segments
 		if len(segments) != 2 {
 			t.Errorf("Expected 2 segments after updates, got %d", len(segments))
 		}
@@ -169,11 +174,15 @@ func TestStreamingDeltaIntegration(t *testing.T) {
 	})
 	
 	t.Run("fallback for non-delta storage", func(t *testing.T) {
-		// Use regular DefaultStorage (doesn't implement DeltaStorage)
+		// Use regular DefaultStorage
 		regularStorage := &DefaultStorage{}
 		regularStorage.Init("/tmp", "test-app-regular")
 		
-		regularProcessor := newStreamingProcessor(regularStorage, channels)
+		regularRepo := &repository{
+			segments: make(map[int][]api.Constraint),
+		}
+		
+		regularProcessor := newStreamingProcessor(regularStorage, regularRepo, channels)
 		
 		// Process a simple update
 		updateJSON := `{
@@ -197,7 +206,7 @@ func TestStreamingDeltaIntegration(t *testing.T) {
 			t.Fatalf("Failed to process with regular storage: %v", err)
 		}
 		
-		// Verify feature was added even without DeltaStorage
+		// Verify feature was added using the List/Reset pattern
 		if feature, exists := regularStorage.Get("test-feature"); !exists {
 			t.Error("Feature should exist even with regular storage")
 		} else if f, ok := feature.(api.Feature); ok && !f.Enabled {
@@ -208,8 +217,12 @@ func TestStreamingDeltaIntegration(t *testing.T) {
 
 // TestDeltaEventBackwardCompatibility verifies backward compatibility
 func TestDeltaEventBackwardCompatibility(t *testing.T) {
-	storage := NewDefaultDeltaStorage()
+	storage := &DefaultStorage{}
 	storage.Init("/tmp", "test-app")
+	
+	repo := &repository{
+		segments: make(map[int][]api.Constraint),
+	}
 	
 	channels := repositoryChannels{
 		ready:  make(chan bool, 1),
@@ -220,7 +233,7 @@ func TestDeltaEventBackwardCompatibility(t *testing.T) {
 		},
 	}
 	
-	processor := newStreamingProcessor(storage, channels)
+	processor := newStreamingProcessor(storage, repo, channels)
 	
 	// Test that processor can still handle legacy FeatureResponse format
 	legacyResponse := api.FeatureResponse{
@@ -243,7 +256,7 @@ func TestDeltaEventBackwardCompatibility(t *testing.T) {
 	}
 	
 	// Verify segments were set in storage
-	segments := storage.GetSegments()
+	segments := repo.segments
 	if len(segments) != 1 {
 		t.Errorf("Expected 1 segment from legacy format, got %d", len(segments))
 	}

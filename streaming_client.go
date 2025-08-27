@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"sync"
 
@@ -13,23 +14,24 @@ import (
 
 // streamingClient handles the SSE connection for streaming feature updates
 type streamingClient struct {
-	url            string
-	appName        string
-	instanceId     string
-	httpClient     *http.Client
-	headers        http.Header
-	client         *sse.Client
-	processor      *streamingProcessor
-	ctx            context.Context
-	cancel         context.CancelFunc
-	running        bool
-	runningMutex   sync.RWMutex
-	errorChannels  errorChannels
+	url                string
+	appName            string
+	instanceId         string
+	httpClient         *http.Client
+	headers            http.Header
+	client             *sse.Client
+	processor          *streamingProcessor
+	repository         *repository
+	ctx                context.Context
+	cancel             context.CancelFunc
+	running            bool
+	runningMutex       sync.RWMutex
+	errorChannels      errorChannels
 	repositoryChannels repositoryChannels
 }
 
 // newStreamingClient creates a new streaming client
-func newStreamingClient(options repositoryOptions, repoChannels repositoryChannels, errChannels errorChannels) *streamingClient {
+func newStreamingClient(options repositoryOptions, repo *repository, repoChannels repositoryChannels, errChannels errorChannels) *streamingClient {
 	ctx, cancel := context.WithCancel(context.Background())
 	
 	return &streamingClient{
@@ -38,6 +40,7 @@ func newStreamingClient(options repositoryOptions, repoChannels repositoryChanne
 		instanceId:         options.instanceId,
 		httpClient:         options.httpClient,
 		headers:            options.headers,
+		repository:         repo,
 		ctx:                ctx,
 		cancel:             cancel,
 		errorChannels:      errChannels,
@@ -55,8 +58,10 @@ func (sc *streamingClient) start(storage Storage) error {
 		return nil
 	}
 
-	// Initialize the processor with the storage
-	sc.processor = newStreamingProcessor(storage, sc.repositoryChannels)
+	// Initialize the processor with the storage and repository
+	sc.processor = newStreamingProcessor(storage, sc.repository, sc.repositoryChannels)
+
+	log.Print("Setting up client")
 
 	// Create SSE client with custom headers
 	client := sse.NewClient(sc.url)
@@ -81,6 +86,13 @@ func (sc *streamingClient) start(storage Storage) error {
 
 	// Subscribe to SSE events using handler function
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				err := fmt.Errorf("SSE subscription panic recovered: %v", r)
+				sc.errorChannels.err(err)
+			}
+		}()
+		
 		err := client.SubscribeWithContext(sc.ctx, "", sc.handleEvent)
 		if err != nil {
 			sc.errorChannels.err(fmt.Errorf("SSE subscription error: %w", err))
@@ -93,9 +105,14 @@ func (sc *streamingClient) start(storage Storage) error {
 
 // handleEvent processes individual SSE events
 func (sc *streamingClient) handleEvent(event *sse.Event) {
+	log.Printf("Handling event: %s", event.Event)
+
 	if event == nil {
 		return
 	}
+
+	log.Printf("Received SSE event: %s", event.Event)
+	log.Printf("Receiving SSE content %s", event.Data)
 
 	eventType := string(event.Event)
 	switch eventType {

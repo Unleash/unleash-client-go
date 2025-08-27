@@ -37,8 +37,13 @@ func TestStreamingClient_Creation(t *testing.T) {
 		headers:    make(http.Header),
 	}
 
+	// Create mock repository
+	repo := &repository{
+		segments: make(map[int][]api.Constraint),
+	}
+
 	// Create streaming client
-	client := newStreamingClient(options, repoChannels, errChannels)
+	client := newStreamingClient(options, repo, repoChannels, errChannels)
 
 	// Verify client was created correctly
 	assert.NotNil(t, client)
@@ -64,8 +69,13 @@ func TestStreamingProcessor_ProcessFeatureResponse(t *testing.T) {
 	storage := &DefaultStorage{}
 	storage.Init("/tmp", "test-app")
 
+	// Create mock repository
+	repo := &repository{
+		segments: make(map[int][]api.Constraint),
+	}
+
 	// Create processor
-	processor := newStreamingProcessor(storage, repoChannels)
+	processor := newStreamingProcessor(storage, repo, repoChannels)
 
 	// Create feature response
 	response := api.FeatureResponse{
@@ -110,9 +120,8 @@ func TestStreamingProcessor_ProcessFeatureResponse(t *testing.T) {
 		assert.False(t, f.Enabled)
 	}
 
-	// Check segments - they should be stored in DeltaStorage if available
-	// Since this test uses DefaultStorage (not DeltaStorage), segments are not stored
-	// In a real streaming scenario, DeltaStorage would be used
+	// Check segments - they are stored in the repository
+	// Segments are handled directly by the repository for both polling and streaming modes
 
 	// Check that ready signal was sent
 	select {
@@ -144,14 +153,19 @@ func TestStreamingClient_HandleEvents(t *testing.T) {
 		headers:    make(http.Header),
 	}
 
+	// Create mock repository
+	repo := &repository{
+		segments: make(map[int][]api.Constraint),
+	}
+
 	// Create streaming client
-	client := newStreamingClient(options, repoChannels, errChannels)
+	client := newStreamingClient(options, repo, repoChannels, errChannels)
 	client.ctx, client.cancel = context.WithCancel(context.Background())
 
 	// Create storage and processor
 	storage := &DefaultStorage{}
 	storage.Init("/tmp", "test-app")
-	client.processor = newStreamingProcessor(storage, repoChannels)
+	client.processor = newStreamingProcessor(storage, repo, repoChannels)
 
 	// Test connected event
 	connectedData := map[string]interface{}{

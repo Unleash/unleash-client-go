@@ -63,7 +63,7 @@ data: {"events":[{"type":"hydration","eventId":1,"features":[{"name":"test-featu
 		WithInstanceId("test-instance"),
 		WithCustomHeaders(http.Header{"X-API-KEY": []string{"123"}}),
 		WithExperimentalMode(map[string]string{"type": "streaming"}),
-		WithStorage(NewDefaultDeltaStorage()), // Use DeltaStorage for streaming
+		WithStorage(&DefaultStorage{}), // Use DefaultStorage for streaming
 	)
 	assert.NoError(t, err)
 	defer client.Close()
@@ -138,7 +138,7 @@ data: {"events":[{"type":"feature-updated","eventId":2,"feature":{"name":"featur
 		WithInstanceId("test-instance"),
 		WithDisableMetrics(true),
 		WithExperimentalMode(map[string]string{"type": "streaming"}),
-		WithStorage(NewDefaultDeltaStorage()),
+		WithStorage(&DefaultStorage{}),
 		WithRefreshInterval(time.Hour), // Long interval to ensure we're using streaming
 	)
 	assert.NoError(t, err)
@@ -240,7 +240,7 @@ data: {"events":[{"type":"feature-removed","eventId":4,"featureName":"feature-b"
 		WithInstanceId("test-instance"),
 		WithDisableMetrics(true),
 		WithExperimentalMode(map[string]string{"type": "streaming"}),
-		WithStorage(NewDefaultDeltaStorage()),
+		WithStorage(&DefaultStorage{}),
 	)
 	assert.NoError(t, err)
 	defer client.Close()
@@ -318,7 +318,7 @@ data: {"events":[{"type":"segment-updated","eventId":3,"segment":{"id":2,"constr
 		WithInstanceId("test-instance"),
 		WithDisableMetrics(true),
 		WithExperimentalMode(map[string]string{"type": "streaming"}),
-		WithStorage(NewDefaultDeltaStorage()),
+		WithStorage(&DefaultStorage{}),
 	)
 	assert.NoError(t, err)
 	defer client.Close()
@@ -408,7 +408,7 @@ data: {"events":[{"type":"hydration","eventId":1,"features":[],"segments":[]}]}
 		WithDisableMetrics(true),
 		WithCustomHeaders(customHeaders),
 		WithExperimentalMode(map[string]string{"type": "streaming"}),
-		WithStorage(NewDefaultDeltaStorage()),
+		WithStorage(&DefaultStorage{}),
 	)
 	assert.NoError(t, err)
 	defer client.Close()
@@ -489,7 +489,7 @@ data: {"events":[{"type":"feature-updated","eventId":2,"feature":{"name":"test2"
 		WithInstanceId("test-instance"),
 		WithDisableMetrics(true),
 		WithExperimentalMode(map[string]string{"type": "streaming"}),
-		WithStorage(NewDefaultDeltaStorage()),
+		WithStorage(&DefaultStorage{}),
 		WithListener(listener),
 	)
 	assert.NoError(t, err)

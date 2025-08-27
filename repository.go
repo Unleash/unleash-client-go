@@ -70,6 +70,7 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 	if repo.isStreaming {
 		repo.streamingClient = newStreamingClient(
 			options,
+			repo,
 			channels,
 			channels.errorChannels,
 		)
@@ -249,15 +250,8 @@ func (r *repository) getToggle(key string) *api.Feature {
 func (r *repository) resolveSegmentConstraints(strategy api.Strategy) ([]api.Constraint, error) {
 	segmentConstraints := []api.Constraint{}
 
-	var segments map[int][]api.Constraint
-	
-	// Check if storage supports DeltaStorage (used in streaming mode)
-	if deltaStorage, ok := r.options.storage.(DeltaStorage); ok {
-		segments = deltaStorage.GetSegments()
-	} else {
-		// Fallback to repository's segments for polling mode
-		segments = r.segments
-	}
+	// Use repository's segments (works for both polling and streaming modes)
+	segments := r.segments
 
 	for _, segmentId := range strategy.Segments {
 		if resolvedConstraints, ok := segments[segmentId]; ok {
