@@ -92,7 +92,6 @@ func (sc *streamingClient) start(storage Storage) error {
 	
 	for time.Since(startTime) < retryDuration {
 		stream, streamErr = eventsource.SubscribeWithRequestAndOptions(req,
-			eventsource.StreamOptionReadTimeout(30*time.Second),
 			eventsource.StreamOptionUseBackoff(5*time.Minute),
 			eventsource.StreamOptionUseJitter(0.5),
 			eventsource.StreamOptionErrorHandler(func(err error) eventsource.StreamErrorHandlerResult {
