@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"math"
 	"net/http"
 	"net/url"
@@ -219,53 +218,9 @@ func (r *repository) fetch() error {
 		return err
 	}
 
-	// Try to decode as delta format first
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	
-	// Check if this is a delta format response
-	if delta, err := api.ParseDelta(body); err == nil && len(delta.Events) > 0 {
-		// Process delta events
-		features := make(map[string]interface{})
-		segments := make(map[int][]api.Constraint)
-		
-		for _, event := range delta.Events {
-			switch e := event.(type) {
-			case *api.HydrationEvent:
-				// Hydration replaces all features and segments
-				features = make(map[string]interface{})
-				segments = make(map[int][]api.Constraint)
-				for _, feature := range e.Features {
-					features[feature.Name] = feature
-				}
-				for _, segment := range e.Segments {
-					segments[segment.Id] = segment.Constraints
-				}
-			case *api.FeatureUpdatedEvent:
-				features[e.Feature.Name] = e.Feature
-			case *api.FeatureRemovedEvent:
-				delete(features, e.FeatureName)
-			case *api.SegmentUpdatedEvent:
-				segments[e.Segment.Id] = e.Segment.Constraints
-			case *api.SegmentRemovedEvent:
-				delete(segments, e.SegmentId)
-			}
-		}
-		
-		r.Lock()
-		r.etag = resp.Header.Get("Etag")
-		r.segments = segments
-		r.options.storage.Reset(features, true)
-		r.successfulFetch()
-		r.Unlock()
-		return nil
-	}
-	
-	// Fall back to regular FeatureResponse format
 	var featureResp api.FeatureResponse
-	if err := json.Unmarshal(body, &featureResp); err != nil {
+	dec := json.NewDecoder(resp.Body)
+	if err := dec.Decode(&featureResp); err != nil {
 		return err
 	}
 
