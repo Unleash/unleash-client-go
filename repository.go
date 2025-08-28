@@ -116,15 +116,11 @@ func (r *repository) sync() {
 	streamingClient := r.streamingClient
 	r.RUnlock()
 	
-	// Try streaming mode if enabled
+	// Start streaming mode if enabled
+	// The eventsource library handles all reconnections automatically with backoff and jitter
 	if isStreaming && streamingClient != nil {
 		if err := streamingClient.start(r.options.storage); err != nil {
 			r.err(fmt.Errorf("failed to start streaming client: %w", err))
-			// Fall back to polling mode
-			r.Lock()
-			r.isStreaming = false
-			isStreaming = false  // Update local variable
-			r.Unlock()
 		}
 	}
 

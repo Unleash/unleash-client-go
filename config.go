@@ -153,6 +153,7 @@ func (o *configOption) IsStreamingMode() bool {
 	return o.experimentalMode != nil && o.experimentalMode["type"] == "streaming"
 }
 
+
 // FeatureResolver represents a function to be called to resolve the feature instead of using the repository
 type FeatureResolver func(feature string) *api.Feature
 
@@ -259,16 +260,17 @@ func WithVariantFallbackFunc(variantFallbackFunc VariantFallbackFunc) VariantOpt
 }
 
 type repositoryOptions struct {
-	appName         string
-	instanceId      string
-	projectName     string
-	url             url.URL
-	backupPath      string
-	refreshInterval time.Duration
-	storage         Storage
-	httpClient      *http.Client
-	headers         http.Header
-	isStreaming     bool
+	appName                string
+	instanceId             string
+	projectName            string
+	url                    url.URL
+	backupPath             string
+	refreshInterval        time.Duration
+	storage                Storage
+	httpClient             *http.Client
+	headers                http.Header
+	isStreaming            bool
+	streamingRetryDuration time.Duration
 }
 
 type metricsOptions struct {
