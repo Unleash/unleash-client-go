@@ -113,16 +113,56 @@ func (td TestDefinition) Mock(listener interface{}) (*Client, error) {
 	gock.New(mockHost).
 		Post("/client/register").
 		Reply(200)
-	gock.New(mockHost).
-		Get("/client/features").
-		Reply(200).
-		JSON(api.FeatureResponse{
-			Response: api.Response{
-				Version: td.State.Version,
-			},
-			Features: td.State.Features,
-			Segments: td.State.Segments,
-		})
+
+	// Check if this is a delta format test by checking if the spec file contains events
+	specFile := filepath.Join(specFolder, td.Name+".json")
+	data, err := os.ReadFile(specFile)
+	if err != nil {
+		return nil, err
+	}
+	
+	// Parse to detect format type
+	var rawSpec map[string]interface{}
+	if err := json.Unmarshal(data, &rawSpec); err != nil {
+		return nil, err
+	}
+	
+	// Check if this is a delta format by looking for events in state
+	if state, ok := rawSpec["state"].(map[string]interface{}); ok {
+		if events, ok := state["events"].([]interface{}); ok && len(events) > 0 {
+			// This is a delta format test - mock delta API response
+			gock.New(mockHost).
+				Get("/client/features").
+				Reply(200).
+				JSON(map[string]interface{}{
+					"events": events,
+				})
+		} else {
+			// Regular format test - use traditional FeatureResponse
+			gock.New(mockHost).
+				Get("/client/features").
+				Reply(200).
+				JSON(api.FeatureResponse{
+					Response: api.Response{
+						Version: td.State.Version,
+					},
+					Features: td.State.Features,
+					Segments: td.State.Segments,
+				})
+		}
+	} else {
+		// Fallback to regular format if state structure is unexpected
+		gock.New(mockHost).
+			Get("/client/features").
+			Reply(200).
+			JSON(api.FeatureResponse{
+				Response: api.Response{
+					Version: td.State.Version,
+				},
+				Features: td.State.Features,
+				Segments: td.State.Segments,
+			})
+	}
 
 	return NewClient(
 		WithUrl(mockHost),
