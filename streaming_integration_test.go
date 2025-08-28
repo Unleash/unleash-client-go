@@ -4,12 +4,21 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestStreamingModeConfiguration(t *testing.T) {
+	listener := &MockedListener{}
+	listener.On("OnError", mock.Anything).Return()
+	listener.On("OnWarning", mock.Anything).Return()
+	listener.On("OnReady").Return()
+	listener.On("OnRegistered", mock.AnythingOfType("ClientData")).Return()
+	listener.On("OnCount", mock.AnythingOfType("string"), mock.AnythingOfType("bool")).Return()
+
 	client, err := NewClient(
 		WithUrl("https://example.com"),
 		WithAppName("test-app"),
+		WithListener(listener),
 		WithExperimentalMode(map[string]string{
 			"type": "streaming",
 		}),
@@ -25,9 +34,17 @@ func TestStreamingModeConfiguration(t *testing.T) {
 }
 
 func TestNonStreamingModeByDefault(t *testing.T) {
+	listener := &MockedListener{}
+	listener.On("OnError", mock.Anything).Return()
+	listener.On("OnWarning", mock.Anything).Return()
+	listener.On("OnReady").Return()
+	listener.On("OnRegistered", mock.AnythingOfType("ClientData")).Return()
+	listener.On("OnCount", mock.AnythingOfType("string"), mock.AnythingOfType("bool")).Return()
+
 	client, err := NewClient(
 		WithUrl("https://example.com"),
 		WithAppName("test-app"),
+		WithListener(listener),
 	)
 
 	assert.NoError(t, err)
