@@ -41,6 +41,14 @@ func (sp *streamingProcessor) processDelta(delta *api.ClientFeaturesDelta) error
 		}
 	}
 	
+	// Get current segments - need to access repository safely
+	segments := make(map[int][]api.Constraint)
+	sp.repository.RLock()
+	for id, constraints := range sp.repository.segments {
+		segments[id] = constraints
+	}
+	sp.repository.RUnlock()
+	
 	// Apply delta events to the current state
 	for _, event := range delta.Events {
 		switch e := event.(type) {
@@ -51,16 +59,10 @@ func (sp *streamingProcessor) processDelta(delta *api.ClientFeaturesDelta) error
 			delete(currentFeatures, e.FeatureName)
 			
 		case *api.SegmentUpdatedEvent:
-			// Manipulate repository segments directly
-			sp.repository.Lock()
-			sp.repository.segments[e.Segment.Id] = e.Segment.Constraints
-			sp.repository.Unlock()
+			segments[e.Segment.Id] = e.Segment.Constraints
 			
 		case *api.SegmentRemovedEvent:
-			// Manipulate repository segments directly
-			sp.repository.Lock()
-			delete(sp.repository.segments, e.SegmentId)
-			sp.repository.Unlock()
+			delete(segments, e.SegmentId)
 			
 		case *api.HydrationEvent:
 			// Replace entire state
@@ -69,13 +71,11 @@ func (sp *streamingProcessor) processDelta(delta *api.ClientFeaturesDelta) error
 				currentFeatures[feature.Name] = feature
 			}
 			
-			// Replace segments in repository
-			sp.repository.Lock()
-			sp.repository.segments = make(map[int][]api.Constraint)
+			// Replace segments
+			segments = make(map[int][]api.Constraint)
 			for _, segment := range e.Segments {
-				sp.repository.segments[segment.Id] = segment.Constraints
+				segments[segment.Id] = segment.Constraints
 			}
-			sp.repository.Unlock()
 			
 		default:
 			// Unknown event type - log but don't fail
@@ -83,8 +83,8 @@ func (sp *streamingProcessor) processDelta(delta *api.ClientFeaturesDelta) error
 		}
 	}
 	
-	// Reset storage with the updated features
-	if err := sp.storage.Reset(currentFeatures, true); err != nil {
+	// Update storage through repository for thread safety
+	if err := sp.repository.updateStorageWithDelta(currentFeatures, segments); err != nil {
 		return fmt.Errorf("failed to reset storage after delta: %w", err)
 	}
 	

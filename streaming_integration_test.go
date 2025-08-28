@@ -19,7 +19,7 @@ func TestStreamingModeConfiguration(t *testing.T) {
 	assert.NotNil(t, client)
 	
 	assert.True(t, client.options.IsStreamingMode())
-	assert.True(t, client.repository.isStreaming)
+	assert.True(t, client.repository.IsStreaming())
 	
 	client.Close()
 }
@@ -34,7 +34,7 @@ func TestNonStreamingModeByDefault(t *testing.T) {
 	assert.NotNil(t, client)
 	
 	assert.False(t, client.options.IsStreamingMode())
-	assert.False(t, client.repository.isStreaming)
+	assert.False(t, client.repository.IsStreaming())
 	
 	client.Close()
 }

@@ -69,23 +69,26 @@ func TestStreamingClient_HandleEvents(t *testing.T) {
 		update:        make(chan bool, 1),
 	}
 
+	storage := &DefaultStorage{}
+	storage.Init("/tmp", "test-app")
+	
 	options := repositoryOptions{
 		url:        url.URL{},
 		appName:    "test-app",
 		instanceId: "test-instance",
 		httpClient: &http.Client{},
 		headers:    make(http.Header),
+		storage:    storage,
 	}
 
 	repo := &repository{
 		segments: make(map[int][]api.Constraint),
+		options:  options,
 	}
 
 	client := newStreamingClient(options, repo, repoChannels, errChannels)
 	client.ctx, client.cancel = context.WithCancel(context.Background())
 
-	storage := &DefaultStorage{}
-	storage.Init("/tmp", "test-app")
 	client.processor = newStreamingProcessor(storage, repo, repoChannels)
 
 	connectedData := map[string]interface{}{

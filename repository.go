@@ -111,17 +111,26 @@ func (r *repository) fetchAndReportError() {
 }
 
 func (r *repository) sync() {
-	// If streaming mode is enabled, start the streaming client
-	if r.isStreaming && r.streamingClient != nil {
-		if err := r.streamingClient.start(r.options.storage); err != nil {
+	// Single read lock to determine initial mode
+	r.RLock()
+	isStreaming := r.isStreaming
+	streamingClient := r.streamingClient
+	r.RUnlock()
+	
+	// Try streaming mode if enabled
+	if isStreaming && streamingClient != nil {
+		if err := streamingClient.start(r.options.storage); err != nil {
 			r.err(fmt.Errorf("failed to start streaming client: %w", err))
 			// Fall back to polling mode
+			r.Lock()
 			r.isStreaming = false
+			isStreaming = false  // Update local variable
+			r.Unlock()
 		}
 	}
 
-	// For non-streaming mode or as a fallback, use polling
-	if !r.isStreaming {
+	// Use polling if not streaming
+	if !isStreaming {
 		r.fetchAndReportError()
 	}
 
@@ -138,7 +147,11 @@ func (r *repository) sync() {
 			return
 		case <-r.refreshTicker.C:
 			// Only poll if not in streaming mode
-			if !r.isStreaming {
+			r.RLock()
+			shouldPoll := !r.isStreaming
+			r.RUnlock()
+			
+			if shouldPoll {
 				if r.skips == 0 {
 					r.fetchAndReportError()
 				} else {
@@ -265,6 +278,25 @@ func (r *repository) fetch() error {
 	return nil
 }
 
+// updateStorageWithDelta updates the storage with delta changes in a thread-safe manner
+func (r *repository) updateStorageWithDelta(features map[string]interface{}, segments map[int][]api.Constraint) error {
+	r.Lock()
+	defer r.Unlock()
+	
+	// Update segments
+	r.segments = segments
+	
+	// Update storage
+	return r.options.storage.Reset(features, true)
+}
+
+// IsStreaming returns whether the repository is currently in streaming mode
+func (r *repository) IsStreaming() bool {
+	r.RLock()
+	defer r.RUnlock()
+	return r.isStreaming
+}
+
 func (r *repository) statusIsOK(resp *http.Response) error {
 	s := resp.StatusCode
 	if http.StatusOK <= s && s < http.StatusMultipleChoices {
@@ -296,7 +328,9 @@ func (r *repository) resolveSegmentConstraints(strategy api.Strategy) ([]api.Con
 	segmentConstraints := []api.Constraint{}
 
 	// Use repository's segments (works for both polling and streaming modes)
+	r.RLock()
 	segments := r.segments
+	r.RUnlock()
 
 	for _, segmentId := range strategy.Segments {
 		if resolvedConstraints, ok := segments[segmentId]; ok {

@@ -12,8 +12,13 @@ func TestStreamingDeltaIntegration(t *testing.T) {
 	storage := &DefaultStorage{}
 	storage.Init("/tmp", "test-app")
 	
+	options := repositoryOptions{
+		storage: storage,
+	}
+	
 	repo := &repository{
 		segments: make(map[int][]api.Constraint),
+		options:  options,
 	}
 	
 	channels := repositoryChannels{
