@@ -141,7 +141,7 @@ func (td TestDefinition) Run(t *testing.T) {
 		listener.On("OnReady").Return()
 		listener.On("OnRegistered", mock.AnythingOfType("ClientData")).Return()
 		listener.On("OnCount", mock.AnythingOfType("string"), mock.AnythingOfType("bool")).Return()
-		listener.On("OnError", mock.AnythingOfType("*errors.errorString")).Return()
+		listener.On("OnError", mock.Anything).Return()
 
 		client, err := td.Mock(listener)
 		assert.NoError(t, err)
