@@ -77,65 +77,19 @@ func (sc *streamingClient) start(storage Storage) error {
 	req.Header.Set("UNLEASH-INSTANCEID", sc.instanceId)
 	req.Header.Add("Unleash-Client-Spec", SEGMENT_CLIENT_SPEC_VERSION)
 
-	// Retry initial connection attempts with configurable duration and exponential backoff
-	retryDuration := sc.repository.options.streamingRetryDuration
-	if retryDuration <= 0 {
-		retryDuration = 5 * time.Minute // fallback default
-	}
-	startTime := time.Now()
-	baseDelay := time.Second
-	maxDelay := 30 * time.Second // Cap individual delays at 30 seconds
+	// Use the built-in backoff from eventsource library
+	stream, err := eventsource.SubscribeWithRequestAndOptions(req,
+		eventsource.StreamOptionCanRetryFirstConnection(-time.Second*3),
+		eventsource.StreamOptionUseBackoff(5*time.Minute),
+		eventsource.StreamOptionUseJitter(0.5),
+		eventsource.StreamOptionErrorHandler(func(err error) eventsource.StreamErrorHandlerResult {
+			sc.errorChannels.err(fmt.Errorf("SSE error: %w", err))
+			return eventsource.StreamErrorHandlerResult{CloseNow: false}
+		}),
+	)
 	
-	var stream *eventsource.Stream
-	var streamErr error
-	attempt := 0
-	
-	for time.Since(startTime) < retryDuration {
-		stream, streamErr = eventsource.SubscribeWithRequestAndOptions(req,
-			eventsource.StreamOptionHTTPClient(sc.httpClient),
-			eventsource.StreamOptionUseBackoff(5*time.Minute),
-			eventsource.StreamOptionUseJitter(0.5),
-			eventsource.StreamOptionErrorHandler(func(err error) eventsource.StreamErrorHandlerResult {
-				sc.errorChannels.err(fmt.Errorf("SSE error: %w", err))
-				return eventsource.StreamErrorHandlerResult{CloseNow: false}
-			}),
-		)
-		
-		if streamErr == nil {
-			// Connection successful
-			break
-		}
-		
-		attempt++
-		elapsed := time.Since(startTime)
-		remaining := retryDuration - elapsed
-		
-		// Log the attempt with timing info
-		sc.errorChannels.err(fmt.Errorf("streaming connection attempt %d failed (elapsed: %v, remaining: %v): %w", 
-			attempt, elapsed.Round(time.Second), remaining.Round(time.Second), streamErr))
-		
-		// If we still have time left, calculate backoff delay
-		if remaining > 0 {
-			// Exponential backoff: min(baseDelay * 2^attempt, maxDelay)
-			backoffDelay := baseDelay * time.Duration(1<<uint(attempt-1))
-			if backoffDelay > maxDelay {
-				backoffDelay = maxDelay
-			}
-			
-			// Don't wait longer than remaining time
-			if backoffDelay > remaining {
-				backoffDelay = remaining
-			}
-			
-			if backoffDelay > 0 {
-				time.Sleep(backoffDelay)
-			}
-		}
-	}
-	
-	if streamErr != nil {
-		return fmt.Errorf("failed to establish streaming connection after %v (attempted %d times): %w", 
-			retryDuration, attempt, streamErr)
+	if err != nil {
+		return fmt.Errorf("failed to establish streaming connection: %w", err)
 	}
 
 	sc.stream = stream

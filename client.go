@@ -2,8 +2,6 @@ package unleash
 
 import (
 	"fmt"
-	"os"
-	"strconv"
 
 	"net/http"
 	"net/url"
@@ -187,27 +185,18 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 	headers.Set("unleash-sdk", fmt.Sprintf("%s:%s", clientName, clientVersion))
 	headers.Set("unleash-connection-id", connectionId)
 
-	// Determine streaming retry duration - allow override for tests
-	streamingRetryDuration := 5 * time.Minute // Default for production
-	if testDurationStr := os.Getenv("UNLEASH_STREAMING_RETRY_DURATION_SECONDS"); testDurationStr != "" {
-		if seconds, err := strconv.Atoi(testDurationStr); err == nil && seconds > 0 {
-			streamingRetryDuration = time.Duration(seconds) * time.Second
-		}
-	}
-
 	uc.repository = newRepository(
 		repositoryOptions{
-			backupPath:             uc.options.backupPath,
-			url:                    *parsedUrl,
-			appName:                uc.options.appName,
-			projectName:            uc.options.projectName,
-			instanceId:             uc.options.instanceId,
-			refreshInterval:        uc.options.refreshInterval,
-			storage:                uc.options.storage,
-			httpClient:             uc.options.httpClient,
-			headers:                headers,
-			isStreaming:            uc.options.IsStreamingMode(),
-			streamingRetryDuration: streamingRetryDuration,
+			backupPath:      uc.options.backupPath,
+			url:             *parsedUrl,
+			appName:         uc.options.appName,
+			projectName:     uc.options.projectName,
+			instanceId:      uc.options.instanceId,
+			refreshInterval: uc.options.refreshInterval,
+			storage:         uc.options.storage,
+			httpClient:      uc.options.httpClient,
+			headers:         headers,
+			isStreaming:     uc.options.IsStreamingMode(),
 		},
 		repositoryChannels{
 			errorChannels: errChannels,
