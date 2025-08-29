@@ -30,6 +30,10 @@ func newStreamingProcessor(storage Storage, repo *repository, channels repositor
 
 // processDelta processes a delta update from streaming events
 func (sp *streamingProcessor) processDelta(delta *api.ClientFeaturesDelta) error {
+	if delta == nil {
+		return fmt.Errorf("delta is nil")
+	}
+	
 	sp.mu.Lock()
 	defer sp.mu.Unlock()
 	
