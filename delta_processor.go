@@ -7,8 +7,8 @@ import (
 	"github.com/Unleash/unleash-go-sdk/v5/api"
 )
 
-// streamingProcessor handles processing of streaming events and updating the feature storage
-type streamingProcessor struct {
+// deltaProcessor handles processing of delta events and updating the feature storage
+type deltaProcessor struct {
 	storage            Storage
 	repository         *repository // Repository reference for segment manipulation
 	mu                 sync.RWMutex
@@ -16,9 +16,9 @@ type streamingProcessor struct {
 	isReady            bool
 }
 
-// newStreamingProcessor creates a new streaming processor
-func newStreamingProcessor(storage Storage, repo *repository, channels repositoryChannels) *streamingProcessor {
-	return &streamingProcessor{
+// newDeltaProcessor creates a new delta processor
+func newDeltaProcessor(storage Storage, repo *repository, channels repositoryChannels) *deltaProcessor {
+	return &deltaProcessor{
 		storage:            storage,
 		repository:         repo,
 		repositoryChannels: channels,
@@ -28,18 +28,18 @@ func newStreamingProcessor(storage Storage, repo *repository, channels repositor
 
 
 
-// processDelta processes a delta update from streaming events
-func (sp *streamingProcessor) processDelta(delta *api.ClientFeaturesDelta) error {
+// process processes a delta update from streaming or API events
+func (dp *deltaProcessor) process(delta *api.ClientFeaturesDelta) error {
 	if delta == nil {
 		return fmt.Errorf("delta is nil")
 	}
 	
-	sp.mu.Lock()
-	defer sp.mu.Unlock()
+	dp.mu.Lock()
+	defer dp.mu.Unlock()
 	
 	// Get current features from storage
 	currentFeatures := make(map[string]interface{})
-	for _, f := range sp.storage.List() {
+	for _, f := range dp.storage.List() {
 		if feature, ok := f.(api.Feature); ok {
 			currentFeatures[feature.Name] = feature
 		}
@@ -47,11 +47,11 @@ func (sp *streamingProcessor) processDelta(delta *api.ClientFeaturesDelta) error
 	
 	// Get current segments - need to access repository safely
 	segments := make(map[int][]api.Constraint)
-	sp.repository.RLock()
-	for id, constraints := range sp.repository.segments {
+	dp.repository.RLock()
+	for id, constraints := range dp.repository.segments {
 		segments[id] = constraints
 	}
-	sp.repository.RUnlock()
+	dp.repository.RUnlock()
 	
 	// Apply delta events to the current state
 	for _, event := range delta.Events {
@@ -88,20 +88,20 @@ func (sp *streamingProcessor) processDelta(delta *api.ClientFeaturesDelta) error
 	}
 	
 	// Update storage through repository for thread safety
-	if err := sp.repository.updateStorageWithDelta(currentFeatures, segments); err != nil {
+	if err := dp.repository.updateStorageWithDelta(currentFeatures, segments); err != nil {
 		return fmt.Errorf("failed to reset storage after delta: %w", err)
 	}
 	
 	// Signal ready or update
-	if !sp.isReady {
-		sp.isReady = true
+	if !dp.isReady {
+		dp.isReady = true
 		select {
-		case sp.repositoryChannels.ready <- true:
+		case dp.repositoryChannels.ready <- true:
 		default:
 		}
 	} else {
 		select {
-		case sp.repositoryChannels.update <- true:
+		case dp.repositoryChannels.update <- true:
 		default:
 		}
 	}

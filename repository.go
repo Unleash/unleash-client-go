@@ -37,6 +37,7 @@ type repository struct {
 	skips           float64
 	streamingClient *streamingClient
 	isStreaming     bool
+	deltaProcessor  *deltaProcessor
 }
 
 func newRepository(options repositoryOptions, channels repositoryChannels) *repository {
@@ -66,6 +67,9 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 
 	repo.options.storage.Init(options.backupPath, options.appName)
 
+	// Initialize delta processor for handling delta events
+	repo.deltaProcessor = newDeltaProcessor(repo.options.storage, repo, channels)
+
 	// Initialize streaming client if streaming mode is enabled
 	if repo.isStreaming {
 		repo.streamingClient = newStreamingClient(
@@ -73,6 +77,7 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 			repo,
 			channels,
 			channels.errorChannels,
+			repo.deltaProcessor,
 		)
 	}
 

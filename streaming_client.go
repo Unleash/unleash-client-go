@@ -20,7 +20,7 @@ type streamingClient struct {
 	httpClient         *http.Client
 	headers            http.Header
 	stream             *eventsource.Stream
-	processor          *streamingProcessor
+	deltaProcessor     *deltaProcessor
 	repository         *repository
 	ctx                context.Context
 	cancel             context.CancelFunc
@@ -31,7 +31,7 @@ type streamingClient struct {
 }
 
 // newStreamingClient creates a new streaming client
-func newStreamingClient(options repositoryOptions, repo *repository, repoChannels repositoryChannels, errChannels errorChannels) *streamingClient {
+func newStreamingClient(options repositoryOptions, repo *repository, repoChannels repositoryChannels, errChannels errorChannels, deltaProc *deltaProcessor) *streamingClient {
 	ctx, cancel := context.WithCancel(context.Background())
 	
 	return &streamingClient{
@@ -41,6 +41,7 @@ func newStreamingClient(options repositoryOptions, repo *repository, repoChannel
 		httpClient:         options.httpClient,
 		headers:            options.headers,
 		repository:         repo,
+		deltaProcessor:     deltaProc,
 		ctx:                ctx,
 		cancel:             cancel,
 		errorChannels:      errChannels,
@@ -50,15 +51,13 @@ func newStreamingClient(options repositoryOptions, repo *repository, repoChannel
 }
 
 // start begins the SSE connection
-func (sc *streamingClient) start(storage Storage) error {
+func (sc *streamingClient) start(_ Storage) error {
 	sc.runningMutex.Lock()
 	defer sc.runningMutex.Unlock()
 
 	if sc.running {
 		return nil
 	}
-
-	sc.processor = newStreamingProcessor(storage, sc.repository, sc.repositoryChannels)
 
 	log.Print("Setting up client")
 
@@ -153,7 +152,7 @@ func (sc *streamingClient) handleConnectedEvent(event eventsource.Event) error {
 		return fmt.Errorf("failed to parse connected event: %w", err)
 	}
 	
-	return sc.processor.processDelta(delta)
+	return sc.deltaProcessor.process(delta)
 }
 
 // handleUpdatedEvent processes feature update events
@@ -164,7 +163,7 @@ func (sc *streamingClient) handleUpdatedEvent(event eventsource.Event) error {
 		return fmt.Errorf("failed to parse updated event: %w", err)
 	}
 	
-	return sc.processor.processDelta(delta)
+	return sc.deltaProcessor.process(delta)
 }
 
 // stop closes the SSE connection

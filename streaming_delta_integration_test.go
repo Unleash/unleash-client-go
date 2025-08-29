@@ -31,7 +31,7 @@ func TestStreamingDeltaIntegration(t *testing.T) {
 		},
 	}
 	
-	processor := newStreamingProcessor(storage, repo, channels)
+	processor := newDeltaProcessor(storage, repo, channels)
 	
 	t.Run("process initial hydration", func(t *testing.T) {
 		hydrationJSON := `{
@@ -55,7 +55,7 @@ func TestStreamingDeltaIntegration(t *testing.T) {
 			t.Fatalf("Failed to unmarshal hydration: %v", err)
 		}
 		
-		err = processor.processDelta(&delta)
+		err = processor.process(&delta)
 		if err != nil {
 			t.Fatalf("Failed to process hydration: %v", err)
 		}
@@ -122,7 +122,7 @@ func TestStreamingDeltaIntegration(t *testing.T) {
 			t.Fatalf("Failed to unmarshal update: %v", err)
 		}
 		
-		err = processor.processDelta(&delta)
+		err = processor.process(&delta)
 		if err != nil {
 			t.Fatalf("Failed to process update: %v", err)
 		}
@@ -187,7 +187,7 @@ func TestStreamingDelta_MultipleDeltaEvents(t *testing.T) {
 		},
 	}
 	
-	processor := newStreamingProcessor(storage, repo, channels)
+	processor := newDeltaProcessor(storage, repo, channels)
 	
 	// Initial hydration with two features
 	hydrationJSON := `{
@@ -206,7 +206,7 @@ func TestStreamingDelta_MultipleDeltaEvents(t *testing.T) {
 	err := json.Unmarshal([]byte(hydrationJSON), &hydrationDelta)
 	assert.NoError(t, err)
 	
-	err = processor.processDelta(&hydrationDelta)
+	err = processor.process(&hydrationDelta)
 	assert.NoError(t, err)
 	
 	// Verify initial state
@@ -248,7 +248,7 @@ func TestStreamingDelta_MultipleDeltaEvents(t *testing.T) {
 	err = json.Unmarshal([]byte(updatesJSON), &updatesDelta)
 	assert.NoError(t, err)
 	
-	err = processor.processDelta(&updatesDelta)
+	err = processor.process(&updatesDelta)
 	assert.NoError(t, err)
 	
 	// Verify final state
@@ -292,7 +292,7 @@ func TestStreamingDelta_SegmentUpdates(t *testing.T) {
 		},
 	}
 	
-	processor := newStreamingProcessor(storage, repo, channels)
+	processor := newDeltaProcessor(storage, repo, channels)
 	
 	// Hydration with feature using segments
 	hydrationJSON := `{
@@ -326,7 +326,7 @@ func TestStreamingDelta_SegmentUpdates(t *testing.T) {
 	err := json.Unmarshal([]byte(hydrationJSON), &hydrationDelta)
 	assert.NoError(t, err)
 	
-	err = processor.processDelta(&hydrationDelta)
+	err = processor.process(&hydrationDelta)
 	assert.NoError(t, err)
 	
 	// Verify initial segment state
@@ -356,7 +356,7 @@ func TestStreamingDelta_SegmentUpdates(t *testing.T) {
 	err = json.Unmarshal([]byte(segmentUpdateJSON), &segmentUpdateDelta)
 	assert.NoError(t, err)
 	
-	err = processor.processDelta(&segmentUpdateDelta)
+	err = processor.process(&segmentUpdateDelta)
 	assert.NoError(t, err)
 	
 	// Verify updated segment
@@ -402,7 +402,7 @@ func TestStreamingDelta_SegmentUpdates(t *testing.T) {
 	err = json.Unmarshal([]byte(multiSegmentUpdateJSON), &multiSegmentDelta)
 	assert.NoError(t, err)
 	
-	err = processor.processDelta(&multiSegmentDelta)
+	err = processor.process(&multiSegmentDelta)
 	assert.NoError(t, err)
 	
 	// Verify both segments exist
@@ -448,7 +448,7 @@ func TestStreamingDelta_ErrorHandling(t *testing.T) {
 		},
 	}
 	
-	processor := newStreamingProcessor(storage, repo, channels)
+	processor := newDeltaProcessor(storage, repo, channels)
 	
 	// Send valid hydration first
 	validHydrationJSON := `{
@@ -466,7 +466,7 @@ func TestStreamingDelta_ErrorHandling(t *testing.T) {
 	err := json.Unmarshal([]byte(validHydrationJSON), &validDelta)
 	assert.NoError(t, err)
 	
-	err = processor.processDelta(&validDelta)
+	err = processor.process(&validDelta)
 	assert.NoError(t, err)
 	
 	// Verify feature exists
@@ -475,7 +475,7 @@ func TestStreamingDelta_ErrorHandling(t *testing.T) {
 	}
 	
 	// Try to process nil delta (should handle gracefully)
-	err = processor.processDelta(nil)
+	err = processor.process(nil)
 	if err == nil {
 		t.Error("Processing nil delta should return an error")
 	}
@@ -492,7 +492,7 @@ func TestStreamingDelta_ErrorHandling(t *testing.T) {
 	err = json.Unmarshal([]byte(unknownEventJSON), &unknownDelta)
 	assert.NoError(t, err)
 	
-	err = processor.processDelta(&unknownDelta)
+	err = processor.process(&unknownDelta)
 	// Should not error, just ignore unknown event
 	assert.NoError(t, err)
 	
@@ -509,7 +509,7 @@ func TestStreamingDelta_ErrorHandling(t *testing.T) {
 	err = json.Unmarshal([]byte(validUpdateJSON), &validUpdateDelta)
 	assert.NoError(t, err)
 	
-	err = processor.processDelta(&validUpdateDelta)
+	err = processor.process(&validUpdateDelta)
 	assert.NoError(t, err)
 	
 	// Both features should exist
@@ -544,7 +544,7 @@ func TestStreamingDelta_ConstraintEvaluation(t *testing.T) {
 		},
 	}
 	
-	processor := newStreamingProcessor(storage, repo, channels)
+	processor := newDeltaProcessor(storage, repo, channels)
 	
 	// Setup feature with complex segment constraints
 	hydrationJSON := `{
@@ -585,7 +585,7 @@ func TestStreamingDelta_ConstraintEvaluation(t *testing.T) {
 	err := json.Unmarshal([]byte(hydrationJSON), &hydrationDelta)
 	assert.NoError(t, err)
 	
-	err = processor.processDelta(&hydrationDelta)
+	err = processor.process(&hydrationDelta)
 	assert.NoError(t, err)
 	
 	// Test constraint evaluation logic would go here
@@ -640,7 +640,7 @@ func TestStreamingDelta_FeatureEvaluation(t *testing.T) {
 		},
 	}
 	
-	processor := newStreamingProcessor(storage, repo, channels)
+	processor := newDeltaProcessor(storage, repo, channels)
 	
 	// Setup features with various strategies
 	hydrationJSON := `{
@@ -677,7 +677,7 @@ func TestStreamingDelta_FeatureEvaluation(t *testing.T) {
 	err := json.Unmarshal([]byte(hydrationJSON), &hydrationDelta)
 	assert.NoError(t, err)
 	
-	err = processor.processDelta(&hydrationDelta)
+	err = processor.process(&hydrationDelta)
 	assert.NoError(t, err)
 	
 	// Create a mock client to test feature evaluation
@@ -727,7 +727,7 @@ func TestStreamingDelta_FeatureEvaluation(t *testing.T) {
 	err = json.Unmarshal([]byte(updateJSON), &updateDelta)
 	assert.NoError(t, err)
 	
-	err = processor.processDelta(&updateDelta)
+	err = processor.process(&updateDelta)
 	assert.NoError(t, err)
 	
 	// Verify the feature is now enabled

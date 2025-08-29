@@ -48,7 +48,12 @@ func TestStreamingClient_Creation(t *testing.T) {
 		segments: make(map[int][]api.Constraint),
 	}
 
-	client := newStreamingClient(options, repo, repoChannels, errChannels)
+	// Create a delta processor for the test
+	storage := &DefaultStorage{}
+	storage.Init("/tmp", "test-app")
+	deltaProc := newDeltaProcessor(storage, repo, repoChannels)
+
+	client := newStreamingClient(options, repo, repoChannels, errChannels, deltaProc)
 
 	assert.NotNil(t, client)
 	assert.Equal(t, "http://localhost:8080/client/streaming", client.url)
@@ -86,10 +91,11 @@ func TestStreamingClient_HandleEvents(t *testing.T) {
 		options:  options,
 	}
 
-	client := newStreamingClient(options, repo, repoChannels, errChannels)
-	client.ctx, client.cancel = context.WithCancel(context.Background())
+	// Create a delta processor for the test
+	deltaProc := newDeltaProcessor(storage, repo, repoChannels)
 
-	client.processor = newStreamingProcessor(storage, repo, repoChannels)
+	client := newStreamingClient(options, repo, repoChannels, errChannels, deltaProc)
+	client.ctx, client.cancel = context.WithCancel(context.Background())
 
 	connectedData := map[string]interface{}{
 		"events": []map[string]interface{}{
