@@ -177,41 +177,7 @@ toggle is enabled or not.
 unleash.IsEnabled("app.ToggleX")
 ```
 
-### 4. Experimental: Streaming Mode (Server-Sent Events)
-
-The Go SDK supports an experimental streaming mode that uses Server-Sent Events (SSE) for real-time feature flag updates. This eliminates the polling delay and provides instant updates when feature flags change.
-
-#### Enabling Streaming Mode
-
-```go
-unleash.Initialize(
-    unleash.WithAppName("my-application"),
-    unleash.WithUrl("https://eu.app.unleash-hosted.com/demo/api/"),
-    unleash.WithCustomHeaders(http.Header{"Authorization": {"<API token>"}}),
-    // Enable experimental streaming mode
-    unleash.WithExperimentalMode(map[string]string{
-        "type": "streaming",
-    }),
-    // Optional: Set refresh interval as fallback (default is 15s)
-    unleash.WithRefreshInterval(30 * time.Second),
-)
-```
-
-#### How it Works
-
-- When streaming mode is enabled, the client establishes a persistent SSE connection to the Unleash server
-- Feature flag updates are pushed to the client in real-time via `unleash-connected` and `unleash-updated` events
-- If the streaming connection fails, the client automatically falls back to the traditional polling mode
-- The refresh interval serves as the polling interval when in fallback mode
-
-#### Benefits
-
-- **Real-time updates**: Feature flags update instantly without polling delay
-- **Reduced server load**: No need for frequent polling requests
-- **Automatic fallback**: Seamlessly falls back to polling if streaming is unavailable
-- **Lower latency**: Changes are reflected immediately in your application
-
-### 5. Stop unleash
+### 4. Stop unleash
 
 To shut down the client (turn off the polling) you can simply call the
 destroy-method. This is typically not required.
