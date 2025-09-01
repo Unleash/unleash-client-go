@@ -114,12 +114,12 @@ func (td TestDefinition) Mock(listener interface{}) (*Client, error) {
 	// Process events if present (for delta API tests)
 	features := td.State.Features
 	segments := td.State.Segments
-	
+
 	if len(td.State.Events) > 0 {
 		// Process delta events to build features and segments
 		features, segments = td.processDeltaEvents()
 	}
-	
+
 	gock.New(mockHost).
 		Post("/client/register").
 		Reply(200)
@@ -144,7 +144,7 @@ func (td TestDefinition) Mock(listener interface{}) (*Client, error) {
 func (td TestDefinition) processDeltaEvents() ([]api.Feature, []api.Segment) {
 	features := make(map[string]api.Feature)
 	segments := make(map[int]api.Segment)
-	
+
 	// Process each event
 	for _, eventRaw := range td.State.Events {
 		var eventType struct {
@@ -153,7 +153,7 @@ func (td TestDefinition) processDeltaEvents() ([]api.Feature, []api.Segment) {
 		if err := json.Unmarshal(eventRaw, &eventType); err != nil {
 			continue
 		}
-		
+
 		switch eventType.Type {
 		case "hydration":
 			var hydration struct {
@@ -164,7 +164,7 @@ func (td TestDefinition) processDeltaEvents() ([]api.Feature, []api.Segment) {
 				// Reset state for hydration
 				features = make(map[string]api.Feature)
 				segments = make(map[int]api.Segment)
-				
+
 				for _, f := range hydration.Features {
 					features[f.Name] = f
 				}
@@ -172,7 +172,7 @@ func (td TestDefinition) processDeltaEvents() ([]api.Feature, []api.Segment) {
 					segments[s.Id] = s
 				}
 			}
-			
+
 		case "feature-updated":
 			var update struct {
 				Feature api.Feature `json:"feature"`
@@ -180,7 +180,7 @@ func (td TestDefinition) processDeltaEvents() ([]api.Feature, []api.Segment) {
 			if err := json.Unmarshal(eventRaw, &update); err == nil {
 				features[update.Feature.Name] = update.Feature
 			}
-			
+
 		case "feature-removed":
 			var removal struct {
 				FeatureName string `json:"featureName"`
@@ -188,7 +188,7 @@ func (td TestDefinition) processDeltaEvents() ([]api.Feature, []api.Segment) {
 			if err := json.Unmarshal(eventRaw, &removal); err == nil {
 				delete(features, removal.FeatureName)
 			}
-			
+
 		case "segment-updated":
 			var update struct {
 				Segment api.Segment `json:"segment"`
@@ -196,7 +196,7 @@ func (td TestDefinition) processDeltaEvents() ([]api.Feature, []api.Segment) {
 			if err := json.Unmarshal(eventRaw, &update); err == nil {
 				segments[update.Segment.Id] = update.Segment
 			}
-			
+
 		case "segment-removed":
 			var removal struct {
 				SegmentId int `json:"segmentId"`
@@ -206,18 +206,18 @@ func (td TestDefinition) processDeltaEvents() ([]api.Feature, []api.Segment) {
 			}
 		}
 	}
-	
+
 	// Convert maps to slices
 	var featureList []api.Feature
 	for _, f := range features {
 		featureList = append(featureList, f)
 	}
-	
+
 	var segmentList []api.Segment
 	for _, s := range segments {
 		segmentList = append(segmentList, s)
 	}
-	
+
 	return featureList, segmentList
 }
 

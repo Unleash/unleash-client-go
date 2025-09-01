@@ -21,7 +21,6 @@ type streamingClient struct {
 	headers            http.Header
 	stream             *eventsource.Stream
 	deltaProcessor     *deltaProcessor
-	repository         *repository
 	ctx                context.Context
 	cancel             context.CancelFunc
 	running            bool
@@ -30,17 +29,15 @@ type streamingClient struct {
 	repositoryChannels repositoryChannels
 }
 
-// newStreamingClient creates a new streaming client
-func newStreamingClient(options repositoryOptions, repo *repository, repoChannels repositoryChannels, errChannels errorChannels, deltaProc *deltaProcessor) *streamingClient {
+func newStreamingClient(options repositoryOptions, repoChannels repositoryChannels, errChannels errorChannels, deltaProc *deltaProcessor) *streamingClient {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	return &streamingClient{
 		url:                fmt.Sprintf("%sclient/streaming", options.url.String()),
 		appName:            options.appName,
 		instanceId:         options.instanceId,
 		httpClient:         options.httpClient,
 		headers:            options.headers,
-		repository:         repo,
 		deltaProcessor:     deltaProc,
 		ctx:                ctx,
 		cancel:             cancel,
@@ -50,7 +47,6 @@ func newStreamingClient(options repositoryOptions, repo *repository, repoChannel
 	}
 }
 
-// start begins the SSE connection
 func (sc *streamingClient) start(_ Storage) error {
 	sc.runningMutex.Lock()
 	defer sc.runningMutex.Unlock()
@@ -71,12 +67,11 @@ func (sc *streamingClient) start(_ Storage) error {
 			req.Header.Add(key, value)
 		}
 	}
-	
+
 	req.Header.Set("UNLEASH-APPNAME", sc.appName)
 	req.Header.Set("UNLEASH-INSTANCEID", sc.instanceId)
 	req.Header.Add("Unleash-Client-Spec", SEGMENT_CLIENT_SPEC_VERSION)
 
-	// Use the built-in backoff from eventsource library
 	stream, err := eventsource.SubscribeWithRequestAndOptions(req,
 		eventsource.StreamOptionCanRetryFirstConnection(-time.Second*3),
 		eventsource.StreamOptionUseBackoff(5*time.Minute),
@@ -86,7 +81,7 @@ func (sc *streamingClient) start(_ Storage) error {
 			return eventsource.StreamErrorHandlerResult{CloseNow: false}
 		}),
 	)
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to establish streaming connection: %w", err)
 	}
@@ -100,7 +95,7 @@ func (sc *streamingClient) start(_ Storage) error {
 				sc.errorChannels.err(err)
 			}
 		}()
-		
+
 		for {
 			select {
 			case event := <-stream.Events:
@@ -118,7 +113,6 @@ func (sc *streamingClient) start(_ Storage) error {
 	return nil
 }
 
-// handleEvent processes individual SSE events
 func (sc *streamingClient) handleEvent(event eventsource.Event) {
 	eventType := event.Event()
 	log.Printf("Handling event: %s", eventType)
@@ -144,29 +138,26 @@ func (sc *streamingClient) handleEvent(event eventsource.Event) {
 	}
 }
 
-// handleConnectedEvent processes the initial connection event
 func (sc *streamingClient) handleConnectedEvent(event eventsource.Event) error {
 	eventData := []byte(event.Data())
 	delta, err := api.ParseDelta(eventData)
 	if err != nil {
 		return fmt.Errorf("failed to parse connected event: %w", err)
 	}
-	
+
 	return sc.deltaProcessor.process(delta)
 }
 
-// handleUpdatedEvent processes feature update events
 func (sc *streamingClient) handleUpdatedEvent(event eventsource.Event) error {
 	eventData := []byte(event.Data())
 	delta, err := api.ParseDelta(eventData)
 	if err != nil {
 		return fmt.Errorf("failed to parse updated event: %w", err)
 	}
-	
+
 	return sc.deltaProcessor.process(delta)
 }
 
-// stop closes the SSE connection
 func (sc *streamingClient) stop() {
 	sc.runningMutex.Lock()
 	defer sc.runningMutex.Unlock()
@@ -182,7 +173,6 @@ func (sc *streamingClient) stop() {
 	sc.running = false
 }
 
-// isRunning returns whether the streaming client is currently running
 func (sc *streamingClient) isRunning() bool {
 	sc.runningMutex.RLock()
 	defer sc.runningMutex.RUnlock()

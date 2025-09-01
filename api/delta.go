@@ -5,18 +5,14 @@ import (
 	"fmt"
 )
 
-// ClientFeaturesDelta represents a delta update from the streaming endpoint
 type ClientFeaturesDelta struct {
 	Events []DeltaEvent `json:"events"`
 }
 
-// DeltaEvent is the interface for all delta event types
 type DeltaEvent interface {
 	GetType() string
 	GetEventId() int
 }
-
-// FeatureUpdatedEvent represents a feature update event
 type FeatureUpdatedEvent struct {
 	Type    string  `json:"type"`
 	EventId int     `json:"eventId"`
@@ -25,8 +21,6 @@ type FeatureUpdatedEvent struct {
 
 func (e *FeatureUpdatedEvent) GetType() string   { return e.Type }
 func (e *FeatureUpdatedEvent) GetEventId() int   { return e.EventId }
-
-// FeatureRemovedEvent represents a feature removal event
 type FeatureRemovedEvent struct {
 	Type        string `json:"type"`
 	EventId     int    `json:"eventId"`
@@ -37,7 +31,6 @@ type FeatureRemovedEvent struct {
 func (e *FeatureRemovedEvent) GetType() string   { return e.Type }
 func (e *FeatureRemovedEvent) GetEventId() int   { return e.EventId }
 
-// SegmentUpdatedEvent represents a segment update event
 type SegmentUpdatedEvent struct {
 	Type    string  `json:"type"`
 	EventId int     `json:"eventId"`
@@ -47,7 +40,6 @@ type SegmentUpdatedEvent struct {
 func (e *SegmentUpdatedEvent) GetType() string   { return e.Type }
 func (e *SegmentUpdatedEvent) GetEventId() int   { return e.EventId }
 
-// SegmentRemovedEvent represents a segment removal event
 type SegmentRemovedEvent struct {
 	Type      string `json:"type"`
 	EventId   int    `json:"eventId"`
@@ -57,7 +49,6 @@ type SegmentRemovedEvent struct {
 func (e *SegmentRemovedEvent) GetType() string   { return e.Type }
 func (e *SegmentRemovedEvent) GetEventId() int   { return e.EventId }
 
-// HydrationEvent represents a full state replacement event
 type HydrationEvent struct {
 	Type     string    `json:"type"`
 	EventId  int       `json:"eventId"`
@@ -138,7 +129,6 @@ func (c *ClientFeaturesDelta) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// ParseDelta parses a JSON byte array into a ClientFeaturesDelta
 func ParseDelta(data []byte) (*ClientFeaturesDelta, error) {
 	var delta ClientFeaturesDelta
 	if err := json.Unmarshal(data, &delta); err != nil {

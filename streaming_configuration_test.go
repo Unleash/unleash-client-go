@@ -11,7 +11,7 @@ func TestStreamingModeConfiguration(t *testing.T) {
 	// Use a mock server instead of external URL
 	server := mockSSEServer(`{"events":[{"type":"hydration","eventId":1,"features":[],"segments":[]}]}`, "")
 	defer server.Close()
-	
+
 	listener := &MockedListener{}
 	listener.On("OnError", mock.Anything).Return()
 	listener.On("OnWarning", mock.Anything).Return()
@@ -31,10 +31,10 @@ func TestStreamingModeConfiguration(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotNil(t, client)
-	
+
 	assert.True(t, client.options.IsStreamingMode())
 	assert.True(t, client.repository.IsStreaming())
-	
+
 	client.WaitForReady()
 	client.Close()
 }
@@ -43,10 +43,10 @@ func TestNonStreamingModeByDefault(t *testing.T) {
 	// Simply test that the default configuration doesn't use streaming mode
 	// without trying to connect to any server
 	config := &configOption{}
-	
+
 	// Check that streaming mode is disabled by default
 	assert.False(t, config.IsStreamingMode())
-	
+
 	// Test with a client that has an empty experimental mode
 	config2 := &configOption{
 		experimentalMode: map[string]string{},

@@ -36,7 +36,6 @@ type Storage interface {
 	List() []interface{}
 }
 
-
 // DefaultStorage is a default Storage implementation.
 type DefaultStorage struct {
 	appName string
@@ -102,4 +101,3 @@ func (ds *DefaultStorage) List() []interface{} {
 	}
 	return features
 }
-

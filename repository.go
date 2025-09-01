@@ -74,7 +74,6 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 	if repo.isStreaming {
 		repo.streamingClient = newStreamingClient(
 			options,
-			repo,
 			channels,
 			channels.errorChannels,
 			repo.deltaProcessor,
@@ -120,7 +119,7 @@ func (r *repository) sync() {
 	isStreaming := r.isStreaming
 	streamingClient := r.streamingClient
 	r.RUnlock()
-	
+
 	// Start streaming mode if enabled
 	// The eventsource library handles all reconnections automatically with backoff and jitter
 	if isStreaming && streamingClient != nil {
@@ -150,7 +149,7 @@ func (r *repository) sync() {
 			r.RLock()
 			shouldPoll := !r.isStreaming
 			r.RUnlock()
-			
+
 			if shouldPoll {
 				if r.skips == 0 {
 					r.fetchAndReportError()
@@ -238,10 +237,10 @@ func (r *repository) fetch() error {
 func (r *repository) updateStorageWithDelta(features map[string]interface{}, segments map[int][]api.Constraint) error {
 	r.Lock()
 	defer r.Unlock()
-	
+
 	// Update segments
 	r.segments = segments
-	
+
 	// Update storage
 	return r.options.storage.Reset(features, true)
 }

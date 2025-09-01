@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// mockEvent implements the eventsource.Event interface for testing
 type mockEvent struct {
 	id    string
 	event string
@@ -53,7 +52,7 @@ func TestStreamingClient_Creation(t *testing.T) {
 	storage.Init("/tmp", "test-app")
 	deltaProc := newDeltaProcessor(storage, repo, repoChannels)
 
-	client := newStreamingClient(options, repo, repoChannels, errChannels, deltaProc)
+	client := newStreamingClient(options, repoChannels, errChannels, deltaProc)
 
 	assert.NotNil(t, client)
 	assert.Equal(t, "http://localhost:8080/client/streaming", client.url)
@@ -61,7 +60,6 @@ func TestStreamingClient_Creation(t *testing.T) {
 	assert.Equal(t, "test-instance", client.instanceId)
 	assert.False(t, client.isRunning())
 }
-
 
 func TestStreamingClient_HandleEvents(t *testing.T) {
 	errChannels := errorChannels{
@@ -76,7 +74,7 @@ func TestStreamingClient_HandleEvents(t *testing.T) {
 
 	storage := &DefaultStorage{}
 	storage.Init("/tmp", "test-app")
-	
+
 	options := repositoryOptions{
 		url:        url.URL{},
 		appName:    "test-app",
@@ -94,14 +92,14 @@ func TestStreamingClient_HandleEvents(t *testing.T) {
 	// Create a delta processor for the test
 	deltaProc := newDeltaProcessor(storage, repo, repoChannels)
 
-	client := newStreamingClient(options, repo, repoChannels, errChannels, deltaProc)
+	client := newStreamingClient(options, repoChannels, errChannels, deltaProc)
 	client.ctx, client.cancel = context.WithCancel(context.Background())
 
 	connectedData := map[string]interface{}{
 		"events": []map[string]interface{}{
 			{
-				"type":     "hydration",
-				"eventId":  1,
+				"type":    "hydration",
+				"eventId": 1,
 				"features": []map[string]interface{}{
 					{
 						"name":    "test-feature",

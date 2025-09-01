@@ -18,27 +18,27 @@ func mockSSEServer(hydrationData, updateData string) *httptest.Server {
 		case "/client/register":
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(`{}`))
-			
+
 		case "/client/streaming":
 			// Set SSE headers
 			w.Header().Set("Content-Type", "text/event-stream")
 			w.Header().Set("Cache-Control", "no-cache")
 			w.Header().Set("Connection", "keep-alive")
-			
+
 			// Send hydration event
 			fmt.Fprintf(w, "event: unleash-connected\ndata: %s\n\n", hydrationData)
 			w.(http.Flusher).Flush()
-			
+
 			// Send update event if provided
 			if updateData != "" {
 				time.Sleep(50 * time.Millisecond)
 				fmt.Fprintf(w, "event: unleash-updated\ndata: %s\n\n", updateData)
 				w.(http.Flusher).Flush()
 			}
-			
+
 			// Keep connection open briefly to simulate streaming
 			time.Sleep(100 * time.Millisecond)
-			
+
 		default:
 			w.WriteHeader(http.StatusNotFound)
 		}
@@ -48,7 +48,7 @@ func mockSSEServer(hydrationData, updateData string) *httptest.Server {
 // TestStreamingMode_UnleashConnectedEvent tests that the client can process an unleash-connected SSE event
 func TestStreamingMode_UnleashConnectedEvent(t *testing.T) {
 	hydrationData := `{"events":[{"type":"hydration","eventId":1,"features":[{"name":"test-feature","enabled":true,"strategies":[{"name":"default"}],"variants":[],"dependencies":null}],"segments":[]}]}`
-	
+
 	server := mockSSEServer(hydrationData, "")
 	defer server.Close()
 
@@ -79,7 +79,7 @@ func TestStreamingMode_UnleashConnectedEvent(t *testing.T) {
 func TestStreamingMode_UnleashUpdatedEvent(t *testing.T) {
 	hydrationData := `{"events":[{"type":"hydration","eventId":1,"features":[{"name":"feature-1","enabled":false,"strategies":[{"name":"default"}]}],"segments":[]}]}`
 	updateData := `{"events":[{"type":"feature-updated","eventId":2,"feature":{"name":"feature-1","enabled":true,"strategies":[{"name":"default"}]}}]}`
-	
+
 	server := mockSSEServer(hydrationData, updateData)
 	defer server.Close()
 
@@ -96,7 +96,7 @@ func TestStreamingMode_UnleashUpdatedEvent(t *testing.T) {
 
 	// Wait for initial hydration
 	client.WaitForReady()
-	
+
 	// Feature should initially be disabled
 	assert.False(t, client.IsEnabled("feature-1"), "feature-1 should be initially disabled")
 

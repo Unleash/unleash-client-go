@@ -446,7 +446,7 @@ func (uc *Client) GetVariant(feature string, options ...VariantOption) (variant 
 
 	defer func() {
 		uc.metrics.countVariants(feature, variant.FeatureEnabled, variant.Name)
-		
+
 		f := uc.repository.getToggle(feature)
 		if f != nil && f.ImpressionData && uc.impressionListener != nil {
 			var opts variantOption

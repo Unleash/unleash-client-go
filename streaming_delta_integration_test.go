@@ -12,16 +12,16 @@ import (
 func TestStreamingDeltaIntegration(t *testing.T) {
 	storage := &DefaultStorage{}
 	storage.Init("/tmp", "test-app")
-	
+
 	options := repositoryOptions{
 		storage: storage,
 	}
-	
+
 	repo := &repository{
 		segments: make(map[int][]api.Constraint),
 		options:  options,
 	}
-	
+
 	channels := repositoryChannels{
 		ready:  make(chan bool, 1),
 		update: make(chan bool, 1),
@@ -30,9 +30,9 @@ func TestStreamingDeltaIntegration(t *testing.T) {
 			warnings: make(chan error, 10),
 		},
 	}
-	
+
 	processor := newDeltaProcessor(storage, repo, channels)
-	
+
 	t.Run("process initial hydration", func(t *testing.T) {
 		hydrationJSON := `{
 			"events": [{
@@ -48,42 +48,42 @@ func TestStreamingDeltaIntegration(t *testing.T) {
 				]
 			}]
 		}`
-		
+
 		var delta api.ClientFeaturesDelta
 		err := json.Unmarshal([]byte(hydrationJSON), &delta)
 		if err != nil {
 			t.Fatalf("Failed to unmarshal hydration: %v", err)
 		}
-		
+
 		err = processor.process(&delta)
 		if err != nil {
 			t.Fatalf("Failed to process hydration: %v", err)
 		}
-		
+
 		if feature, exists := storage.Get("feature-1"); !exists {
 			t.Error("feature-1 should exist after hydration")
 		} else if f, ok := feature.(api.Feature); ok && !f.Enabled {
 			t.Error("feature-1 should be enabled")
 		}
-		
+
 		if feature, exists := storage.Get("feature-2"); !exists {
 			t.Error("feature-2 should exist after hydration")
 		} else if f, ok := feature.(api.Feature); ok && f.Enabled {
 			t.Error("feature-2 should be disabled")
 		}
-		
+
 		segments := repo.segments
 		if len(segments) != 2 {
 			t.Errorf("Expected 2 segments, got %d", len(segments))
 		}
-		
+
 		select {
 		case <-channels.ready:
 		default:
 			t.Error("Expected ready signal after hydration")
 		}
 	})
-	
+
 	t.Run("process incremental updates", func(t *testing.T) {
 		updateJSON := `{
 			"events": [
@@ -115,47 +115,47 @@ func TestStreamingDeltaIntegration(t *testing.T) {
 				}
 			]
 		}`
-		
+
 		var delta api.ClientFeaturesDelta
 		err := json.Unmarshal([]byte(updateJSON), &delta)
 		if err != nil {
 			t.Fatalf("Failed to unmarshal update: %v", err)
 		}
-		
+
 		err = processor.process(&delta)
 		if err != nil {
 			t.Fatalf("Failed to process update: %v", err)
 		}
-		
+
 		if feature, exists := storage.Get("feature-1"); !exists {
 			t.Error("feature-1 should still exist")
 		} else if f, ok := feature.(api.Feature); ok && f.Enabled {
 			t.Error("feature-1 should be disabled after update")
 		}
-		
+
 		if _, exists := storage.Get("feature-2"); exists {
 			t.Error("feature-2 should not exist after removal")
 		}
-		
+
 		if feature, exists := storage.Get("feature-3"); !exists {
 			t.Error("feature-3 should exist after update")
 		} else if f, ok := feature.(api.Feature); ok && !f.Enabled {
 			t.Error("feature-3 should be enabled")
 		}
-		
+
 		segments := repo.segments
 		if len(segments) != 2 {
 			t.Errorf("Expected 2 segments after updates, got %d", len(segments))
 		}
-		
+
 		if _, exists := segments[1]; exists {
 			t.Error("Segment 1 should not exist after removal")
 		}
-		
+
 		if _, exists := segments[3]; !exists {
 			t.Error("Segment 3 should exist after update")
 		}
-		
+
 		select {
 		case <-channels.update:
 		default:
@@ -168,16 +168,16 @@ func TestStreamingDeltaIntegration(t *testing.T) {
 func TestStreamingDelta_MultipleDeltaEvents(t *testing.T) {
 	storage := &DefaultStorage{}
 	storage.Init("/tmp", "test-app")
-	
+
 	options := repositoryOptions{
 		storage: storage,
 	}
-	
+
 	repo := &repository{
 		segments: make(map[int][]api.Constraint),
 		options:  options,
 	}
-	
+
 	channels := repositoryChannels{
 		ready:  make(chan bool, 1),
 		update: make(chan bool, 1),
@@ -186,9 +186,9 @@ func TestStreamingDelta_MultipleDeltaEvents(t *testing.T) {
 			warnings: make(chan error, 10),
 		},
 	}
-	
+
 	processor := newDeltaProcessor(storage, repo, channels)
-	
+
 	// Initial hydration with two features
 	hydrationJSON := `{
 		"events": [{
@@ -201,27 +201,27 @@ func TestStreamingDelta_MultipleDeltaEvents(t *testing.T) {
 			"segments": []
 		}]
 	}`
-	
+
 	var hydrationDelta api.ClientFeaturesDelta
 	err := json.Unmarshal([]byte(hydrationJSON), &hydrationDelta)
 	assert.NoError(t, err)
-	
+
 	err = processor.process(&hydrationDelta)
 	assert.NoError(t, err)
-	
+
 	// Verify initial state
 	if feature, exists := storage.Get("feature-a"); !exists {
 		t.Error("feature-a should exist after hydration")
 	} else if f, ok := feature.(api.Feature); ok && !f.Enabled {
 		t.Error("feature-a should be enabled")
 	}
-	
+
 	if feature, exists := storage.Get("feature-b"); !exists {
 		t.Error("feature-b should exist after hydration")
 	} else if f, ok := feature.(api.Feature); ok && !f.Enabled {
 		t.Error("feature-b should be enabled")
 	}
-	
+
 	// Process multiple updates
 	updatesJSON := `{
 		"events": [
@@ -243,25 +243,25 @@ func TestStreamingDelta_MultipleDeltaEvents(t *testing.T) {
 			}
 		]
 	}`
-	
+
 	var updatesDelta api.ClientFeaturesDelta
 	err = json.Unmarshal([]byte(updatesJSON), &updatesDelta)
 	assert.NoError(t, err)
-	
+
 	err = processor.process(&updatesDelta)
 	assert.NoError(t, err)
-	
+
 	// Verify final state
 	if feature, exists := storage.Get("feature-a"); !exists {
 		t.Error("feature-a should still exist")
 	} else if f, ok := feature.(api.Feature); ok && f.Enabled {
 		t.Error("feature-a should be disabled after update")
 	}
-	
+
 	if _, exists := storage.Get("feature-b"); exists {
 		t.Error("feature-b should not exist after removal")
 	}
-	
+
 	if feature, exists := storage.Get("feature-c"); !exists {
 		t.Error("feature-c should exist after update")
 	} else if f, ok := feature.(api.Feature); ok && !f.Enabled {
@@ -273,16 +273,16 @@ func TestStreamingDelta_MultipleDeltaEvents(t *testing.T) {
 func TestStreamingDelta_SegmentUpdates(t *testing.T) {
 	storage := &DefaultStorage{}
 	storage.Init("/tmp", "test-app")
-	
+
 	options := repositoryOptions{
 		storage: storage,
 	}
-	
+
 	repo := &repository{
 		segments: make(map[int][]api.Constraint),
 		options:  options,
 	}
-	
+
 	channels := repositoryChannels{
 		ready:  make(chan bool, 1),
 		update: make(chan bool, 1),
@@ -291,9 +291,9 @@ func TestStreamingDelta_SegmentUpdates(t *testing.T) {
 			warnings: make(chan error, 10),
 		},
 	}
-	
+
 	processor := newDeltaProcessor(storage, repo, channels)
-	
+
 	// Hydration with feature using segments
 	hydrationJSON := `{
 		"events": [{
@@ -321,21 +321,21 @@ func TestStreamingDelta_SegmentUpdates(t *testing.T) {
 			]
 		}]
 	}`
-	
+
 	var hydrationDelta api.ClientFeaturesDelta
 	err := json.Unmarshal([]byte(hydrationJSON), &hydrationDelta)
 	assert.NoError(t, err)
-	
+
 	err = processor.process(&hydrationDelta)
 	assert.NoError(t, err)
-	
+
 	// Verify initial segment state
 	if constraints, exists := repo.segments[1]; !exists {
 		t.Error("Segment 1 should exist")
 	} else if len(constraints) != 1 {
 		t.Errorf("Segment 1 should have 1 constraint, got %d", len(constraints))
 	}
-	
+
 	// Update segment to include more users
 	segmentUpdateJSON := `{
 		"events": [{
@@ -351,14 +351,14 @@ func TestStreamingDelta_SegmentUpdates(t *testing.T) {
 			}
 		}]
 	}`
-	
+
 	var segmentUpdateDelta api.ClientFeaturesDelta
 	err = json.Unmarshal([]byte(segmentUpdateJSON), &segmentUpdateDelta)
 	assert.NoError(t, err)
-	
+
 	err = processor.process(&segmentUpdateDelta)
 	assert.NoError(t, err)
-	
+
 	// Verify updated segment
 	if constraints, exists := repo.segments[1]; !exists {
 		t.Error("Segment 1 should still exist")
@@ -367,7 +367,7 @@ func TestStreamingDelta_SegmentUpdates(t *testing.T) {
 	} else if len(constraints[0].Values) != 2 {
 		t.Errorf("Segment 1 constraint should have 2 values, got %d", len(constraints[0].Values))
 	}
-	
+
 	// Add new segment and update feature to use both
 	multiSegmentUpdateJSON := `{
 		"events": [
@@ -397,14 +397,14 @@ func TestStreamingDelta_SegmentUpdates(t *testing.T) {
 			}
 		]
 	}`
-	
+
 	var multiSegmentDelta api.ClientFeaturesDelta
 	err = json.Unmarshal([]byte(multiSegmentUpdateJSON), &multiSegmentDelta)
 	assert.NoError(t, err)
-	
+
 	err = processor.process(&multiSegmentDelta)
 	assert.NoError(t, err)
-	
+
 	// Verify both segments exist
 	if _, exists := repo.segments[1]; !exists {
 		t.Error("Segment 1 should still exist")
@@ -412,7 +412,7 @@ func TestStreamingDelta_SegmentUpdates(t *testing.T) {
 	if _, exists := repo.segments[2]; !exists {
 		t.Error("Segment 2 should exist")
 	}
-	
+
 	// Verify feature has been updated with both segments
 	if feature, exists := storage.Get("segmented-feature"); !exists {
 		t.Error("segmented-feature should exist")
@@ -429,16 +429,16 @@ func TestStreamingDelta_SegmentUpdates(t *testing.T) {
 func TestStreamingDelta_ErrorHandling(t *testing.T) {
 	storage := &DefaultStorage{}
 	storage.Init("/tmp", "test-app")
-	
+
 	options := repositoryOptions{
 		storage: storage,
 	}
-	
+
 	repo := &repository{
 		segments: make(map[int][]api.Constraint),
 		options:  options,
 	}
-	
+
 	channels := repositoryChannels{
 		ready:  make(chan bool, 1),
 		update: make(chan bool, 1),
@@ -447,9 +447,9 @@ func TestStreamingDelta_ErrorHandling(t *testing.T) {
 			warnings: make(chan error, 10),
 		},
 	}
-	
+
 	processor := newDeltaProcessor(storage, repo, channels)
-	
+
 	// Send valid hydration first
 	validHydrationJSON := `{
 		"events": [{
@@ -461,25 +461,25 @@ func TestStreamingDelta_ErrorHandling(t *testing.T) {
 			"segments": []
 		}]
 	}`
-	
+
 	var validDelta api.ClientFeaturesDelta
 	err := json.Unmarshal([]byte(validHydrationJSON), &validDelta)
 	assert.NoError(t, err)
-	
+
 	err = processor.process(&validDelta)
 	assert.NoError(t, err)
-	
+
 	// Verify feature exists
 	if _, exists := storage.Get("test"); !exists {
 		t.Error("test feature should exist after valid hydration")
 	}
-	
+
 	// Try to process nil delta (should handle gracefully)
 	err = processor.process(nil)
 	if err == nil {
 		t.Error("Processing nil delta should return an error")
 	}
-	
+
 	// Process delta with unknown event type (should be ignored)
 	unknownEventJSON := `{
 		"events": [{
@@ -487,15 +487,15 @@ func TestStreamingDelta_ErrorHandling(t *testing.T) {
 			"eventId": 2
 		}]
 	}`
-	
+
 	var unknownDelta api.ClientFeaturesDelta
 	err = json.Unmarshal([]byte(unknownEventJSON), &unknownDelta)
 	assert.NoError(t, err)
-	
+
 	err = processor.process(&unknownDelta)
 	// Should not error, just ignore unknown event
 	assert.NoError(t, err)
-	
+
 	// Process valid update after error
 	validUpdateJSON := `{
 		"events": [{
@@ -504,14 +504,14 @@ func TestStreamingDelta_ErrorHandling(t *testing.T) {
 			"feature": {"name": "test2", "enabled": true, "strategies": []}
 		}]
 	}`
-	
+
 	var validUpdateDelta api.ClientFeaturesDelta
 	err = json.Unmarshal([]byte(validUpdateJSON), &validUpdateDelta)
 	assert.NoError(t, err)
-	
+
 	err = processor.process(&validUpdateDelta)
 	assert.NoError(t, err)
-	
+
 	// Both features should exist
 	if _, exists := storage.Get("test"); !exists {
 		t.Error("test feature should still exist")
@@ -525,16 +525,16 @@ func TestStreamingDelta_ErrorHandling(t *testing.T) {
 func TestStreamingDelta_ConstraintEvaluation(t *testing.T) {
 	storage := &DefaultStorage{}
 	storage.Init("/tmp", "test-app")
-	
+
 	options := repositoryOptions{
 		storage: storage,
 	}
-	
+
 	repo := &repository{
 		segments: make(map[int][]api.Constraint),
 		options:  options,
 	}
-	
+
 	channels := repositoryChannels{
 		ready:  make(chan bool, 1),
 		update: make(chan bool, 1),
@@ -543,9 +543,9 @@ func TestStreamingDelta_ConstraintEvaluation(t *testing.T) {
 			warnings: make(chan error, 10),
 		},
 	}
-	
+
 	processor := newDeltaProcessor(storage, repo, channels)
-	
+
 	// Setup feature with complex segment constraints
 	hydrationJSON := `{
 		"events": [{
@@ -580,14 +580,14 @@ func TestStreamingDelta_ConstraintEvaluation(t *testing.T) {
 			]
 		}]
 	}`
-	
+
 	var hydrationDelta api.ClientFeaturesDelta
 	err := json.Unmarshal([]byte(hydrationJSON), &hydrationDelta)
 	assert.NoError(t, err)
-	
+
 	err = processor.process(&hydrationDelta)
 	assert.NoError(t, err)
-	
+
 	// Test constraint evaluation logic would go here
 	// This is primarily testing that the segments are properly stored
 	if constraints, exists := repo.segments[1]; !exists {
@@ -605,7 +605,7 @@ func TestStreamingDelta_ConstraintEvaluation(t *testing.T) {
 		if len(constraints[0].Values) != 2 {
 			t.Errorf("First constraint should have 2 values, got %d", len(constraints[0].Values))
 		}
-		
+
 		// Verify second constraint (environment NOT_IN)
 		if constraints[1].ContextName != "environment" {
 			t.Errorf("Second constraint should be environment, got %s", constraints[1].ContextName)
@@ -621,16 +621,16 @@ func TestStreamingDelta_FeatureEvaluation(t *testing.T) {
 	// This test validates that features can be evaluated with context after processing deltas
 	storage := &DefaultStorage{}
 	storage.Init("/tmp", "test-app")
-	
+
 	options := repositoryOptions{
 		storage: storage,
 	}
-	
+
 	repo := &repository{
 		segments: make(map[int][]api.Constraint),
 		options:  options,
 	}
-	
+
 	channels := repositoryChannels{
 		ready:  make(chan bool, 1),
 		update: make(chan bool, 1),
@@ -639,9 +639,9 @@ func TestStreamingDelta_FeatureEvaluation(t *testing.T) {
 			warnings: make(chan error, 10),
 		},
 	}
-	
+
 	processor := newDeltaProcessor(storage, repo, channels)
-	
+
 	// Setup features with various strategies
 	hydrationJSON := `{
 		"events": [{
@@ -672,18 +672,18 @@ func TestStreamingDelta_FeatureEvaluation(t *testing.T) {
 			"segments": []
 		}]
 	}`
-	
+
 	var hydrationDelta api.ClientFeaturesDelta
 	err := json.Unmarshal([]byte(hydrationJSON), &hydrationDelta)
 	assert.NoError(t, err)
-	
+
 	err = processor.process(&hydrationDelta)
 	assert.NoError(t, err)
-	
+
 	// Create a mock client to test feature evaluation
 	// Note: In a real integration test, you'd use the actual Client
 	// Here we're just verifying the data is stored correctly
-	
+
 	// Verify always-on feature
 	if feature, exists := storage.Get("always-on"); !exists {
 		t.Error("always-on feature should exist")
@@ -692,7 +692,7 @@ func TestStreamingDelta_FeatureEvaluation(t *testing.T) {
 		assert.Equal(t, 1, len(f.Strategies), "always-on should have 1 strategy")
 		assert.Equal(t, "default", f.Strategies[0].Name, "always-on should use default strategy")
 	}
-	
+
 	// Verify user-based feature
 	if feature, exists := storage.Get("user-based"); !exists {
 		t.Error("user-based feature should exist")
@@ -702,14 +702,14 @@ func TestStreamingDelta_FeatureEvaluation(t *testing.T) {
 		assert.Equal(t, "userWithId", f.Strategies[0].Name, "user-based should use userWithId strategy")
 		assert.Equal(t, "user1,user2,user3", f.Strategies[0].Parameters["userIds"], "userIds parameter should match")
 	}
-	
+
 	// Verify disabled feature
 	if feature, exists := storage.Get("disabled-feature"); !exists {
 		t.Error("disabled-feature should exist")
 	} else if f, ok := feature.(api.Feature); ok {
 		assert.False(t, f.Enabled, "disabled-feature should be disabled")
 	}
-	
+
 	// Now update a feature and verify the change
 	updateJSON := `{
 		"events": [{
@@ -722,14 +722,14 @@ func TestStreamingDelta_FeatureEvaluation(t *testing.T) {
 			}
 		}]
 	}`
-	
+
 	var updateDelta api.ClientFeaturesDelta
 	err = json.Unmarshal([]byte(updateJSON), &updateDelta)
 	assert.NoError(t, err)
-	
+
 	err = processor.process(&updateDelta)
 	assert.NoError(t, err)
-	
+
 	// Verify the feature is now enabled
 	if feature, exists := storage.Get("disabled-feature"); !exists {
 		t.Error("disabled-feature should still exist")
@@ -737,4 +737,3 @@ func TestStreamingDelta_FeatureEvaluation(t *testing.T) {
 		assert.True(t, f.Enabled, "disabled-feature should now be enabled")
 	}
 }
-
