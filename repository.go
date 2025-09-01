@@ -66,9 +66,9 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 	}
 
 	repo.options.storage.Init(options.backupPath, options.appName)
-
+	// In the future, remove the dependency of the repository and just pass in the storage
 	repo.deltaProcessor = newDeltaProcessor(repo.options.storage, repo, channels)
-
+	
 	if repo.isStreaming {
 		repo.streamingClient = newStreamingClient(
 			options,

@@ -3,7 +3,6 @@ package unleash
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -52,8 +51,6 @@ func (sc *streamingClient) start(_ Storage) error {
 	if sc.running {
 		return nil
 	}
-
-	log.Print("Setting up client")
 
 	req, err := http.NewRequestWithContext(sc.ctx, "GET", sc.url, nil)
 	if err != nil {
@@ -114,14 +111,10 @@ func (sc *streamingClient) start(_ Storage) error {
 
 func (sc *streamingClient) handleEvent(event eventsource.Event) {
 	eventType := event.Event()
-	log.Printf("Handling event: %s", eventType)
 
 	if event == nil {
 		return
 	}
-
-	log.Printf("Received SSE event: %s", eventType)
-	log.Printf("Receiving SSE content %s", event.Data())
 
 	switch eventType {
 	case "unleash-connected":

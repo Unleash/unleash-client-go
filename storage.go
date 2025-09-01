@@ -76,7 +76,6 @@ func (ds *DefaultStorage) Load() error {
 }
 
 func (ds *DefaultStorage) Persist() error {
-	fmt.Printf("Persisting feature toggles to %s\n", ds.path)
 	if file, err := os.Create(ds.path); err != nil {
 		return err
 	} else {
