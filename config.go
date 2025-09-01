@@ -266,7 +266,7 @@ type repositoryOptions struct {
 	backupPath      string
 	refreshInterval time.Duration
 	storage         Storage
-	httpClient      *http.Client
+	httpClient     	*http.Client
 	headers         http.Header
 	isStreaming     bool
 }
