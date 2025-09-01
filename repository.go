@@ -23,18 +23,21 @@ var (
 type repository struct {
 	repositoryChannels
 	sync.RWMutex
-	options       repositoryOptions
-	etag          string
-	close         chan struct{}
-	closed        chan struct{}
-	ctx           context.Context
-	cancel        func()
-	isReady       bool
-	refreshTicker *time.Ticker
-	segments      map[int][]api.Constraint
-	errors        float64
-	maxSkips      float64
-	skips         float64
+	options         repositoryOptions
+	etag            string
+	close           chan struct{}
+	closed          chan struct{}
+	ctx             context.Context
+	cancel          func()
+	isReady         bool
+	refreshTicker   *time.Ticker
+	segments        map[int][]api.Constraint
+	errors          float64
+	maxSkips        float64
+	skips           float64
+	streamingClient *streamingClient
+	isStreaming     bool
+	deltaProcessor  *deltaProcessor
 }
 
 func newRepository(options repositoryOptions, channels repositoryChannels) *repository {
@@ -48,6 +51,7 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 		errors:             0,
 		maxSkips:           10,
 		skips:              0,
+		isStreaming:        options.isStreaming,
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	repo.ctx = ctx
@@ -62,6 +66,16 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 	}
 
 	repo.options.storage.Init(options.backupPath, options.appName)
+	// In the future, remove the dependency of the repository and just pass in the storage
+	repo.deltaProcessor = newDeltaProcessor(repo.options.storage, repo, channels)
+	
+	if repo.isStreaming {
+		repo.streamingClient = newStreamingClient(
+			options,
+			channels,
+			repo.deltaProcessor,
+		)
+	}
 
 	go repo.sync()
 
@@ -97,20 +111,48 @@ func (r *repository) fetchAndReportError() {
 }
 
 func (r *repository) sync() {
-	r.fetchAndReportError()
+	// Single read lock to determine initial mode
+	r.RLock()
+	isStreaming := r.isStreaming
+	streamingClient := r.streamingClient
+	r.RUnlock()
+
+	// Start streaming mode if enabled
+	// The eventsource library handles all reconnections automatically with backoff and jitter
+	if isStreaming && streamingClient != nil {
+		if err := streamingClient.start(r.options.storage); err != nil {
+			r.err(fmt.Errorf("failed to start streaming client: %w", err))
+		}
+	}
+
+	// Use polling if not streaming
+	if !isStreaming {
+		r.fetchAndReportError()
+	}
+
 	for {
 		select {
 		case <-r.close:
+			if r.streamingClient != nil {
+				r.streamingClient.stop()
+			}
 			if err := r.options.storage.Persist(); err != nil {
 				r.err(err)
 			}
 			close(r.closed)
 			return
 		case <-r.refreshTicker.C:
-			if r.skips == 0 {
-				r.fetchAndReportError()
-			} else {
-				r.decrementSkips()
+			// Only poll if not in streaming mode
+			r.RLock()
+			shouldPoll := !r.isStreaming
+			r.RUnlock()
+
+			if shouldPoll {
+				if r.skips == 0 {
+					r.fetchAndReportError()
+				} else {
+					r.decrementSkips()
+				}
 			}
 		}
 	}
@@ -188,6 +230,25 @@ func (r *repository) fetch() error {
 	return nil
 }
 
+// updateStorageWithDelta updates the storage with delta changes in a thread-safe manner
+func (r *repository) updateStorageWithDelta(features map[string]interface{}, segments map[int][]api.Constraint) error {
+	r.Lock()
+	defer r.Unlock()
+
+	// Update segments
+	r.segments = segments
+
+	// Update storage
+	return r.options.storage.Reset(features, true)
+}
+
+// IsStreaming returns whether the repository is currently in streaming mode
+func (r *repository) IsStreaming() bool {
+	r.RLock()
+	defer r.RUnlock()
+	return r.isStreaming
+}
+
 func (r *repository) statusIsOK(resp *http.Response) error {
 	s := resp.StatusCode
 	if http.StatusOK <= s && s < http.StatusMultipleChoices {
@@ -218,8 +279,13 @@ func (r *repository) getToggle(key string) *api.Feature {
 func (r *repository) resolveSegmentConstraints(strategy api.Strategy) ([]api.Constraint, error) {
 	segmentConstraints := []api.Constraint{}
 
+	// Use repository's segments (works for both polling and streaming modes)
+	r.RLock()
+	segments := r.segments
+	r.RUnlock()
+
 	for _, segmentId := range strategy.Segments {
-		if resolvedConstraints, ok := r.segments[segmentId]; ok {
+		if resolvedConstraints, ok := segments[segmentId]; ok {
 			segmentConstraints = append(segmentConstraints, resolvedConstraints...)
 		} else {
 			return segmentConstraints, fmt.Errorf("segment does not exist")

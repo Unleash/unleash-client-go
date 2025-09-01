@@ -11,20 +11,21 @@ import (
 )
 
 type configOption struct {
-	appName         string
-	environment     string
-	instanceId      string
-	url             string
-	projectName     string
-	refreshInterval time.Duration
-	metricsInterval time.Duration
-	disableMetrics  bool
-	backupPath      string
-	strategies      []strategy.Strategy
-	listener        interface{}
-	storage         Storage
-	httpClient      *http.Client
-	customHeaders   http.Header
+	appName          string
+	environment      string
+	instanceId       string
+	url              string
+	projectName      string
+	refreshInterval  time.Duration
+	metricsInterval  time.Duration
+	disableMetrics   bool
+	backupPath       string
+	strategies       []strategy.Strategy
+	listener         interface{}
+	storage          Storage
+	httpClient       *http.Client
+	customHeaders    http.Header
+	experimentalMode map[string]string
 }
 
 // ConfigOption represents a option for configuring the client.
@@ -137,6 +138,19 @@ func WithProjectName(projectName string) ConfigOption {
 	return func(o *configOption) {
 		o.projectName = projectName
 	}
+}
+
+// WithExperimentalMode allows enabling experimental features like streaming.
+// Example: WithExperimentalMode(map[string]string{"type": "streaming"})
+func WithExperimentalMode(mode map[string]string) ConfigOption {
+	return func(o *configOption) {
+		o.experimentalMode = mode
+	}
+}
+
+// IsStreamingMode checks if streaming mode is configured
+func (o *configOption) IsStreamingMode() bool {
+	return o.experimentalMode != nil && o.experimentalMode["type"] == "streaming"
 }
 
 // FeatureResolver represents a function to be called to resolve the feature instead of using the repository
@@ -252,8 +266,9 @@ type repositoryOptions struct {
 	backupPath      string
 	refreshInterval time.Duration
 	storage         Storage
-	httpClient      *http.Client
+	httpClient     	*http.Client
 	headers         http.Header
+	isStreaming     bool
 }
 
 type metricsOptions struct {
