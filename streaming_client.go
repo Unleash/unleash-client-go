@@ -25,11 +25,10 @@ type streamingClient struct {
 	cancel             context.CancelFunc
 	running            bool
 	runningMutex       sync.RWMutex
-	errorChannels      errorChannels
 	repositoryChannels repositoryChannels
 }
 
-func newStreamingClient(options repositoryOptions, repoChannels repositoryChannels, errChannels errorChannels, deltaProc *deltaProcessor) *streamingClient {
+func newStreamingClient(options repositoryOptions, repoChannels repositoryChannels, deltaProc *deltaProcessor) *streamingClient {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	return &streamingClient{
@@ -41,7 +40,6 @@ func newStreamingClient(options repositoryOptions, repoChannels repositoryChanne
 		deltaProcessor:     deltaProc,
 		ctx:                ctx,
 		cancel:             cancel,
-		errorChannels:      errChannels,
 		repositoryChannels: repoChannels,
 		running:            false,
 	}
@@ -71,13 +69,14 @@ func (sc *streamingClient) start(_ Storage) error {
 	req.Header.Set("UNLEASH-APPNAME", sc.appName)
 	req.Header.Set("UNLEASH-INSTANCEID", sc.instanceId)
 	req.Header.Add("Unleash-Client-Spec", SEGMENT_CLIENT_SPEC_VERSION)
+	req.Header.Add("User-Agent", sc.appName)
 
 	stream, err := eventsource.SubscribeWithRequestAndOptions(req,
 		eventsource.StreamOptionCanRetryFirstConnection(-time.Second*3),
 		eventsource.StreamOptionUseBackoff(5*time.Minute),
 		eventsource.StreamOptionUseJitter(0.5),
 		eventsource.StreamOptionErrorHandler(func(err error) eventsource.StreamErrorHandlerResult {
-			sc.errorChannels.err(fmt.Errorf("SSE error: %w", err))
+			sc.repositoryChannels.errorChannels.err(fmt.Errorf("SSE error: %w", err))
 			return eventsource.StreamErrorHandlerResult{CloseNow: false}
 		}),
 	)
@@ -92,7 +91,7 @@ func (sc *streamingClient) start(_ Storage) error {
 		defer func() {
 			if r := recover(); r != nil {
 				err := fmt.Errorf("SSE subscription panic recovered: %v", r)
-				sc.errorChannels.err(err)
+				sc.repositoryChannels.errorChannels.err(err)
 			}
 		}()
 
@@ -127,14 +126,14 @@ func (sc *streamingClient) handleEvent(event eventsource.Event) {
 	switch eventType {
 	case "unleash-connected":
 		if err := sc.handleConnectedEvent(event); err != nil {
-			sc.errorChannels.err(fmt.Errorf("error handling connected event: %w", err))
+			sc.repositoryChannels.errorChannels.err(fmt.Errorf("error handling connected event: %w", err))
 		}
 	case "unleash-updated":
 		if err := sc.handleUpdatedEvent(event); err != nil {
-			sc.errorChannels.err(fmt.Errorf("error handling updated event: %w", err))
+			sc.repositoryChannels.errorChannels.err(fmt.Errorf("error handling updated event: %w", err))
 		}
 	default:
-		sc.errorChannels.warn(fmt.Errorf("unknown SSE event type: %s", eventType))
+		sc.repositoryChannels.errorChannels.warn(fmt.Errorf("unknown SSE event type: %s", eventType))
 	}
 }
 

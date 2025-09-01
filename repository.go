@@ -67,15 +67,12 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 
 	repo.options.storage.Init(options.backupPath, options.appName)
 
-	// Initialize delta processor for handling delta events
 	repo.deltaProcessor = newDeltaProcessor(repo.options.storage, repo, channels)
 
-	// Initialize streaming client if streaming mode is enabled
 	if repo.isStreaming {
 		repo.streamingClient = newStreamingClient(
 			options,
 			channels,
-			channels.errorChannels,
 			repo.deltaProcessor,
 		)
 	}
