@@ -10,6 +10,26 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// testRepositoryListener is a test implementation of RepositoryListener that
+// notifies via channels when events occur
+type testRepositoryListener struct {
+	updateChan chan bool
+}
+
+func (l *testRepositoryListener) OnReady() {
+	// Not needed for this test
+}
+
+func (l *testRepositoryListener) OnUpdate() {
+	if l.updateChan != nil {
+		select {
+		case l.updateChan <- true:
+		default:
+			// Channel is full, ignore
+		}
+	}
+}
+
 // mockSSEServer creates a test server that simulates SSE responses
 // Since Gock doesn't support SSE streaming, we need a real test server for these tests
 func mockSSEServer(hydrationData, updateData string) *httptest.Server {
@@ -52,6 +72,9 @@ func TestStreamingMode_UnleashConnectedEvent(t *testing.T) {
 	server := mockSSEServer(hydrationData, "")
 	defer server.Close()
 
+	// Create a listener for monitoring events
+	listener := &testRepositoryListener{}
+
 	// Configure client with streaming mode
 	client, err := NewClient(
 		WithUrl(server.URL),
@@ -61,6 +84,7 @@ func TestStreamingMode_UnleashConnectedEvent(t *testing.T) {
 		WithExperimentalMode(map[string]string{"type": "streaming"}),
 		WithStorage(&DefaultStorage{}),
 		WithDisableMetrics(true),
+		WithListener(listener),
 	)
 	assert.NoError(t, err)
 	defer client.Close()
@@ -83,6 +107,12 @@ func TestStreamingMode_UnleashUpdatedEvent(t *testing.T) {
 	server := mockSSEServer(hydrationData, updateData)
 	defer server.Close()
 
+	// Create a listener to detect updates
+	updateChan := make(chan bool, 1)
+	listener := &testRepositoryListener{
+		updateChan: updateChan,
+	}
+
 	client, err := NewClient(
 		WithUrl(server.URL),
 		WithAppName("test-app"),
@@ -90,6 +120,7 @@ func TestStreamingMode_UnleashUpdatedEvent(t *testing.T) {
 		WithDisableMetrics(true),
 		WithExperimentalMode(map[string]string{"type": "streaming"}),
 		WithStorage(&DefaultStorage{}),
+		WithListener(listener),
 	)
 	assert.NoError(t, err)
 	defer client.Close()
@@ -101,7 +132,12 @@ func TestStreamingMode_UnleashUpdatedEvent(t *testing.T) {
 	assert.False(t, client.IsEnabled("feature-1"), "feature-1 should be initially disabled")
 
 	// Wait for the update event to be processed
-	time.Sleep(200 * time.Millisecond)
+	select {
+	case <-updateChan:
+		// Update received
+	case <-time.After(5 * time.Second):
+		t.Fatal("Timeout waiting for update event")
+	}
 
 	// Feature should now be enabled after update
 	assert.True(t, client.IsEnabled("feature-1"), "feature-1 should be enabled after update")
