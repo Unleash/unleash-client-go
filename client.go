@@ -548,11 +548,17 @@ func (uc *Client) Warnings() <-chan error {
 	return uc.warnings
 }
 
-// Ready returns the ready channel for the client. A value will be available on
-// the channel when the feature toggles have been loaded from the Unleash
-// server.
+// Ready returns a channel that will receive `true` when the client has loaded
+// feature toggles from the Unleash server. It returns a fresh channel per call
+// and will deliver immediately if the client is already ready.
 func (uc *Client) Ready() <-chan bool {
-	return uc.ready
+	ch := make(chan bool, 1)
+	go func() {
+		<-uc.onReady
+		ch <- true
+		close(ch)
+	}()
+	return ch
 }
 
 // Count returns the count channel which gives an update when a toggle has been queried.

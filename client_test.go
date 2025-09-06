@@ -1496,3 +1496,86 @@ func TestConnectionAndIntervalHeadersAndBody(t *testing.T) {
 
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
+
+func TestReady(t *testing.T) {
+	// waitReadyChannelWithTimeout is a safety net for waiting on the ready channel to send the ready state.
+	// In the worst case, if the channel never sends anything after this subscribe, this function will time out and fail the test.
+	waitReadyChannelWithTimeout := func(t *testing.T, ready <-chan bool) (bool, bool) {
+		t.Helper()
+		select {
+		case actual, ok := <-ready:
+			return actual, ok
+		case <-time.After(100 * time.Millisecond):
+			t.Error("timeout waiting for unleash client to be ready after 100ms")
+		}
+		return false, false
+	}
+
+	t.Run("call ready", func(t *testing.T) {
+		assert := assert.New(t)
+		defer gock.OffAll()
+
+		gock.New(mockerServer).
+			Get("/client/features").
+			Reply(200).
+			JSON(api.FeatureResponse{})
+
+		mockListener := &MockedListener{}
+		mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+		mockListener.On("OnReady").Return()
+
+		client, err := NewClient(
+			WithUrl(mockerServer),
+			WithAppName(mockAppName),
+			WithInstanceId(mockInstanceId),
+			WithListener(mockListener),
+			WithDisableMetrics(true),
+		)
+		assert.NoError(err)
+
+		ready, ok := waitReadyChannelWithTimeout(t, client.Ready())
+		assert.True(ready, "the ready should be true when client has synced the feature flags")
+		assert.True(ok)
+
+		err = client.Close()
+
+		assert.True(gock.IsDone(), "there should be no more mocks")
+	})
+
+	t.Run("call Ready again after client is ready", func(t *testing.T) {
+		assert := assert.New(t)
+		defer gock.OffAll()
+
+		gock.New(mockerServer).
+			Get("/client/features").
+			Reply(200).
+			JSON(api.FeatureResponse{})
+
+		mockListener := &MockedListener{}
+		mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+		mockListener.On("OnReady").Return()
+
+		client, err := NewClient(
+			WithUrl(mockerServer),
+			WithAppName(mockAppName),
+			WithInstanceId(mockInstanceId),
+			WithListener(mockListener),
+			WithDisableMetrics(true),
+		)
+		assert.NoError(err)
+
+		ready, ok := waitReadyChannelWithTimeout(t, client.Ready())
+		assert.True(ready, "the ready should be true when client has synced the feature flags")
+		assert.True(ok)
+
+		// Issue since v5.0.3 and below.
+		// If client is ready after client.Ready is called, The ready channel return nothing and it will be stuck
+		ready, ok = waitReadyChannelWithTimeout(t, client.Ready())
+		assert.True(ready, "the ready should remain true even if the ready channel has already broadcast the ready state.")
+		assert.True(ok)
+
+		err = client.Close()
+
+		assert.True(gock.IsDone(), "there should be no more mocks")
+	})
+}
