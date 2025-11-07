@@ -111,7 +111,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		onReady:       make(chan struct{}),
 		ready:         make(chan bool, 1),
 		update:        make(chan bool, 1),
-		count:         make(chan metric),
+		count:         make(chan metric, 65536),
 		sent:          make(chan MetricsData),
 		registered:    make(chan ClientData, 1),
 		impression:    make(chan ImpressionEvent, 10),
@@ -128,6 +128,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		AppName:     uc.options.appName,
 	}
 
+	emitMetricCounts := uc.options.listener != nil
 	if uc.options.listener == nil {
 		uc.options.listener = &NoopListener{}
 	}
@@ -214,15 +215,16 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 
 	uc.metrics = newMetrics(
 		metricsOptions{
-			appName:         uc.options.appName,
-			instanceId:      uc.options.instanceId,
-			connectionId:    connectionId,
-			strategies:      strategyNames,
-			metricsInterval: uc.options.metricsInterval,
-			url:             *parsedUrl,
-			httpClient:      uc.options.httpClient,
-			headers:         headers,
-			disableMetrics:  uc.options.disableMetrics,
+			appName:          uc.options.appName,
+			instanceId:       uc.options.instanceId,
+			connectionId:     connectionId,
+			strategies:       strategyNames,
+			metricsInterval:  uc.options.metricsInterval,
+			url:              *parsedUrl,
+			httpClient:       uc.options.httpClient,
+			headers:          headers,
+			disableMetrics:   uc.options.disableMetrics,
+			emitMetricCounts: emitMetricCounts,
 		},
 		metricsChannels{
 			errorChannels: errChannels,

@@ -89,30 +89,32 @@ type metric struct {
 
 type metrics struct {
 	metricsChannels
-	options  metricsOptions
-	started  time.Time
-	bucketMu sync.Mutex
-	bucket   api.Bucket
-	ticker   *time.Ticker
-	close    chan struct{}
-	closed   chan struct{}
-	ctx      context.Context
-	cancel   func()
-	maxSkips float64
-	errors   float64
-	skips    float64
+	options          metricsOptions
+	started          time.Time
+	bucketMu         sync.Mutex
+	bucket           api.Bucket
+	ticker           *time.Ticker
+	close            chan struct{}
+	closed           chan struct{}
+	ctx              context.Context
+	cancel           func()
+	maxSkips         float64
+	errors           float64
+	skips            float64
+	emitMetricCounts bool
 }
 
 func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
 	m := &metrics{
-		metricsChannels: channels,
-		options:         options,
-		started:         time.Now(),
-		close:           make(chan struct{}),
-		closed:          make(chan struct{}),
-		maxSkips:        10,
-		errors:          0,
-		skips:           0,
+		metricsChannels:  channels,
+		options:          options,
+		started:          time.Now(),
+		close:            make(chan struct{}),
+		closed:           make(chan struct{}),
+		maxSkips:         10,
+		errors:           0,
+		skips:            0,
+		emitMetricCounts: options.emitMetricCounts,
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	m.ctx = ctx
@@ -299,7 +301,9 @@ func (m *metrics) count(name string, enabled bool) {
 		return
 	}
 	m.add(name, enabled, 1)
-	m.metricsChannels.count <- metric{Name: name, Enabled: enabled}
+	if m.emitMetricCounts {
+		m.metricsChannels.count <- metric{Name: name, Enabled: enabled}
+	}
 }
 
 func (m *metrics) countVariants(name string, enabled bool, variantName string) {

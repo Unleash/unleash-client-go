@@ -266,20 +266,21 @@ type repositoryOptions struct {
 	backupPath      string
 	refreshInterval time.Duration
 	storage         Storage
-	httpClient     	*http.Client
+	httpClient      *http.Client
 	headers         http.Header
 	isStreaming     bool
 }
 
 type metricsOptions struct {
-	appName         string
-	instanceId      string
-	connectionId    string
-	url             url.URL
-	strategies      []string
-	metricsInterval time.Duration
-	disableMetrics  bool
-	httpClient      *http.Client
-	headers         http.Header
-	started         *time.Time
+	appName          string
+	instanceId       string
+	connectionId     string
+	url              url.URL
+	strategies       []string
+	metricsInterval  time.Duration
+	disableMetrics   bool
+	httpClient       *http.Client
+	headers          http.Header
+	started          *time.Time
+	emitMetricCounts bool
 }
