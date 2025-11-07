@@ -2,8 +2,9 @@ package unleash_test
 
 import (
 	"fmt"
-	"github.com/Unleash/unleash-client-go/v4"
 	"time"
+
+	"github.com/Unleash/unleash-go-sdk/v5"
 )
 
 const PropertyName = "eid.enabled"

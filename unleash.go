@@ -1,6 +1,6 @@
 package unleash
 
-import "github.com/Unleash/unleash-client-go/v4/api"
+import "github.com/Unleash/unleash-go-sdk/v5/api"
 
 var defaultClient *Client
 
@@ -61,7 +61,7 @@ func IsEnabled(feature string, options ...FeatureOption) bool {
 // Initialize will specify the options to be used by the default client.
 func Initialize(options ...ConfigOption) (err error) {
 	defaultClient, err = NewClient(options...)
-	return
+	return err
 }
 
 func GetVariant(feature string, options ...VariantOption) *api.Variant {

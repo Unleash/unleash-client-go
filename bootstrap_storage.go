@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/Unleash/unleash-client-go/v4/api"
+	"github.com/Unleash/unleash-go-sdk/v5/api"
 )
 
 type BootstrapStorage struct {

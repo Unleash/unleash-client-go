@@ -2,8 +2,8 @@ package constraints
 
 import (
 	"github.com/Masterminds/semver/v3"
-	"github.com/Unleash/unleash-client-go/v4/api"
-	"github.com/Unleash/unleash-client-go/v4/context"
+	"github.com/Unleash/unleash-go-sdk/v5/api"
+	"github.com/Unleash/unleash-go-sdk/v5/context"
 )
 
 func operatorSemverEq(ctx *context.Context, constraint api.Constraint) (bool, error) {

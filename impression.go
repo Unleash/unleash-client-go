@@ -1,13 +1,13 @@
 package unleash
 
 import (
-	"github.com/Unleash/unleash-client-go/v4/context"
+	"github.com/Unleash/unleash-go-sdk/v5/context"
 )
 
 type EventType string
 
 const (
-	ImpressionEventTypeIsEnabled EventType = "IsEnabled"
+	ImpressionEventTypeIsEnabled  EventType = "IsEnabled"
 	ImpressionEventTypeGetVariant EventType = "GetVariant"
 )
 
@@ -28,4 +28,3 @@ type ImpressionEvent struct {
 	// Context is the evaluation context used.
 	Context *context.Context
 }
-

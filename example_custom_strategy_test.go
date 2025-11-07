@@ -2,10 +2,11 @@ package unleash_test
 
 import (
 	"fmt"
-	"github.com/Unleash/unleash-client-go/v4"
-	"github.com/Unleash/unleash-client-go/v4/context"
 	"strings"
 	"time"
+
+	"github.com/Unleash/unleash-go-sdk/v5"
+	"github.com/Unleash/unleash-go-sdk/v5/context"
 )
 
 type ActiveForUserWithEmailStrategy struct{}

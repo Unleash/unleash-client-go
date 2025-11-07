@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Unleash/unleash-client-go/v4"
+	"github.com/Unleash/unleash-go-sdk/v5"
 )
 
 func BenchmarkFeatureToggleEvaluation(b *testing.B) {

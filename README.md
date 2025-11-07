@@ -1,17 +1,15 @@
-[![Build Status](https://github.com/Unleash/unleash-go-sdk/actions/workflows/build.yml/badge.svg)](https://github.com/Unleash/unleash-go-sdk/actions/workflows/build.yml) [![GoDoc](https://pkg.go.dev/badge/github.com/Unleash/unleash-client-go/v4?status.svg)](https://pkg.go.dev/github.com/Unleash/unleash-client-go/v4) [![Go Report Card](https://goreportcard.com/badge/github.com/Unleash/unleash-client-go)](https://goreportcard.com/report/github.com/Unleash/unleash-client-go)
-[![Coverage Status](https://coveralls.io/repos/github/Unleash/unleash-client-go/badge.svg?branch=v4)](https://coveralls.io/github/Unleash/unleash-client-go?branch=v4)
+[![Build Status](https://github.com/Unleash/unleash-go-sdk/actions/workflows/build.yml/badge.svg)](https://github.com/Unleash/unleash-go-sdk/actions/workflows/build.yml) [![GoDoc](https://pkg.go.dev/badge/github.com/Unleash/unleash-go-sdk/v5?status.svg)](https://pkg.go.dev/github.com/Unleash/unleash-go-sdk/v5) [![Go Report Card](https://goreportcard.com/badge/github.com/Unleash/unleash-go-sdk/v5)](https://goreportcard.com/report/github.com/Unleash/unleash-go-sdk/v5)
+[![Coverage Status](https://coveralls.io/repos/github/Unleash/unleash-go-sdk/badge.svg?branch=v5)](https://coveralls.io/github/Unleash/unleash-go-sdk?branch=v5)
 
-# Unleash Go SDK
+# unleash-go-sdk
 
-Unleash is a private, secure, and scalable [feature management platform](https://www.getunleash.io/) built to reduce the risk of releasing new features and accelerate software development. This Backend Go SDK is designed to help you integrate with Unleash and evaluate feature flags inside your application.
-
-You can use this client with [Unleash Enterprise](https://www.getunleash.io/pricing?utm_source=readme&utm_medium=go) or [Unleash Open Source](https://github.com/Unleash/unleash).
+Unleash Client for Go. Read more about the [Unleash project](https://github.com/Unleash/unleash)
 
 **Version 5 of the client changed the module name from `github.com/Unleash/unleash-client-go/v4` to `github.com/Unleash/unleash-go-sdk/v5`. Other than the module name change, it should be a drop-in replacement for the previous version.** If you're using the v4 branch, consider migrating to v5 as soon as possible.
 
-**Version 3.x of the client requires `unleash-server` v4.x or higher.**
+Unleash is a private, secure, and scalable [feature management platform](https://www.getunleash.io/) built to reduce the risk of releasing new features and accelerate software development. This Backend Go SDK is designed to help you integrate with Unleash and evaluate feature flags inside your application.
 
-
+You can use this client with [Unleash Enterprise](https://www.getunleash.io/pricing?utm_source=readme&utm_medium=go) or [Unleash Open Source](https://github.com/Unleash/unleash).
 
 ## Go Version
 
@@ -22,20 +20,12 @@ The client may work on older versions of Go as well, but is not actively tested.
 
 ## Getting started
 
-**Note:** Since August 4th, 2025, the repository was renamed from github.com/Unleash/unleash-client-go to github.com/Unleash/unleash-go-sdk. The module name was changed in v5 branch but for v4 so you should still use the old module path: `go get github.com/Unleash/unleash-client-go/v4`.
-
-### 1. Install unleash-client-go
+### 1. Install unleash-go-sdk
 
 To install the latest version of the client use:
 
 ```bash
-go get github.com/Unleash/unleash-client-go/v4
-```
-
-If you are still using Unleash Server v2.x.x, then you should use:
-
-```bash
-go get github.com/Unleash/unleash-client-go
+go get github.com/Unleash/unleash-go-sdk/v5
 ```
 
 ### 2. Initialize unleash
@@ -45,7 +35,7 @@ The easiest way to get started with Unleash is to initialize it early in your ap
 **Asynchronous initialization example:**
 ```go
 import (
-	"github.com/Unleash/unleash-client-go/v4"
+	"github.com/Unleash/unleash-go-sdk/v5"
 )
 
 func init() {
@@ -62,7 +52,7 @@ func init() {
 
 ```go
 import (
-	"github.com/Unleash/unleash-client-go/v4"
+	"github.com/Unleash/unleash-go-sdk/v5"
 )
 
 func init() {
@@ -88,7 +78,7 @@ Bootstrapping from file on disk is then done using something similar to:
 
 ```go
 import (
-	"github.com/Unleash/unleash-client-go/v4"
+	"github.com/Unleash/unleash-go-sdk/v5"
 )
 
 func init() {
@@ -109,7 +99,7 @@ Bootstrapping from S3 is then done by downloading the file using the AWS library
 
 ```go
 import (
-	"github.com/Unleash/unleash-client-go/v4"
+	"github.com/Unleash/unleash-go-sdk/v5"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -153,7 +143,7 @@ Since the Google Cloud Storage API returns a Reader, implementing a Bootstrap fr
 
 ```go
 import (
-	"github.com/Unleash/unleash-client-go/v4"
+	"github.com/Unleash/unleash-go-sdk/v5"
 	"cloud.google.com/go/storage"
 )
 
@@ -228,7 +218,7 @@ unleash.IsEnabled("someToggle", unleash.WithContext(ctx))
 
 ### Caveat
 
-This client uses go routines to report several events and doesn't drain the channel by default. So you need to either register a listener using `WithListener` or drain the channel "manually" (demonstrated in [this example](https://github.com/Unleash/unleash-go-sdk/blob/v4/example_with_instance_test.go)).
+This client uses go routines to report several events and doesn't drain the channel by default. So you need to either register a listener using `WithListener` or drain the channel "manually" (demonstrated in [this example](https://github.com/Unleash/unleash-go-sdk/blob/v5/example_with_instance_test.go)).
 
 ### Feature Resolver
 
@@ -299,11 +289,11 @@ func main() {
 
 ## Development
 
-To override dependency on unleash-client-go github repository to a local development folder (for instance when building a local test-app for the SDK),
+To override dependency on unleash-go-sdk github repository to a local development folder (for instance when building a local test-app for the SDK),
 you can add the following to your apps `go.mod`:
 
 ```mod
-    replace github.com/Unleash/unleash-client-go/v4 => ../unleash-client-go/
+    replace github.com/Unleash/unleash-go-sdk/v5 => ../unleash-go-sdk/
 ```
 
 
@@ -365,11 +355,11 @@ Here's an example of how the output could look like:
 ```
 goos: darwin
 goarch: arm64
-pkg: github.com/Unleash/unleash-client-go/v4
+pkg: github.com/Unleash/unleash-go-sdk/v5
 BenchmarkFeatureToggleEvaluation-8 Final Estimated Operations Per Day: 101.131 billion (1.011315e+11)
 13635154 854.3 ns/op
 PASS
-ok github.com/Unleash/unleash-client-go/v4 13.388s
+ok github.com/Unleash/unleash-go-sdk/v5 13.388s
 ```
 
 In this example the benchmark was run on a MacBook Pro (M1 Pro, 2021) with 16GB RAM.

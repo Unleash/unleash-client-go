@@ -1,8 +1,8 @@
 package constraints
 
 import (
-	"github.com/Unleash/unleash-client-go/v4/api"
-	"github.com/Unleash/unleash-client-go/v4/context"
+	"github.com/Unleash/unleash-go-sdk/v5/api"
+	"github.com/Unleash/unleash-go-sdk/v5/context"
 )
 
 func operatorNotIn(ctx *context.Context, constraint api.Constraint) bool {

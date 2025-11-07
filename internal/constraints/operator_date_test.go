@@ -1,11 +1,12 @@
 package constraints
 
 import (
-	"github.com/Unleash/unleash-client-go/v4/api"
-	"github.com/Unleash/unleash-client-go/v4/context"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/Unleash/unleash-go-sdk/v5/api"
+	"github.com/Unleash/unleash-go-sdk/v5/context"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestOperatorDate(t *testing.T) {

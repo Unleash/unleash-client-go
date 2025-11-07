@@ -12,7 +12,7 @@ import (
 
 	"github.com/h2non/gock"
 
-	"github.com/Unleash/unleash-client-go/v4/api"
+	"github.com/Unleash/unleash-go-sdk/v5/api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

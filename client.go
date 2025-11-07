@@ -8,17 +8,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Unleash/unleash-client-go/v4/api"
-	"github.com/Unleash/unleash-client-go/v4/context"
-	"github.com/Unleash/unleash-client-go/v4/internal/constraints"
-	s "github.com/Unleash/unleash-client-go/v4/internal/strategies"
-	"github.com/Unleash/unleash-client-go/v4/strategy"
+	"github.com/Unleash/unleash-go-sdk/v5/api"
+	"github.com/Unleash/unleash-go-sdk/v5/context"
+	"github.com/Unleash/unleash-go-sdk/v5/internal/constraints"
+	s "github.com/Unleash/unleash-go-sdk/v5/internal/strategies"
+	"github.com/Unleash/unleash-go-sdk/v5/strategy"
 )
 
 const (
 	deprecatedSuffix = "/features"
-	clientName       = "unleash-client-go"
-	clientVersion    = "4.5.0"
+	clientName       = "unleash-go-sdk"
+	clientVersion    = "5.0.3"
 	specVersion      = "4.3.1"
 )
 
@@ -196,6 +196,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 			storage:         uc.options.storage,
 			httpClient:      uc.options.httpClient,
 			headers:         headers,
+			isStreaming:     uc.options.IsStreamingMode(),
 		},
 		repositoryChannels{
 			errorChannels: errChannels,
@@ -445,7 +446,7 @@ func (uc *Client) GetVariant(feature string, options ...VariantOption) (variant 
 
 	defer func() {
 		uc.metrics.countVariants(feature, variant.FeatureEnabled, variant.Name)
-		
+
 		f := uc.repository.getToggle(feature)
 		if f != nil && f.ImpressionData && uc.impressionListener != nil {
 			var opts variantOption

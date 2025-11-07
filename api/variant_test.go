@@ -3,7 +3,7 @@ package api
 import (
 	"testing"
 
-	"github.com/Unleash/unleash-client-go/v4/context"
+	"github.com/Unleash/unleash-go-sdk/v5/context"
 	"github.com/stretchr/testify/suite"
 )
 

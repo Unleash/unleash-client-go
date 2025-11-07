@@ -3,8 +3,8 @@ package unleash
 import (
 	"time"
 
-	"github.com/Unleash/unleash-client-go/v4/api"
-	"github.com/Unleash/unleash-client-go/v4/context"
+	"github.com/Unleash/unleash-go-sdk/v5/api"
+	"github.com/Unleash/unleash-go-sdk/v5/context"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
@@ -1425,14 +1425,14 @@ func TestSendIdentificationHeaders(t *testing.T) {
 	gock.New(mockerServer).
 		Post("/client/register").
 		MatchHeader("UNLEASH-APPNAME", mockAppName).
-		MatchHeader("UNLEASH-SDK", `unleash-client-go:\d+\.\d+\.\d+`).
+		MatchHeader("UNLEASH-SDK", `unleash-go-sdk:\d+\.\d+\.\d+`).
 		MatchHeader("UNLEASH-CONNECTION-ID", `[0-9a-f\-]{36}`).
 		Reply(200)
 
 	gock.New(mockerServer).
 		Get("/client/features").
 		MatchHeader("UNLEASH-APPNAME", mockAppName).
-		MatchHeader("UNLEASH-SDK", `unleash-client-go:\d+\.\d+\.\d+`).
+		MatchHeader("UNLEASH-SDK", `unleash-go-sdk:\d+\.\d+\.\d+`).
 		MatchHeader("UNLEASH-CONNECTION-ID", `[0-9a-f\-]{36}`).
 		Reply(200).
 		JSON(api.FeatureResponse{})

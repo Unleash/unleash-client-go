@@ -4,11 +4,12 @@
 package strategies
 
 import (
-	"github.com/Unleash/unleash-client-go/v4/context"
-	"github.com/Unleash/unleash-client-go/v4/strategy"
-	"github.com/stretchr/testify/assert"
 	"strconv"
 	"testing"
+
+	"github.com/Unleash/unleash-go-sdk/v5/context"
+	"github.com/Unleash/unleash-go-sdk/v5/strategy"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGradualRolloutRandomStrategy_Name(t *testing.T) {
