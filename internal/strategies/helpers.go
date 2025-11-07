@@ -1,10 +1,9 @@
 package strategies
 
 import (
-	"math/rand"
+	"math/rand/v2"
 	"os"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/twmb/murmur3"
@@ -74,15 +73,11 @@ func coalesce(str ...string) string {
 }
 
 type rng struct {
-	sync.Mutex
 	random *rand.Rand
 }
 
 func (r *rng) int() int {
-	r.Lock()
-	n := r.random.Intn(100) + 1
-	r.Unlock()
-	return n
+	return r.random.IntN(100) + 1
 }
 
 func (r *rng) float() float64 {
@@ -90,15 +85,12 @@ func (r *rng) float() float64 {
 }
 
 func (r *rng) string() string {
-	r.Lock()
-	n := r.random.Intn(10000) + 1
-	r.Unlock()
-	return strconv.Itoa(n)
+	return strconv.Itoa(r.random.IntN(10000) + 1)
 }
 
-// newRng creates a new random number generator and uses a mutex
-// internally to ensure safe concurrent reads.
+// newRng creates a new random number generator that is safe for concurrent use.
+// Uses math/rand/v2 which provides lock-free concurrent access via atomic operations.
 func newRng() *rng {
-	seed := time.Now().UnixNano() + int64(os.Getpid())
-	return &rng{random: rand.New(rand.NewSource(seed))}
+	seed := uint64(time.Now().UnixNano()) + uint64(os.Getpid())
+	return &rng{random: rand.New(rand.NewPCG(seed, 0))}
 }
