@@ -1,7 +1,7 @@
 package strategies
 
 import (
-	"math/rand"
+	"math/rand/v2"
 	"os"
 	"strconv"
 	"sync"
@@ -11,16 +11,6 @@ import (
 )
 
 var VariantNormalizationSeed uint32 = 86028157
-
-func round(f float64) int {
-	if f < -0.5 {
-		return int(f - 0.5)
-	}
-	if f > 0.5 {
-		return int(f + 0.5)
-	}
-	return 0
-}
 
 func resolveHostname() (string, error) {
 	var err error
@@ -34,7 +24,7 @@ func resolveHostname() (string, error) {
 	return hostname, err
 }
 
-func parameterAsFloat64(param interface{}) (result float64, ok bool) {
+func parameterAsFloat64(param any) (result float64, ok bool) {
 	if f, isFloat := param.(float64); isFloat {
 		result, ok = f, true
 	} else if i, isInt := param.(int); isInt {
@@ -80,9 +70,8 @@ type rng struct {
 
 func (r *rng) int() int {
 	r.Lock()
-	n := r.random.Intn(100) + 1
-	r.Unlock()
-	return n
+	defer r.Unlock()
+	return r.random.IntN(100) + 1
 }
 
 func (r *rng) float() float64 {
@@ -91,14 +80,12 @@ func (r *rng) float() float64 {
 
 func (r *rng) string() string {
 	r.Lock()
-	n := r.random.Intn(10000) + 1
-	r.Unlock()
-	return strconv.Itoa(n)
+	defer r.Unlock()
+	return strconv.Itoa(r.random.IntN(10000) + 1)
 }
 
 // newRng creates a new random number generator and uses a mutex
 // internally to ensure safe concurrent reads.
 func newRng() *rng {
-	seed := time.Now().UnixNano() + int64(os.Getpid())
-	return &rng{random: rand.New(rand.NewSource(seed))}
+	return &rng{random: rand.New(rand.NewPCG(uint64(time.Now().UnixNano()), uint64(os.Getpid())))}
 }

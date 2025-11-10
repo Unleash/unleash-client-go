@@ -49,7 +49,7 @@ func (l *MockedListener) OnImpression(event ImpressionEvent) {
 	l.Called(event)
 }
 
-func writeJSON(rw http.ResponseWriter, x interface{}) {
+func writeJSON(rw http.ResponseWriter, x any) {
 	enc := json.NewEncoder(rw)
 	if err := enc.Encode(x); err != nil {
 		panic(err)

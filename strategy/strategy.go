@@ -33,5 +33,5 @@ type Strategy interface {
 	// IsEnabled should look at the map of parameters and optionally
 	// the supplied context and return true if the feature should be
 	// enabled.
-	IsEnabled(map[string]interface{}, *context.Context) bool
+	IsEnabled(map[string]any, *context.Context) bool
 }

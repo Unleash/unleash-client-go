@@ -4,6 +4,7 @@
 package strategies
 
 import (
+	"math"
 	"testing"
 
 	"github.com/Unleash/unleash-go-sdk/v5/context"
@@ -29,7 +30,7 @@ func TestFlexibleRolloutStrategy_IsWellDistributed(t *testing.T) {
 		}
 	}
 
-	actualPercentage := round(100.0 * float64(enabledCount) / float64(rounds))
+	actualPercentage := math.Round(100.0 * float64(enabledCount) / float64(rounds))
 
 	assert.InDelta(t, 50, actualPercentage, 1.0)
 }

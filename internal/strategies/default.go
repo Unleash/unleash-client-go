@@ -12,6 +12,6 @@ func (s defaultStrategy) Name() string {
 	return "default"
 }
 
-func (s defaultStrategy) IsEnabled(_ map[string]interface{}, _ *context.Context) bool {
+func (s defaultStrategy) IsEnabled(_ map[string]any, _ *context.Context) bool {
 	return true
 }

@@ -1,5 +1,7 @@
 package api
 
+import "slices"
+
 import "github.com/Unleash/unleash-go-sdk/v5/context"
 
 var DISABLED_VARIANT = &Variant{
@@ -81,12 +83,7 @@ func (o Override) matchValue(ctx *context.Context) bool {
 	if len(o.Values) == 0 {
 		return false
 	}
-	for _, value := range o.Values {
-		if value == o.getIdentifier(ctx) {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(o.Values, o.getIdentifier(ctx))
 }
 
 // Get default variant if feature is not found or if the feature is disabled.

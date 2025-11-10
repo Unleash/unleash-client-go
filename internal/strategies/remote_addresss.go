@@ -19,7 +19,7 @@ func (s remoteAddressStrategy) Name() string {
 	return "remoteAddress"
 }
 
-func (s remoteAddressStrategy) IsEnabled(params map[string]interface{}, ctx *context.Context) bool {
+func (s remoteAddressStrategy) IsEnabled(params map[string]any, ctx *context.Context) bool {
 	value, found := params[strategy.ParamIps]
 	if !found {
 		return false

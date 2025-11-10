@@ -30,7 +30,7 @@ func TestApplicationHostnameStrategy_IsEnabled(t *testing.T) {
 
 	t.Run("h=os.hostname", func(t *testing.T) {
 		hostname, _ := resolveHostname()
-		isEnabled := s.IsEnabled(map[string]interface{}{
+		isEnabled := s.IsEnabled(map[string]any{
 			strategy.ParamHostNames: hostname,
 		}, nil)
 
@@ -39,7 +39,7 @@ func TestApplicationHostnameStrategy_IsEnabled(t *testing.T) {
 
 	t.Run("h=list(os.hostname)", func(t *testing.T) {
 		hostname, _ := resolveHostname()
-		isEnabled := s.IsEnabled(map[string]interface{}{
+		isEnabled := s.IsEnabled(map[string]any{
 			strategy.ParamHostNames: "localhost," + hostname,
 		}, nil)
 
@@ -52,7 +52,7 @@ func TestApplicationHostnameStrategy_IsEnabled(t *testing.T) {
 		// needed to re-read env-var
 		s = NewApplicationHostnameStrategy()
 
-		isEnabled := s.IsEnabled(map[string]interface{}{
+		isEnabled := s.IsEnabled(map[string]any{
 			strategy.ParamHostNames: "localhost,some-random-name",
 		}, nil)
 
@@ -65,7 +65,7 @@ func TestApplicationHostnameStrategy_IsEnabled(t *testing.T) {
 		// needed to re-read env-var
 		s = NewApplicationHostnameStrategy()
 
-		isEnabled := s.IsEnabled(map[string]interface{}{
+		isEnabled := s.IsEnabled(map[string]any{
 			strategy.ParamHostNames: "localhost,some-random-name",
 		}, nil)
 

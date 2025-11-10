@@ -9,7 +9,7 @@ import (
 	"github.com/Unleash/unleash-go-sdk/v5/internal/strategies"
 )
 
-type ParameterMap map[string]interface{}
+type ParameterMap map[string]any
 
 type FeatureResponse struct {
 	Response
@@ -67,8 +67,8 @@ type Dependency struct {
 	Enabled *bool `json:"enabled"`
 }
 
-func (fr FeatureResponse) FeatureMap() map[string]interface{} {
-	features := map[string]interface{}{}
+func (fr FeatureResponse) FeatureMap() map[string]any {
+	features := map[string]any{}
 	for _, f := range fr.Features {
 		features[f.Name] = f
 	}

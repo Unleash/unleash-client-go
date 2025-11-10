@@ -22,7 +22,7 @@ func (s applicationHostnameStrategy) Name() string {
 	return "applicationHostname"
 }
 
-func (s applicationHostnameStrategy) IsEnabled(params map[string]interface{}, _ *context.Context) bool {
+func (s applicationHostnameStrategy) IsEnabled(params map[string]any, _ *context.Context) bool {
 	value, found := params[strategy.ParamHostNames]
 	if !found {
 		return false

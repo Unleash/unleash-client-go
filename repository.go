@@ -222,11 +222,14 @@ func (r *repository) fetch() error {
 	}
 
 	r.Lock()
+	defer r.Unlock()
 	r.etag = resp.Header.Get("Etag")
 	r.segments = featureResp.SegmentsMap()
-	r.options.storage.Reset(featureResp.FeatureMap(), true)
+	if err := r.options.storage.Reset(featureResp.FeatureMap(), true); err != nil {
+		return fmt.Errorf("resetting storage: %w", err)
+	}
 	r.successfulFetch()
-	r.Unlock()
+
 	return nil
 }
 

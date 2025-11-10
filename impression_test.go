@@ -45,7 +45,7 @@ func TestImpression_Off(t *testing.T) {
 						{
 							Id:   1,
 							Name: "flexibleRollout",
-							Parameters: map[string]interface{}{
+							Parameters: map[string]any{
 								"rollout":    100,
 								"stickiness": "default",
 							},
@@ -94,7 +94,7 @@ func TestImpression_IsEnabled(t *testing.T) {
 						{
 							Id:   1,
 							Name: "flexibleRollout",
-							Parameters: map[string]interface{}{
+							Parameters: map[string]any{
 								"rollout":    100,
 								"stickiness": "default",
 							},
@@ -152,7 +152,7 @@ func TestImpression_GetVariant(t *testing.T) {
 						{
 							Id:   1,
 							Name: "flexibleRollout",
-							Parameters: map[string]interface{}{
+							Parameters: map[string]any{
 								"rollout":    100,
 								"stickiness": "default",
 								"groupId":    variant,
@@ -227,7 +227,7 @@ func TestImpression_WithContext(t *testing.T) {
 						{
 							Id:   1,
 							Name: "flexibleRollout",
-							Parameters: map[string]interface{}{
+							Parameters: map[string]any{
 								"rollout":    100,
 								"stickiness": "default",
 							},
@@ -307,7 +307,7 @@ func TestImpression_WithContextAndMultipleEvents(t *testing.T) {
 						{
 							Id:   1,
 							Name: "flexibleRollout",
-							Parameters: map[string]interface{}{
+							Parameters: map[string]any{
 								"rollout":    100,
 								"stickiness": "default",
 							},
@@ -398,7 +398,7 @@ func TestImpression_GetChannelMethod(t *testing.T) {
 						{
 							Id:   1,
 							Name: "flexibleRollout",
-							Parameters: map[string]interface{}{
+							Parameters: map[string]any{
 								"rollout":    100,
 								"stickiness": "default",
 							},

@@ -18,7 +18,7 @@ func TestRemoteAddressStrategy_IsEnabled(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("r=", func(t *testing.T) {
-		var params map[string]interface{}
+		var params map[string]any
 		ctx := &context.Context{
 			RemoteAddress: "123",
 		}
@@ -26,7 +26,7 @@ func TestRemoteAddressStrategy_IsEnabled(t *testing.T) {
 	})
 
 	t.Run("r=i", func(t *testing.T) {
-		params := map[string]interface{}{
+		params := map[string]any{
 			strategy.ParamIps: "127.0.0.1",
 		}
 		ctx := &context.Context{
@@ -36,7 +36,7 @@ func TestRemoteAddressStrategy_IsEnabled(t *testing.T) {
 	})
 
 	t.Run("r!=list(i)", func(t *testing.T) {
-		params := map[string]interface{}{
+		params := map[string]any{
 			strategy.ParamIps: "127.0.1.1, 127.0.1.2, 127.0.1.3",
 		}
 		ctx := &context.Context{
@@ -46,7 +46,7 @@ func TestRemoteAddressStrategy_IsEnabled(t *testing.T) {
 	})
 
 	t.Run("r=list(i)", func(t *testing.T) {
-		params := map[string]interface{}{
+		params := map[string]any{
 			strategy.ParamIps: "127.0.0.1, 127.0.0.2,127.0.0.213",
 		}
 		ctx := &context.Context{
@@ -56,7 +56,7 @@ func TestRemoteAddressStrategy_IsEnabled(t *testing.T) {
 	})
 
 	t.Run("r=range(i)", func(t *testing.T) {
-		params := map[string]interface{}{
+		params := map[string]any{
 			strategy.ParamIps: "127.0.1.1, 127.0.1.2,127.0.1.3, 160.33.0.0/16",
 		}
 		ctx := &context.Context{

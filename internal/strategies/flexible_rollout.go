@@ -39,7 +39,7 @@ func (s flexibleRolloutStrategy) resolveStickiness(st stickiness, ctx context.Co
 	}
 }
 
-func (s flexibleRolloutStrategy) IsEnabled(params map[string]interface{}, ctx *context.Context) bool {
+func (s flexibleRolloutStrategy) IsEnabled(params map[string]any, ctx *context.Context) bool {
 	groupID := ""
 	if gID, found := params[strategy.ParamGroupId]; found {
 		groupID = gID.(string)

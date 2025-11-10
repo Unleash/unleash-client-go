@@ -249,7 +249,7 @@ func (m *metrics) sendMetrics() {
 	}
 }
 
-func (m *metrics) doPost(url *url.URL, payload interface{}) (*http.Response, error) {
+func (m *metrics) doPost(url *url.URL, payload any) (*http.Response, error) {
 	var body bytes.Buffer
 	enc := json.NewEncoder(&body)
 	if err := enc.Encode(payload); err != nil {
@@ -313,7 +313,7 @@ func (m *metrics) countVariants(name string, enabled bool, variantName string) {
 	m.bucketMu.Lock()
 	defer m.bucketMu.Unlock()
 
-	t, _ := m.bucket.Toggles[name]
+	t := m.bucket.Toggles[name]
 	if len(t.Variants) == 0 {
 		t.Variants = make(map[string]int32)
 	}

@@ -172,12 +172,12 @@ func TestClient_ListFeatures(t *testing.T) {
 							Values:      []string{"constraint-value-1", "constraint-value-2"},
 						},
 					},
-					Parameters: map[string]interface{}{
+					Parameters: map[string]any{
 						"strategy-param-1": "strategy-value-1",
 					},
 				},
 			},
-			Parameters: map[string]interface{}{
+			Parameters: map[string]any{
 				"feature-param-1": "feature-value-1",
 			},
 		},
@@ -302,12 +302,12 @@ func TestClientWithVariantContext(t *testing.T) {
 							Values:      []string{"custom-ctx"},
 						},
 					},
-					Parameters: map[string]interface{}{
+					Parameters: map[string]any{
 						"strategy-param-1": "strategy-value-1",
 					},
 				},
 			},
-			Parameters: map[string]interface{}{
+			Parameters: map[string]any{
 				"feature-param-1": "feature-value-1",
 			},
 			Variants: []api.VariantInternal{
@@ -397,11 +397,11 @@ func TestClient_WithSegment(t *testing.T) {
 					Id:          1,
 					Name:        "default",
 					Constraints: []api.Constraint{},
-					Parameters:  map[string]interface{}{},
+					Parameters:  map[string]any{},
 					Segments:    []int{1},
 				},
 			},
-			Parameters: map[string]interface{}{
+			Parameters: map[string]any{
 				"feature-param-1": "feature-value-1",
 			},
 		},
@@ -482,11 +482,11 @@ func TestClient_WithNonExistingSegment(t *testing.T) {
 					Id:          1,
 					Name:        "default",
 					Constraints: []api.Constraint{},
-					Parameters:  map[string]interface{}{},
+					Parameters:  map[string]any{},
 					Segments:    []int{1},
 				},
 			},
-			Parameters: map[string]interface{}{
+			Parameters: map[string]any{
 				"feature-param-1": "feature-value-1",
 			},
 		},
@@ -561,11 +561,11 @@ func TestClient_WithMultipleSegments(t *testing.T) {
 					Id:          1,
 					Name:        "default",
 					Constraints: []api.Constraint{},
-					Parameters:  map[string]interface{}{},
+					Parameters:  map[string]any{},
 					Segments:    []int{1, 4, 6, 2},
 				},
 			},
-			Parameters: map[string]interface{}{
+			Parameters: map[string]any{
 				"feature-param-1": "feature-value-1",
 			},
 		},
@@ -664,11 +664,11 @@ func TestClient_VariantShouldRespectConstraint(t *testing.T) {
 					Id:          1,
 					Name:        "default",
 					Constraints: []api.Constraint{},
-					Parameters:  map[string]interface{}{},
+					Parameters:  map[string]any{},
 					Segments:    []int{1, 4, 6, 2},
 				},
 			},
-			Parameters: map[string]interface{}{
+			Parameters: map[string]any{
 				"feature-param-1": "feature-value-1",
 			},
 			Variants: []api.VariantInternal{
@@ -783,11 +783,11 @@ func TestClient_VariantShouldFailWhenSegmentConstraintsDontMatch(t *testing.T) {
 					Id:          1,
 					Name:        "default",
 					Constraints: []api.Constraint{},
-					Parameters:  map[string]interface{}{},
+					Parameters:  map[string]any{},
 					Segments:    []int{1, 4, 6, 2},
 				},
 			},
-			Parameters: map[string]interface{}{
+			Parameters: map[string]any{
 				"feature-param-1": "feature-value-1",
 			},
 			Variants: []api.VariantInternal{
@@ -899,7 +899,7 @@ func TestClient_ShouldFavorStrategyVariantOverFeatureVariant(t *testing.T) {
 					Id:          1,
 					Name:        "default",
 					Constraints: []api.Constraint{},
-					Parameters: map[string]interface{}{
+					Parameters: map[string]any{
 						"groupId": "strategyVariantName",
 					},
 					Variants: []api.VariantInternal{
@@ -988,7 +988,7 @@ func TestClient_ShouldReturnOldVariantForNonMatchingStrategyVariant(t *testing.T
 					Id:          1,
 					Name:        "flexibleRollout",
 					Constraints: []api.Constraint{},
-					Parameters: map[string]interface{}{
+					Parameters: map[string]any{
 						"rollout":    0,
 						"stickiness": "default",
 					},
@@ -1010,7 +1010,7 @@ func TestClient_ShouldReturnOldVariantForNonMatchingStrategyVariant(t *testing.T
 					Id:          2,
 					Name:        "flexibleRollout",
 					Constraints: []api.Constraint{},
-					Parameters: map[string]interface{}{
+					Parameters: map[string]any{
 						"rollout":    100,
 						"stickiness": "default",
 					},

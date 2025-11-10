@@ -20,7 +20,7 @@ type Storage interface {
 	// Reset is called after the repository has fetched the feature toggles from the server.
 	// If persist is true the implementation of this function should call Persist(). The data
 	// passed in here should be owned by the implementer of this interface.
-	Reset(data map[string]interface{}, persist bool) error
+	Reset(data map[string]any, persist bool) error
 
 	// Load is called to load the data from persistent storage and hold it in memory for fast
 	// querying.
@@ -30,27 +30,27 @@ type Storage interface {
 	Persist() error
 
 	// Get returns the data for the specified feature toggle.
-	Get(string) (interface{}, bool)
+	Get(string) (any, bool)
 
 	// List returns a list of all feature toggles.
-	List() []interface{}
+	List() []any
 }
 
 // DefaultStorage is a default Storage implementation.
 type DefaultStorage struct {
 	appName string
 	path    string
-	data    map[string]interface{}
+	data    map[string]any
 }
 
 func (ds *DefaultStorage) Init(backupPath, appName string) {
 	ds.appName = appName
 	ds.path = filepath.Join(backupPath, fmt.Sprintf("unleash-repo-schema-v1-%s.json", appName))
-	ds.data = map[string]interface{}{}
+	ds.data = map[string]any{}
 	ds.Load()
 }
 
-func (ds *DefaultStorage) Reset(data map[string]interface{}, persist bool) error {
+func (ds *DefaultStorage) Reset(data map[string]any, persist bool) error {
 	ds.data = data
 	if persist {
 		return ds.Persist()
@@ -88,13 +88,13 @@ func (ds *DefaultStorage) Persist() error {
 	return nil
 }
 
-func (ds DefaultStorage) Get(key string) (interface{}, bool) {
+func (ds DefaultStorage) Get(key string) (any, bool) {
 	val, ok := ds.data[key]
 	return val, ok
 }
 
-func (ds *DefaultStorage) List() []interface{} {
-	var features []interface{}
+func (ds *DefaultStorage) List() []any {
+	var features []any
 	for _, val := range ds.data {
 		features = append(features, val)
 	}

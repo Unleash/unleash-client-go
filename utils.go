@@ -3,12 +3,10 @@ package unleash
 import (
 	cryptoRand "crypto/rand"
 	"fmt"
-	"math/rand"
+	"math/rand/v2"
 	"os"
 	"os/user"
-	"reflect"
 	"sync"
-	"time"
 )
 
 func getTmpDirPath() string {
@@ -21,8 +19,7 @@ func generateInstanceId() string {
 	if user, err := user.Current(); err == nil && user.Username != "" {
 		prefix = user.Username
 	} else {
-		rand.Seed(time.Now().Unix())
-		prefix = fmt.Sprintf("generated-%d-%d", rand.Intn(1000000), os.Getpid())
+		prefix = fmt.Sprintf("generated-%d-%d", rand.N(1000000), os.Getpid())
 	}
 
 	if hostname, err := os.Hostname(); err == nil && hostname != "" {
@@ -58,15 +55,6 @@ func getFetchURLPath(projectName string) string {
 	return "./client/features"
 }
 
-func contains(arr []string, str string) bool {
-	for _, item := range arr {
-		if item == str {
-			return true
-		}
-	}
-	return false
-}
-
 // WarnOnce is a type for handling warnings that should only be displayed once.
 type WarnOnce struct {
 	once sync.Once
@@ -79,20 +67,13 @@ func (wo *WarnOnce) Warn(message string) {
 	})
 }
 
-func every(slice interface{}, condition func(interface{}) bool) bool {
-	sliceValue := reflect.ValueOf(slice)
-
-	if sliceValue.Kind() != reflect.Slice {
-		fmt.Println("Input is not a slice returning false")
+// every returns true iff condition returns true for all elements in the input slice.
+// This function will return false for empty slices (unlike the convention used in mathematical logic).
+func every[T any](slice []T, condition func(T) bool) bool {
+	if len(slice) == 0 {
 		return false
 	}
-
-	if sliceValue.Len() == 0 {
-		return false
-	}
-
-	for i := 0; i < sliceValue.Len(); i++ {
-		element := sliceValue.Index(i).Interface()
+	for _, element := range slice {
 		if !condition(element) {
 			return false
 		}
