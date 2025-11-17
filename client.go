@@ -2,7 +2,6 @@ package unleash
 
 import (
 	"fmt"
-	"slices"
 
 	"net/http"
 	"net/url"
@@ -11,7 +10,6 @@ import (
 
 	"github.com/Unleash/unleash-go-sdk/v5/api"
 	"github.com/Unleash/unleash-go-sdk/v5/context"
-	"github.com/Unleash/unleash-go-sdk/v5/internal/constraints"
 	s "github.com/Unleash/unleash-go-sdk/v5/internal/strategies"
 	"github.com/Unleash/unleash-go-sdk/v5/strategy"
 )
@@ -284,7 +282,8 @@ func (uc *Client) sync() {
 //
 // It is safe to call this method from multiple goroutines concurrently.
 func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled bool) {
-	result, f := uc.isEnabled(feature, options...)
+	snapshot := uc.repository.snapshot()
+	result, f := uc.isEnabled(feature, snapshot, options...)
 	enabled = result.Enabled
 
 	defer func() {
@@ -314,13 +313,13 @@ func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled b
 
 // isEnabled abstracts away the details of checking if a toggle is turned on or off
 // without metrics
-func (uc *Client) isEnabled(feature string, options ...FeatureOption) (api.StrategyResult, *api.Feature) {
+func (uc *Client) isEnabled(feature string, snapshot *FeatureMemoryState, options ...FeatureOption) (api.StrategyResult, *api.Feature) {
 	var opts featureOption
 	for _, o := range options {
 		o(&opts)
 	}
 
-	f := resolveToggle(uc, opts, feature)
+	f := snapshot.Features[feature]
 
 	ctx := uc.staticContext
 	if opts.ctx != nil {
@@ -331,124 +330,28 @@ func (uc *Client) isEnabled(feature string, options ...FeatureOption) (api.Strat
 		return handleFallback(opts, feature, ctx), nil
 	}
 
-	if f.Dependencies != nil && len(*f.Dependencies) > 0 {
-		dependenciesSatisfied := uc.isParentDependencySatisfied(f, *ctx)
-
-		if !dependenciesSatisfied {
-			return api.StrategyResult{
-				Enabled: false,
-			}, f
-		}
-	}
-
-	if !f.Enabled {
+	result, err := snapshot.evaluateFeature(f, ctx, uc.strategies)
+	if err != nil {
+		uc.errors <- err
 		return api.StrategyResult{
 			Enabled: false,
 		}, f
 	}
 
-	if len(f.Strategies) == 0 {
-		return api.StrategyResult{
-			Enabled: f.Enabled,
-		}, f
-	}
-
-	for _, s := range f.Strategies {
-		foundStrategy := uc.getStrategy(s.Name)
-		if foundStrategy == nil {
-			// TODO: warnOnce missingStrategy
-			continue
-		}
-
-		segmentConstraints, err := uc.repository.resolveSegmentConstraints(s)
-
-		if err != nil {
-			uc.errors <- err
-			return api.StrategyResult{
-				Enabled: false,
-			}, f
-		}
-
-		allConstraints := make([]api.Constraint, 0, len(segmentConstraints)+len(s.Constraints))
-		allConstraints = append(allConstraints, segmentConstraints...)
-		allConstraints = append(allConstraints, s.Constraints...)
-
-		if ok, err := constraints.Check(ctx, allConstraints); err != nil {
-			uc.errors <- err
-		} else if ok && foundStrategy.IsEnabled(s.Parameters, ctx) {
-			if len(s.Variants) > 0 {
-				groupIdValue := s.Parameters[strategy.ParamGroupId]
-				groupId, ok := groupIdValue.(string)
-				if !ok {
-					return api.StrategyResult{
-						Enabled: false,
-					}, f
-				}
-
-				return api.StrategyResult{
-					Enabled: true,
-					Variant: api.VariantCollection{
-						GroupId:  groupId,
-						Variants: s.Variants,
-					}.GetVariant(ctx),
-				}, f
-			} else {
-				return api.StrategyResult{
-					Enabled: true,
-				}, f
-			}
-		}
-	}
-
-	return api.StrategyResult{
-		Enabled: false,
-	}, f
-}
-
-func (uc *Client) isParentDependencySatisfied(feature *api.Feature, context context.Context) bool {
-	warnOnce := &WarnOnce{}
-
-	dependenciesSatisfied := func(parent api.Dependency) bool {
-		parentToggle := uc.repository.getToggle(parent.Feature)
-
-		if parentToggle == nil {
-			warnOnce.Warn("the parent toggle was not found in the cache, the evaluation of this dependency will always be false")
-			return false
-		}
-
-		if parentToggle.Dependencies != nil && len(*parentToggle.Dependencies) > 0 {
-			return false
-		}
-
-		enabledResult, _ := uc.isEnabled(parent.Feature, WithContext(context))
-		// According to the schema, if the enabled property is absent we assume it's true.
-		if parent.Enabled == nil || *parent.Enabled {
-			if parent.Variants != nil && len(*parent.Variants) > 0 && enabledResult.Variant != nil {
-				return enabledResult.Enabled && slices.Contains(*parent.Variants, enabledResult.Variant.Name)
-			}
-			return enabledResult.Enabled
-		}
-
-		return !enabledResult.Enabled
-	}
-
-	allDependenciesSatisfied := every(*feature.Dependencies, func(parent api.Dependency) bool {
-		return dependenciesSatisfied(parent)
-	})
-
-	return allDependenciesSatisfied
+	return result, f
 }
 
 // GetVariant queries a variant as the specified feature is enabled.
 //
 // It is safe to call this method from multiple goroutines concurrently.
 func (uc *Client) GetVariant(feature string, options ...VariantOption) (variant *api.Variant) {
-	variant = uc.getVariantWithoutMetrics(feature, options...)
+	snapshot := uc.repository.snapshot()
+	variant = uc.getVariantWithoutMetrics(feature, snapshot, options...)
 
 	defer func() {
 		uc.metrics.countVariants(feature, variant.FeatureEnabled, variant.Name)
 
-		f := uc.repository.getToggle(feature)
+		f := snapshot.Features[feature]
 		if f != nil && f.ImpressionData && uc.impressionListener != nil {
 			var opts variantOption
 			for _, o := range options {
@@ -472,7 +375,7 @@ func (uc *Client) GetVariant(feature string, options ...VariantOption) (variant 
 }
 
 // getVariantWithoutMetrics abstracts away the logic for resolving a variant without metrics
-func (uc *Client) getVariantWithoutMetrics(feature string, options ...VariantOption) *api.Variant {
+func (uc *Client) getVariantWithoutMetrics(feature string, snapshot *FeatureMemoryState, options ...VariantOption) *api.Variant {
 	defaultVariant := api.GetDefaultVariant()
 	var opts variantOption
 	for _, o := range options {
@@ -487,9 +390,9 @@ func (uc *Client) getVariantWithoutMetrics(feature string, options ...VariantOpt
 	var strategyResult api.StrategyResult
 	var f *api.Feature
 	if opts.resolver != nil {
-		strategyResult, f = uc.isEnabled(feature, WithContext(*ctx), WithResolver(opts.resolver))
+		strategyResult, f = uc.isEnabled(feature, snapshot, WithContext(*ctx), WithResolver(opts.resolver))
 	} else {
-		strategyResult, f = uc.isEnabled(feature, WithContext(*ctx))
+		strategyResult, f = uc.isEnabled(feature, snapshot, WithContext(*ctx))
 	}
 
 	getFallbackVariant := func(featureEnabled bool) *api.Variant {
@@ -599,17 +502,6 @@ func (uc *Client) WaitForReady() {
 // ListFeatures returns all available features toggles.
 func (uc *Client) ListFeatures() []api.Feature {
 	return uc.repository.list()
-}
-
-func resolveToggle(unleashClient *Client, opts featureOption, featureName string) *api.Feature {
-	var feature *api.Feature
-	if opts.resolver != nil {
-		feature = opts.resolver(featureName)
-	} else {
-		feature = unleashClient.repository.getToggle(featureName)
-	}
-
-	return feature
 }
 
 func handleFallback(opts featureOption, featureName string, ctx *context.Context) api.StrategyResult {
