@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Unleash/unleash-go-sdk/v5/api"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -43,14 +42,10 @@ func TestStreamingClient_Creation(t *testing.T) {
 		headers:    make(http.Header),
 	}
 
-	repo := &repository{
-		segments: make(map[int][]api.Constraint),
-	}
+	repo := &repository{}
 
 	// Create a delta processor for the test
-	storage := &DefaultStorage{}
-	storage.Init("/tmp", "test-app")
-	deltaProc := newDeltaProcessor(storage, repo, repoChannels)
+	deltaProc := newDeltaProcessor(repo, repoChannels)
 
 	client := newStreamingClient(options, repoChannels, deltaProc)
 
@@ -72,25 +67,20 @@ func TestStreamingClient_HandleEvents(t *testing.T) {
 		update:        make(chan bool, 1),
 	}
 
-	storage := &DefaultStorage{}
-	storage.Init("/tmp", "test-app")
-
 	options := repositoryOptions{
 		url:        url.URL{},
 		appName:    "test-app",
 		instanceId: "test-instance",
 		httpClient: &http.Client{},
 		headers:    make(http.Header),
-		storage:    storage,
 	}
 
 	repo := &repository{
-		segments: make(map[int][]api.Constraint),
-		options:  options,
+		options: options,
 	}
 
 	// Create a delta processor for the test
-	deltaProc := newDeltaProcessor(storage, repo, repoChannels)
+	deltaProc := newDeltaProcessor(repo, repoChannels)
 
 	client := newStreamingClient(options, repoChannels, deltaProc)
 	client.ctx, client.cancel = context.WithCancel(context.Background())
@@ -118,7 +108,9 @@ func TestStreamingClient_HandleEvents(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	feature, found := storage.Get("test-feature")
+	snapshot := repo.snapshot()
+
+	feature, found := snapshot.Features["test-feature"]
 	assert.True(t, found)
 	assert.True(t, feature.Enabled)
 
@@ -142,7 +134,9 @@ func TestStreamingClient_HandleEvents(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	feature, found = storage.Get("test-feature")
+	snapshot = repo.snapshot()
+
+	feature, found = snapshot.Features["test-feature"]
 	assert.True(t, found)
 	assert.False(t, feature.Enabled)
 
