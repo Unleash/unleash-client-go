@@ -319,7 +319,11 @@ func (uc *Client) isEnabled(feature string, snapshot *FeatureMemoryState, option
 		o(&opts)
 	}
 
-	f := snapshot.Features[feature]
+	// Because we're not reading directly from the snapshot, we run the risk of getting a torn feature response - one where
+	// a segment is not in sync with the feature requesting it. However, that problem has existed since the feature resolver feature was added.
+	// That feature exists to work around a performance problem where a custom storage implementation wasn't caching.
+	// However that problem should no longer exist since storage is no longer the caching layer and so this code path should be deprecated in the future.
+	f := resolveToggle(snapshot, opts, feature)
 
 	ctx := uc.staticContext
 	if opts.ctx != nil {
@@ -517,5 +521,13 @@ func handleFallback(opts featureOption, featureName string, ctx *context.Context
 
 	return api.StrategyResult{
 		Enabled: false,
+	}
+}
+
+func resolveToggle(snapshot *FeatureMemoryState, opts featureOption, featureName string) *api.Feature {
+	if opts.resolver != nil {
+		return opts.resolver(featureName)
+	} else {
+		return snapshot.Features[featureName]
 	}
 }
