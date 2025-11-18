@@ -11,7 +11,9 @@ import (
 // TestStreamingDeltaIntegration tests the full delta processing flow
 func TestStreamingDeltaIntegration(t *testing.T) {
 	repo := &repository{
-		options: repositoryOptions{},
+		options: repositoryOptions{
+			storage: &NoOpStorage{},
+		},
 	}
 
 	channels := repositoryChannels{
@@ -164,7 +166,9 @@ func TestStreamingDeltaIntegration(t *testing.T) {
 // TestStreamingDelta_MultipleDeltaEvents tests processing multiple delta events in sequence
 func TestStreamingDelta_MultipleDeltaEvents(t *testing.T) {
 	repo := &repository{
-		options: repositoryOptions{},
+		options: repositoryOptions{
+			storage: &NoOpStorage{},
+		},
 	}
 
 	channels := repositoryChannels{
@@ -242,6 +246,7 @@ func TestStreamingDelta_MultipleDeltaEvents(t *testing.T) {
 
 	err = processor.process(&updatesDelta)
 	assert.NoError(t, err)
+	snapshot = repo.snapshot()
 
 	// Verify final state
 	feature, exists = snapshot.Features["feature-a"]
@@ -267,7 +272,9 @@ func TestStreamingDelta_MultipleDeltaEvents(t *testing.T) {
 // TestStreamingDelta_SegmentUpdates tests segment updates via delta events
 func TestStreamingDelta_SegmentUpdates(t *testing.T) {
 	repo := &repository{
-		options: repositoryOptions{},
+		options: repositoryOptions{
+			storage: &NoOpStorage{},
+		},
 	}
 
 	channels := repositoryChannels{
@@ -348,6 +355,8 @@ func TestStreamingDelta_SegmentUpdates(t *testing.T) {
 	err = processor.process(&segmentUpdateDelta)
 	assert.NoError(t, err)
 
+	snapshot = repo.snapshot()
+
 	// Verify updated segment
 	if constraints, exists := snapshot.Segments[1]; !exists {
 		t.Error("Segment 1 should still exist")
@@ -394,6 +403,8 @@ func TestStreamingDelta_SegmentUpdates(t *testing.T) {
 	err = processor.process(&multiSegmentDelta)
 	assert.NoError(t, err)
 
+	snapshot = repo.snapshot()
+
 	// Verify both segments exist
 	if _, exists := snapshot.Segments[1]; !exists {
 		t.Error("Segment 1 should still exist")
@@ -418,7 +429,9 @@ func TestStreamingDelta_SegmentUpdates(t *testing.T) {
 // TestStreamingDelta_ErrorHandling tests error handling in delta processing
 func TestStreamingDelta_ErrorHandling(t *testing.T) {
 	repo := &repository{
-		options: repositoryOptions{},
+		options: repositoryOptions{
+			storage: &NoOpStorage{},
+		},
 	}
 
 	channels := repositoryChannels{
@@ -508,7 +521,9 @@ func TestStreamingDelta_ErrorHandling(t *testing.T) {
 // TestStreamingDelta_ConstraintEvaluation tests constraint evaluation for segments
 func TestStreamingDelta_ConstraintEvaluation(t *testing.T) {
 	repo := &repository{
-		options: repositoryOptions{},
+		options: repositoryOptions{
+			storage: &NoOpStorage{},
+		},
 	}
 
 	channels := repositoryChannels{
@@ -599,7 +614,9 @@ func TestStreamingDelta_FeatureEvaluation(t *testing.T) {
 	// This test validates that features can be evaluated with context after processing deltas
 	// Note from the future: this test does not do what the previous comment says. Leaving it in for context
 	repo := &repository{
-		options: repositoryOptions{},
+		options: repositoryOptions{
+			storage: &NoOpStorage{},
+		},
 	}
 
 	channels := repositoryChannels{

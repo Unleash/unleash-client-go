@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Unleash/unleash-go-sdk/v5/api"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,6 +21,16 @@ type mockEvent struct {
 func (m *mockEvent) Id() string    { return m.id }
 func (m *mockEvent) Event() string { return m.event }
 func (m *mockEvent) Data() string  { return m.data }
+
+type NoOpStorage struct{}
+
+func (s *NoOpStorage) Persist(features *api.FeatureResponse) error {
+	return nil
+}
+
+func (s *NoOpStorage) Load() (*api.FeatureResponse, error) {
+	return &api.FeatureResponse{}, nil
+}
 
 func TestStreamingClient_Creation(t *testing.T) {
 	serverURL, _ := url.Parse("http://localhost:8080/")
@@ -73,6 +84,7 @@ func TestStreamingClient_HandleEvents(t *testing.T) {
 		instanceId: "test-instance",
 		httpClient: &http.Client{},
 		headers:    make(http.Header),
+		storage:    &NoOpStorage{},
 	}
 
 	repo := &repository{
