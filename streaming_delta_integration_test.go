@@ -493,6 +493,8 @@ func TestStreamingDelta_ErrorHandling(t *testing.T) {
 	// Should not error, just ignore unknown event
 	assert.NoError(t, err)
 
+	snapshot = repo.snapshot()
+
 	// Process valid update after error
 	validUpdateJSON := `{
 		"events": [{
@@ -508,6 +510,8 @@ func TestStreamingDelta_ErrorHandling(t *testing.T) {
 
 	err = processor.process(&validUpdateDelta)
 	assert.NoError(t, err)
+
+	snapshot = repo.snapshot()
 
 	// Both features should exist
 	if _, exists := snapshot.Features["test"]; !exists {
