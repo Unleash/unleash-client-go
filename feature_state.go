@@ -22,6 +22,16 @@ func (s *FeatureMemoryState) evaluateFeature(
 	strategies []strategy.Strategy,
 ) (api.StrategyResult, error) {
 
+	if f.Dependencies != nil && len(*f.Dependencies) > 0 {
+		dependenciesSatisfied := s.isParentDependencySatisfied(f, ctx, strategies)
+
+		if !dependenciesSatisfied {
+			return api.StrategyResult{
+				Enabled: false,
+			}, nil
+		}
+	}
+
 	if !f.Enabled {
 		return api.StrategyResult{
 			Enabled: false,
