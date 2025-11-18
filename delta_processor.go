@@ -95,9 +95,9 @@ func (dp *deltaProcessor) process(delta *api.ClientFeaturesDelta) error {
 		Segments: newSegmentList,
 	}
 
-	if err := dp.repository.saveState(state); err != nil {
-		return fmt.Errorf("failed to persist after delta: %w", err)
-	}
+	// explicitly ignore error here, saveState fails if we cannot write to the persistent storage
+	// this no longer means that features are in an invalid state so we can enter a ready state
+	_ = dp.repository.saveState(state)
 
 	if !dp.isReady {
 		dp.isReady = true

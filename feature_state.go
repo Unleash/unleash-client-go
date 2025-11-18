@@ -22,6 +22,12 @@ func (s *FeatureMemoryState) evaluateFeature(
 	strategies []strategy.Strategy,
 ) (api.StrategyResult, error) {
 
+	if !f.Enabled {
+		return api.StrategyResult{
+			Enabled: false,
+		}, nil
+	}
+
 	if len(f.Strategies) == 0 {
 		return api.StrategyResult{
 			Enabled: f.Enabled,
