@@ -59,7 +59,7 @@ func TestClient_WithFallbackFunc(t *testing.T) {
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
-	mockListener.On("OnCount", feature, true).Return()
+	mockListener.On("OnCount", feature, true).Maybe()
 	mockListener.On("OnError").Return()
 
 	client, err := NewClient(
@@ -103,7 +103,7 @@ func TestClient_WithResolver(t *testing.T) {
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
-	mockListener.On("OnCount", feature, true).Return()
+	mockListener.On("OnCount", feature, true).Maybe()
 	mockListener.On("OnError").Return()
 
 	client, err := NewClient(
@@ -335,7 +335,7 @@ func TestClientWithVariantContext(t *testing.T) {
 
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
-	mockListener.On("OnCount", mock.AnythingOfType("string"), mock.AnythingOfType("bool")).Return()
+	mockListener.On("OnCount", mock.AnythingOfType("string"), mock.AnythingOfType("bool")).Maybe()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
 	mockListener.On("OnError", mock.AnythingOfType("*errors.errorString"))
 
@@ -424,7 +424,7 @@ func TestClient_WithSegment(t *testing.T) {
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
-	mockListener.On("OnCount", feature, true).Return()
+	mockListener.On("OnCount", feature, true).Maybe()
 	mockListener.On("OnError").Return()
 
 	client, err := NewClient(
@@ -502,7 +502,7 @@ func TestClient_WithNonExistingSegment(t *testing.T) {
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
-	mockListener.On("OnCount", feature, false).Return()
+	mockListener.On("OnCount", feature, false).Maybe()
 	mockListener.On("OnError", mock.AnythingOfType("*errors.errorString"))
 
 	client, err := NewClient(
@@ -606,7 +606,7 @@ func TestClient_WithMultipleSegments(t *testing.T) {
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
-	mockListener.On("OnCount", feature, true).Return()
+	mockListener.On("OnCount", feature, true).Maybe()
 	mockListener.On("OnError").Return()
 
 	client, err := NewClient(
@@ -721,7 +721,7 @@ func TestClient_VariantShouldRespectConstraint(t *testing.T) {
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
-	mockListener.On("OnCount", feature, true).Return()
+	mockListener.On("OnCount", feature, true).Maybe()
 	mockListener.On("OnError").Return()
 
 	client, err := NewClient(
@@ -839,7 +839,7 @@ func TestClient_VariantShouldFailWhenSegmentConstraintsDontMatch(t *testing.T) {
 
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
-	mockListener.On("OnCount", mock.AnythingOfType("string"), mock.AnythingOfType("bool")).Return()
+	mockListener.On("OnCount", mock.AnythingOfType("string"), mock.AnythingOfType("bool")).Maybe()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
 	mockListener.On("OnError").Return()
 
@@ -942,7 +942,7 @@ func TestClient_ShouldFavorStrategyVariantOverFeatureVariant(t *testing.T) {
 
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
-	mockListener.On("OnCount", mock.AnythingOfType("string"), mock.AnythingOfType("bool")).Return()
+	mockListener.On("OnCount", mock.AnythingOfType("string"), mock.AnythingOfType("bool")).Maybe()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
 	mockListener.On("OnError", mock.AnythingOfType("*errors.errorString"))
 
@@ -1042,7 +1042,7 @@ func TestClient_ShouldReturnOldVariantForNonMatchingStrategyVariant(t *testing.T
 
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
-	mockListener.On("OnCount", mock.AnythingOfType("string"), mock.AnythingOfType("bool")).Return()
+	mockListener.On("OnCount", mock.AnythingOfType("string"), mock.AnythingOfType("bool")).Maybe()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
 	mockListener.On("OnError", mock.AnythingOfType("*errors.errorString"))
 
@@ -1106,7 +1106,7 @@ func TestClient_VariantFromEnabledFeatureWithNoVariants(t *testing.T) {
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
-	mockListener.On("OnCount", feature, true).Return()
+	mockListener.On("OnCount", feature, true).Maybe()
 	mockListener.On("OnError").Return()
 
 	client, err := NewClient(
