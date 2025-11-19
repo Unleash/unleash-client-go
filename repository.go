@@ -62,11 +62,11 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 	}
 
 	if options.storage == nil {
-		storage := &DefaultStorage{}
-		repo.options.storage = storage
+		repo.options.storage = &DefaultStorage{}
 	}
 
 	repo.options.storage.Init(options.backupPath, options.appName)
+	repo.deltaProcessor = newDeltaProcessor(repo, channels)
 
 	if loadedState, err := repo.options.storage.Load(); err == nil && loadedState != nil {
 		repo.updateState(loadedState)
@@ -82,8 +82,7 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 		repo.streamingClient = newStreamingClient(
 			options,
 			channels,
-			newDeltaProcessor(repo, channels),
-		)
+			repo.deltaProcessor)
 	}
 
 	go repo.sync()
