@@ -62,9 +62,11 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 	}
 
 	if options.storage == nil {
-		storage := newDefaultStorage(options.backupPath, options.appName)
+		storage := &DefaultStorage{}
 		repo.options.storage = storage
 	}
+
+	repo.options.storage.Init(options.backupPath, options.appName)
 
 	if loadedState, err := repo.options.storage.Load(); err == nil && loadedState != nil {
 		repo.updateState(loadedState)

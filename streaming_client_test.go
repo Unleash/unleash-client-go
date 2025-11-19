@@ -32,6 +32,8 @@ func (s *NoOpStorage) Load() (*api.FeatureResponse, error) {
 	return &api.FeatureResponse{}, nil
 }
 
+func (s *NoOpStorage) Init(backupPath, appName string) {}
+
 func TestStreamingClient_Creation(t *testing.T) {
 	serverURL, _ := url.Parse("http://localhost:8080/")
 

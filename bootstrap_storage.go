@@ -12,6 +12,10 @@ type BootstrapStorage struct {
 	Reader       io.Reader
 }
 
+func (ds *BootstrapStorage) Init(backupPath, appName string) {
+	ds.backingStore.Init(backupPath, appName)
+}
+
 func (bs *BootstrapStorage) Load() (*api.FeatureResponse, error) {
 	if bs.Reader == nil {
 		return nil, nil
