@@ -86,7 +86,9 @@ func TestMetrics_VariantsCountToggles(t *testing.T) {
 	client.WaitForReady()
 	client.GetVariant("foo")
 
-	assert.EqualValues(client.metrics.bucket.Toggles["foo"].No, 1)
+	registered_metric, ok := client.metrics.counters.Load("foo")
+	assert.True(ok, "should have a count for 'foo'")
+	assert.EqualValues(registered_metric.(*toggleCounters).no, 1)
 	client.Close()
 
 	assert.Nil(err, "client should not return an error")
@@ -335,8 +337,13 @@ func TestMetrics_ShouldNotCountMetricsForParentToggles(t *testing.T) {
 	client.WaitForReady()
 	client.IsEnabled("child")
 
-	assert.EqualValues(client.metrics.bucket.Toggles["child"].Yes, 1)
-	assert.EqualValues(client.metrics.bucket.Toggles["parent"].Yes, 0)
+	child_metric, ok := client.metrics.counters.Load("child")
+	assert.True(ok, "should have a count for 'child'")
+	assert.EqualValues(child_metric.(*toggleCounters).yes, 1)
+
+	_, ok = client.metrics.counters.Load("parent")
+	assert.False(ok, "should not have a count for parent'")
+
 	err = client.Close()
 
 	assert.Nil(err, "client should not return an error")
@@ -591,4 +598,37 @@ func TestMetrics_metricsData_includes_new_metadata(t *testing.T) {
 	assert.Nil(err, "Client should close without errors")
 
 	st.Expect(t, gock.IsDone(), true)
+}
+
+func TestReinsertingBucketsAlsoRestoresVariants(t *testing.T) {
+	metrics_handler := &metrics{
+		metricsChannels: metricsChannels{
+			count: make(chan metric, 100),
+		},
+	}
+
+	metrics_handler.countVariants("some-feature", true, "some-variant")
+	registered_metric, ok := metrics_handler.counters.Load("some-feature")
+
+	if !ok {
+		t.Fatal("should have a count for 'some-feature'")
+	}
+
+	assert.EqualValues(t, 1, registered_metric.(*toggleCounters).variants["some-variant"])
+
+	retrieved_bucket, ok := metrics_handler.buildBucketAndReset(time.Now())
+	if !ok {
+		t.Fatal("Missing bucket for 'some-feature'")
+	}
+
+	assert.EqualValues(t, 1, retrieved_bucket.Toggles["some-feature"].Variants["some-variant"])
+
+	metrics_handler.reinsertBucket(retrieved_bucket)
+
+	registered_metric, ok = metrics_handler.counters.Load("some-feature")
+	if !ok {
+		t.Fatal("should have a count for 'some-feature'")
+	}
+
+	assert.EqualValues(t, 1, registered_metric.(*toggleCounters).variants["some-variant"])
 }
