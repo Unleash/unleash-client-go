@@ -92,14 +92,13 @@ func newRng() *rng {
 
 var rngPool = sync.Pool{
 	New: func() any {
-		seed := time.Now().UnixNano() + int64(os.Getpid())
-		return rand.New(rand.NewSource(seed))
+		return rand.New(rand.NewPCG(uint64(time.Now().UnixNano()), uint64(os.Getpid())))
 	},
 }
 
 func randomString() string {
 	r := rngPool.Get().(*rand.Rand)
-	n := r.Intn(10000) + 1
+	n := r.IntN(10000) + 1
 	rngPool.Put(r)
 
 	return strconv.Itoa(n)
