@@ -98,18 +98,18 @@ type toggleCounters struct {
 
 type metrics struct {
 	metricsChannels
-	options         metricsOptions
-	started         time.Time
-	last_close_time time.Time
-	counters        sync.Map // map[string]*toggleCounters
-	ticker          *time.Ticker
-	close           chan struct{}
-	closed          chan struct{}
-	ctx             context.Context
-	cancel          func()
-	maxSkips        float64
-	errors          float64
-	skips           float64
+	options       metricsOptions
+	started       time.Time
+	lastCloseTime time.Time
+	counters      sync.Map // map[string]*toggleCounters
+	ticker        *time.Ticker
+	close         chan struct{}
+	closed        chan struct{}
+	ctx           context.Context
+	cancel        func()
+	maxSkips      float64
+	errors        float64
+	skips         float64
 }
 
 func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
@@ -122,7 +122,7 @@ func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
 		maxSkips:        10,
 		errors:          0,
 		skips:           0,
-		last_close_time: time.Now(),
+		lastCloseTime:   time.Now(),
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	m.ctx = ctx
@@ -210,29 +210,29 @@ func (m *metrics) decrementSkip() {
 // The consequence is that if the user archives a lot of toggles this internal representation will not lose those
 // toggles until the process is terminated. In practice, I don't believe this is a big problem, just means a
 // little bit more memory is held than necessary
-func (m *metrics) buildBucketAndReset(last_close_time time.Time) (api.Bucket, bool) {
+func (m *metrics) buildBucketAndReset(lastCloseTime time.Time) (api.Bucket, bool) {
 	bucket := api.Bucket{
-		Start:   last_close_time,
+		Start:   lastCloseTime,
 		Toggles: make(map[string]api.ToggleCount),
 	}
 
 	m.counters.Range(func(key, value any) bool {
 		name := key.(string)
-		c := value.(*toggleCounters)
+		counter := value.(*toggleCounters)
 
-		yes := atomic.SwapInt64(&c.yes, 0)
-		no := atomic.SwapInt64(&c.no, 0)
+		yes := atomic.SwapInt64(&counter.yes, 0)
+		no := atomic.SwapInt64(&counter.no, 0)
 
 		if yes == 0 && no == 0 {
-			c.mu.Lock()
-			emptyVariants := len(c.variants) == 0
-			c.mu.Unlock()
+			counter.mu.Lock()
+			emptyVariants := len(counter.variants) == 0
+			counter.mu.Unlock()
 			if emptyVariants {
 				return true
 			}
 		}
 
-		tc := api.ToggleCount{
+		toggleCounters := api.ToggleCount{
 			Yes: int32(yes),
 			No:  int32(no),
 		}
@@ -240,19 +240,19 @@ func (m *metrics) buildBucketAndReset(last_close_time time.Time) (api.Bucket, bo
 		// we can have a little locking, as a treat. Variants are likely a luke warm path at best
 		// until we have evidence that this is a hot path API, I'd like to keep this simple
 		// simple here means a local lock per toggle counter while we swap out the variants map
-		c.mu.Lock()
-		if len(c.variants) > 0 {
-			vars := make(map[string]int32, len(c.variants))
-			for vName, cnt := range c.variants {
+		counter.mu.Lock()
+		if len(counter.variants) > 0 {
+			vars := make(map[string]int32, len(counter.variants))
+			for vName, cnt := range counter.variants {
 				vars[vName] = int32(cnt)
 			}
-			tc.Variants = vars
+			toggleCounters.Variants = vars
 
-			c.variants = make(map[string]int64)
+			counter.variants = make(map[string]int64)
 		}
-		c.mu.Unlock()
+		counter.mu.Unlock()
 
-		bucket.Toggles[name] = tc
+		bucket.Toggles[name] = toggleCounters
 		return true
 	})
 
@@ -264,11 +264,11 @@ func (m *metrics) buildBucketAndReset(last_close_time time.Time) (api.Bucket, bo
 }
 
 func (m *metrics) sendMetrics() {
-	bucket, ok := m.buildBucketAndReset(m.last_close_time)
+	bucket, ok := m.buildBucketAndReset(m.lastCloseTime)
 	if !ok {
 		return
 	}
-	m.last_close_time = time.Now()
+	m.lastCloseTime = time.Now()
 	bucket.Stop = time.Now()
 	payload := MetricsData{
 		AppName:          m.options.appName,
@@ -303,7 +303,7 @@ func (m *metrics) sendMetrics() {
 
 		// Set the start time of the current bucket to the one we
 		// attempted to send.
-		m.last_close_time = bucket.Start
+		m.lastCloseTime = bucket.Start
 
 	} else {
 		m.successfulPost()
@@ -350,29 +350,27 @@ func (m *metrics) getOrCreateCounter(name string) *toggleCounters {
 }
 
 func (m *metrics) reinsertBucket(bucket api.Bucket) {
-	for name, tc := range bucket.Toggles {
-		c := m.getOrCreateCounter(name)
-		if tc.Yes != 0 {
-			atomic.AddInt64(&c.yes, int64(tc.Yes))
+	for name, bucketToggle := range bucket.Toggles {
+		counter := m.getOrCreateCounter(name)
+		if bucketToggle.Yes != 0 {
+			atomic.AddInt64(&counter.yes, int64(bucketToggle.Yes))
 		}
-		if tc.No != 0 {
-			atomic.AddInt64(&c.no, int64(tc.No))
+		if bucketToggle.No != 0 {
+			atomic.AddInt64(&counter.no, int64(bucketToggle.No))
 		}
 
-		if len(tc.Variants) > 0 {
-			c := m.getOrCreateCounter(name)
-
-			c.mu.Lock()
-			if c.variants == nil {
-				c.variants = make(map[string]int64, len(tc.Variants))
+		if len(bucketToggle.Variants) > 0 {
+			counter.mu.Lock()
+			if counter.variants == nil {
+				counter.variants = make(map[string]int64, len(bucketToggle.Variants))
 			}
-			for vName, cnt := range tc.Variants {
+			for vName, cnt := range bucketToggle.Variants {
 				if cnt == 0 {
 					continue
 				}
-				c.variants[vName] += int64(cnt)
+				counter.variants[vName] += int64(cnt)
 			}
-			c.mu.Unlock()
+			counter.mu.Unlock()
 		}
 	}
 }
