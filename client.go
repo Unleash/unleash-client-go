@@ -431,7 +431,7 @@ func (uc *Client) getVariantWithoutMetrics(feature string, snapshot *FeatureMemo
 	return api.VariantCollection{
 		GroupId:  f.Name,
 		Variants: f.Variants,
-	}.GetVariant(ctx)
+	}.GetVariant(ctx, nil)
 }
 
 // Close stops the client from syncing data from the server.
