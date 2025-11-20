@@ -2,6 +2,7 @@ package unleash
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/Unleash/unleash-go-sdk/v5/api"
 	"github.com/Unleash/unleash-go-sdk/v5/context"
@@ -122,7 +123,7 @@ func (s *FeatureMemoryState) isParentDependencySatisfied(feature *api.Feature, c
 		// According to the schema, if the enabled property is absent we assume it's true.
 		if parent.Enabled == nil || *parent.Enabled {
 			if parent.Variants != nil && len(*parent.Variants) > 0 && enabledResult.Variant != nil {
-				return enabledResult.Enabled && contains(*parent.Variants, enabledResult.Variant.Name)
+				return enabledResult.Enabled && slices.Contains(*parent.Variants, enabledResult.Variant.Name)
 			}
 			return enabledResult.Enabled
 		}
@@ -130,8 +131,8 @@ func (s *FeatureMemoryState) isParentDependencySatisfied(feature *api.Feature, c
 		return !enabledResult.Enabled
 	}
 
-	allDependenciesSatisfied := every(*feature.Dependencies, func(parent interface{}) bool {
-		return dependenciesSatisfied(parent.(api.Dependency))
+	allDependenciesSatisfied := every(*feature.Dependencies, func(parent api.Dependency) bool {
+		return dependenciesSatisfied(parent)
 	})
 
 	return allDependenciesSatisfied
