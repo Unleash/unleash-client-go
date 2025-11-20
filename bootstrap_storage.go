@@ -38,7 +38,7 @@ func (bs *BootstrapStorage) Init(backupPath string, appName string) {
 	}
 }
 
-func (bs *BootstrapStorage) Reset(data map[string]any, persist bool) error {
+func (bs *BootstrapStorage) Reset(data map[string]*api.Feature, persist bool) error {
 	return bs.backingStore.Reset(data, persist)
 }
 
@@ -46,10 +46,10 @@ func (bs *BootstrapStorage) Persist() error {
 	return bs.backingStore.Persist()
 }
 
-func (bs *BootstrapStorage) Get(key string) (any, bool) {
+func (bs *BootstrapStorage) Get(key string) (*api.Feature, bool) {
 	return bs.backingStore.Get(key)
 }
 
-func (bs *BootstrapStorage) List() []any {
+func (bs *BootstrapStorage) List() []*api.Feature {
 	return bs.backingStore.List()
 }

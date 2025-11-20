@@ -67,10 +67,11 @@ type Dependency struct {
 	Enabled *bool `json:"enabled"`
 }
 
-func (fr FeatureResponse) FeatureMap() map[string]any {
-	features := map[string]any{}
+func (fr FeatureResponse) FeatureMap() map[string]*Feature {
+	features := make(map[string]*Feature, len(fr.Features))
 	for _, f := range fr.Features {
-		features[f.Name] = f
+		ff := f
+		features[f.Name] = &ff
 	}
 	return features
 }

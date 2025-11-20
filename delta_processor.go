@@ -33,11 +33,9 @@ func (dp *deltaProcessor) process(delta *api.ClientFeaturesDelta) error {
 	dp.mu.Lock()
 	defer dp.mu.Unlock()
 
-	currentFeatures := make(map[string]interface{})
-	for _, f := range dp.storage.List() {
-		if feature, ok := f.(api.Feature); ok {
-			currentFeatures[feature.Name] = feature
-		}
+	currentFeatures := make(map[string]*api.Feature)
+	for _, feature := range dp.storage.List() {
+		currentFeatures[feature.Name] = feature
 	}
 
 	segments := make(map[int][]api.Constraint)
@@ -51,7 +49,7 @@ func (dp *deltaProcessor) process(delta *api.ClientFeaturesDelta) error {
 	for _, event := range delta.Events {
 		switch e := event.(type) {
 		case *api.FeatureUpdatedEvent:
-			currentFeatures[e.Feature.Name] = e.Feature
+			currentFeatures[e.Feature.Name] = &e.Feature
 
 		case *api.FeatureRemovedEvent:
 			delete(currentFeatures, e.FeatureName)
@@ -64,9 +62,9 @@ func (dp *deltaProcessor) process(delta *api.ClientFeaturesDelta) error {
 
 		case *api.HydrationEvent:
 			// Replace entire state
-			currentFeatures = make(map[string]interface{})
+			currentFeatures = make(map[string]*api.Feature)
 			for _, feature := range e.Features {
-				currentFeatures[feature.Name] = feature
+				currentFeatures[feature.Name] = &feature
 			}
 
 			// Replace segments

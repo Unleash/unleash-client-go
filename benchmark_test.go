@@ -12,24 +12,23 @@ import (
 
 type mockStorage map[string]api.Feature
 
-func (m mockStorage) Get(in string) (any, bool) {
+func (m mockStorage) Get(in string) (*api.Feature, bool) {
 	out, found := m[in]
-	return out, found
+	return &out, found
 }
 
-func (m mockStorage) List() []any {
-	res := make([]any, 0, len(m))
+func (m mockStorage) List() []*api.Feature {
+	res := make([]*api.Feature, 0, len(m))
 	for _, feature := range m {
-		res = append(res, feature)
+		res = append(res, &feature)
 	}
 	return res
-
 }
 
-func (m mockStorage) Init(backupPath string, appName string)        {}
-func (m mockStorage) Load() error                                   { return nil }
-func (m mockStorage) Persist() error                                { return nil }
-func (m mockStorage) Reset(data map[string]any, persist bool) error { return nil }
+func (m mockStorage) Init(backupPath string, appName string)                 {}
+func (m mockStorage) Load() error                                            { return nil }
+func (m mockStorage) Persist() error                                         { return nil }
+func (m mockStorage) Reset(data map[string]*api.Feature, persist bool) error { return nil }
 
 func ptr[T any](v T) *T {
 	return &v

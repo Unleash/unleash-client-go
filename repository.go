@@ -68,7 +68,7 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 	repo.options.storage.Init(options.backupPath, options.appName)
 	// In the future, remove the dependency of the repository and just pass in the storage
 	repo.deltaProcessor = newDeltaProcessor(repo.options.storage, repo, channels)
-	
+
 	if repo.isStreaming {
 		repo.streamingClient = newStreamingClient(
 			options,
@@ -234,7 +234,7 @@ func (r *repository) fetch() error {
 }
 
 // updateStorageWithDelta updates the storage with delta changes in a thread-safe manner
-func (r *repository) updateStorageWithDelta(features map[string]interface{}, segments map[int][]api.Constraint) error {
+func (r *repository) updateStorageWithDelta(features map[string]*api.Feature, segments map[int][]api.Constraint) error {
 	r.Lock()
 	defer r.Unlock()
 
@@ -271,12 +271,8 @@ func (r *repository) getToggle(key string) *api.Feature {
 	r.RLock()
 	defer r.RUnlock()
 
-	if toggle, found := r.options.storage.Get(key); found {
-		if feature, ok := toggle.(api.Feature); ok {
-			return &feature
-		}
-	}
-	return nil
+	feature, _ := r.options.storage.Get(key)
+	return feature
 }
 
 func (r *repository) resolveSegmentConstraints(strategy api.Strategy) ([]api.Constraint, error) {
@@ -302,9 +298,16 @@ func (r *repository) list() []api.Feature {
 	r.RLock()
 	defer r.RUnlock()
 
-	var features []api.Feature
-	for _, feature := range r.options.storage.List() {
-		features = append(features, feature.(api.Feature))
+	raw := r.options.storage.List()
+	features := make([]api.Feature, 0, len(raw))
+
+	// we're doing an explicit copy here, this function should not be on a hot path
+	// and we want to avoid exposing internal pointers or changing too much of the public API
+	for _, feature := range raw {
+		if feature == nil {
+			continue
+		}
+		features = append(features, *feature)
 	}
 	return features
 }

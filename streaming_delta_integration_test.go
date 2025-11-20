@@ -59,16 +59,17 @@ func TestStreamingDeltaIntegration(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to process hydration: %v", err)
 		}
-
-		if feature, exists := storage.Get("feature-1"); !exists {
+		feature, exists := storage.Get("feature-1")
+		if !exists {
 			t.Error("feature-1 should exist after hydration")
-		} else if f, ok := feature.(api.Feature); ok && !f.Enabled {
+		} else if !feature.Enabled {
 			t.Error("feature-1 should be enabled")
 		}
 
-		if feature, exists := storage.Get("feature-2"); !exists {
+		feature, exists = storage.Get("feature-2")
+		if !exists {
 			t.Error("feature-2 should exist after hydration")
-		} else if f, ok := feature.(api.Feature); ok && f.Enabled {
+		} else if feature.Enabled {
 			t.Error("feature-2 should be disabled")
 		}
 
@@ -127,9 +128,10 @@ func TestStreamingDeltaIntegration(t *testing.T) {
 			t.Fatalf("Failed to process update: %v", err)
 		}
 
-		if feature, exists := storage.Get("feature-1"); !exists {
+		feature, exists := storage.Get("feature-1")
+		if !exists {
 			t.Error("feature-1 should still exist")
-		} else if f, ok := feature.(api.Feature); ok && f.Enabled {
+		} else if feature.Enabled {
 			t.Error("feature-1 should be disabled after update")
 		}
 
@@ -137,9 +139,10 @@ func TestStreamingDeltaIntegration(t *testing.T) {
 			t.Error("feature-2 should not exist after removal")
 		}
 
-		if feature, exists := storage.Get("feature-3"); !exists {
+		feature, exists = storage.Get("feature-3")
+		if !exists {
 			t.Error("feature-3 should exist after update")
-		} else if f, ok := feature.(api.Feature); ok && !f.Enabled {
+		} else if !feature.Enabled {
 			t.Error("feature-3 should be enabled")
 		}
 
@@ -210,15 +213,17 @@ func TestStreamingDelta_MultipleDeltaEvents(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Verify initial state
-	if feature, exists := storage.Get("feature-a"); !exists {
+	feature, exists := storage.Get("feature-a")
+	if !exists {
 		t.Error("feature-a should exist after hydration")
-	} else if f, ok := feature.(api.Feature); ok && !f.Enabled {
+	} else if !feature.Enabled {
 		t.Error("feature-a should be enabled")
 	}
 
-	if feature, exists := storage.Get("feature-b"); !exists {
+	feature, exists = storage.Get("feature-b")
+	if !exists {
 		t.Error("feature-b should exist after hydration")
-	} else if f, ok := feature.(api.Feature); ok && !f.Enabled {
+	} else if !feature.Enabled {
 		t.Error("feature-b should be enabled")
 	}
 
@@ -252,19 +257,22 @@ func TestStreamingDelta_MultipleDeltaEvents(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Verify final state
-	if feature, exists := storage.Get("feature-a"); !exists {
+	feature, exists = storage.Get("feature-a")
+	if !exists {
 		t.Error("feature-a should still exist")
-	} else if f, ok := feature.(api.Feature); ok && f.Enabled {
+	} else if feature.Enabled {
 		t.Error("feature-a should be disabled after update")
 	}
 
-	if _, exists := storage.Get("feature-b"); exists {
+	_, exists = storage.Get("feature-b")
+	if exists {
 		t.Error("feature-b should not exist after removal")
 	}
 
-	if feature, exists := storage.Get("feature-c"); !exists {
+	feature, exists = storage.Get("feature-c")
+	if !exists {
 		t.Error("feature-c should exist after update")
-	} else if f, ok := feature.(api.Feature); ok && !f.Enabled {
+	} else if !feature.Enabled {
 		t.Error("feature-c should be enabled")
 	}
 }
@@ -414,13 +422,14 @@ func TestStreamingDelta_SegmentUpdates(t *testing.T) {
 	}
 
 	// Verify feature has been updated with both segments
-	if feature, exists := storage.Get("segmented-feature"); !exists {
+	feature, exists := storage.Get("segmented-feature")
+	if !exists {
 		t.Error("segmented-feature should exist")
-	} else if f, ok := feature.(api.Feature); ok {
-		if len(f.Strategies) != 1 {
-			t.Errorf("Feature should have 1 strategy, got %d", len(f.Strategies))
-		} else if len(f.Strategies[0].Segments) != 2 {
-			t.Errorf("Strategy should have 2 segments, got %d", len(f.Strategies[0].Segments))
+	} else if feature.Enabled {
+		if len(feature.Strategies) != 1 {
+			t.Errorf("Feature should have 1 strategy, got %d", len(feature.Strategies))
+		} else if len(feature.Strategies[0].Segments) != 2 {
+			t.Errorf("Strategy should have 2 segments, got %d", len(feature.Strategies[0].Segments))
 		}
 	}
 }
@@ -685,29 +694,30 @@ func TestStreamingDelta_FeatureEvaluation(t *testing.T) {
 	// Here we're just verifying the data is stored correctly
 
 	// Verify always-on feature
-	if feature, exists := storage.Get("always-on"); !exists {
+	feature, exists := storage.Get("always-on")
+	if !exists {
 		t.Error("always-on feature should exist")
-	} else if f, ok := feature.(api.Feature); ok {
-		assert.True(t, f.Enabled, "always-on should be enabled")
-		assert.Equal(t, 1, len(f.Strategies), "always-on should have 1 strategy")
-		assert.Equal(t, "default", f.Strategies[0].Name, "always-on should use default strategy")
+	} else if feature.Enabled {
+		assert.Equal(t, 1, len(feature.Strategies), "always-on should have 1 strategy")
+		assert.Equal(t, "default", feature.Strategies[0].Name, "always-on should use default strategy")
 	}
 
 	// Verify user-based feature
-	if feature, exists := storage.Get("user-based"); !exists {
+	feature, exists = storage.Get("user-based")
+	if !exists {
 		t.Error("user-based feature should exist")
-	} else if f, ok := feature.(api.Feature); ok {
-		assert.True(t, f.Enabled, "user-based should be enabled")
-		assert.Equal(t, 1, len(f.Strategies), "user-based should have 1 strategy")
-		assert.Equal(t, "userWithId", f.Strategies[0].Name, "user-based should use userWithId strategy")
-		assert.Equal(t, "user1,user2,user3", f.Strategies[0].Parameters["userIds"], "userIds parameter should match")
+	} else if feature.Enabled {
+		assert.Equal(t, 1, len(feature.Strategies), "user-based should have 1 strategy")
+		assert.Equal(t, "userWithId", feature.Strategies[0].Name, "user-based should use userWithId strategy")
+		assert.Equal(t, "user1,user2,user3", feature.Strategies[0].Parameters["userIds"], "userIds parameter should match")
 	}
 
 	// Verify disabled feature
-	if feature, exists := storage.Get("disabled-feature"); !exists {
+	feature, exists = storage.Get("disabled-feature")
+	if !exists {
 		t.Error("disabled-feature should exist")
-	} else if f, ok := feature.(api.Feature); ok {
-		assert.False(t, f.Enabled, "disabled-feature should be disabled")
+	} else if !feature.Enabled {
+		assert.False(t, feature.Enabled, "disabled-feature should be disabled")
 	}
 
 	// Now update a feature and verify the change
@@ -731,9 +741,10 @@ func TestStreamingDelta_FeatureEvaluation(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Verify the feature is now enabled
-	if feature, exists := storage.Get("disabled-feature"); !exists {
+	feature, exists = storage.Get("disabled-feature")
+	if !exists {
 		t.Error("disabled-feature should still exist")
-	} else if f, ok := feature.(api.Feature); ok {
-		assert.True(t, f.Enabled, "disabled-feature should now be enabled")
+	} else if feature.Enabled {
+		assert.True(t, feature.Enabled, "disabled-feature should now be enabled")
 	}
 }

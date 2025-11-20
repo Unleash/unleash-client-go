@@ -120,9 +120,7 @@ func TestStreamingClient_HandleEvents(t *testing.T) {
 
 	feature, found := storage.Get("test-feature")
 	assert.True(t, found)
-	if f, ok := feature.(api.Feature); ok {
-		assert.True(t, f.Enabled)
-	}
+	assert.True(t, feature.Enabled)
 
 	updatedData := map[string]interface{}{
 		"events": []map[string]interface{}{
@@ -146,9 +144,7 @@ func TestStreamingClient_HandleEvents(t *testing.T) {
 
 	feature, found = storage.Get("test-feature")
 	assert.True(t, found)
-	if f, ok := feature.(api.Feature); ok {
-		assert.False(t, f.Enabled)
-	}
+	assert.False(t, feature.Enabled)
 
 	client.cancel()
 }
