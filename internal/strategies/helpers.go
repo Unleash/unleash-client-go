@@ -89,3 +89,17 @@ func (r *rng) string() string {
 func newRng() *rng {
 	return &rng{random: rand.New(rand.NewPCG(uint64(time.Now().UnixNano()), uint64(os.Getpid())))}
 }
+
+var rngPool = sync.Pool{
+	New: func() any {
+		return rand.New(rand.NewPCG(uint64(time.Now().UnixNano()), uint64(os.Getpid())))
+	},
+}
+
+func randomString() string {
+	r := rngPool.Get().(*rand.Rand)
+	n := r.IntN(10000) + 1
+	rngPool.Put(r)
+
+	return strconv.Itoa(n)
+}

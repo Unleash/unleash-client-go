@@ -82,7 +82,6 @@ func TestStreamingMode_UnleashConnectedEvent(t *testing.T) {
 		WithInstanceId("test-instance"),
 		WithCustomHeaders(http.Header{"X-API-KEY": []string{"123"}}),
 		WithExperimentalMode(map[string]string{"type": "streaming"}),
-		WithStorage(&DefaultStorage{}),
 		WithDisableMetrics(true),
 		WithListener(listener),
 	)
@@ -119,7 +118,7 @@ func TestStreamingMode_UnleashUpdatedEvent(t *testing.T) {
 		WithInstanceId("test-instance"),
 		WithDisableMetrics(true),
 		WithExperimentalMode(map[string]string{"type": "streaming"}),
-		WithStorage(&DefaultStorage{}),
+		WithStorage(&NoOpStorage{}),
 		WithListener(listener),
 	)
 	assert.NoError(t, err)
@@ -135,7 +134,7 @@ func TestStreamingMode_UnleashUpdatedEvent(t *testing.T) {
 	select {
 	case <-updateChan:
 		// Update received
-	case <-time.After(5 * time.Second):
+	case <-time.After(1 * time.Second):
 		t.Fatal("Timeout waiting for update event")
 	}
 

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/Unleash/unleash-go-sdk/v5/api"
@@ -31,13 +32,13 @@ type repository struct {
 	cancel          func()
 	isReady         bool
 	refreshTicker   *time.Ticker
-	segments        map[int][]api.Constraint
 	errors          float64
 	maxSkips        float64
 	skips           float64
 	streamingClient *streamingClient
 	isStreaming     bool
 	deltaProcessor  *deltaProcessor
+	featureState    atomic.Value // this should always hold an instance of *FeatureMemoryState
 }
 
 func newRepository(options repositoryOptions, channels repositoryChannels) *repository {
@@ -47,7 +48,6 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 		close:              make(chan struct{}),
 		closed:             make(chan struct{}),
 		refreshTicker:      time.NewTicker(options.refreshInterval),
-		segments:           map[int][]api.Constraint{},
 		errors:             0,
 		maxSkips:           10,
 		skips:              0,
@@ -66,20 +66,42 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 	}
 
 	repo.options.storage.Init(options.backupPath, options.appName)
-	// In the future, remove the dependency of the repository and just pass in the storage
-	repo.deltaProcessor = newDeltaProcessor(repo.options.storage, repo, channels)
-	
+	repo.deltaProcessor = newDeltaProcessor(repo, channels)
+
+	if loadedState, err := repo.options.storage.Load(); err == nil && loadedState != nil {
+		repo.updateState(loadedState)
+	} else {
+		repo.featureState.Store(&FeatureMemoryState{
+			Features: make(map[string]*api.Feature),
+			Segments: make(map[int][]api.Constraint),
+		})
+	}
+
+	// Delta processor needs to be collapsed into this module, it's far too jealous of this domain at the moment
 	if repo.isStreaming {
 		repo.streamingClient = newStreamingClient(
 			options,
 			channels,
-			repo.deltaProcessor,
-		)
+			repo.deltaProcessor)
 	}
 
 	go repo.sync()
 
 	return repo
+}
+
+func (r *repository) updateState(features *api.FeatureResponse) {
+	state := &FeatureMemoryState{
+		Features: features.FeatureMap(),
+		Segments: features.SegmentsMap(),
+	}
+
+	r.featureState.Store(state)
+}
+
+func (r *repository) saveState(features *api.FeatureResponse) error {
+	r.updateState(features)
+	return r.options.storage.Persist(features)
 }
 
 func (r *repository) fetchAndReportError() {
@@ -135,9 +157,6 @@ func (r *repository) sync() {
 		case <-r.close:
 			if r.streamingClient != nil {
 				r.streamingClient.stop()
-			}
-			if err := r.options.storage.Persist(); err != nil {
-				r.err(err)
 			}
 			close(r.closed)
 			return
@@ -222,33 +241,15 @@ func (r *repository) fetch() error {
 	}
 
 	r.Lock()
-	defer r.Unlock()
 	r.etag = resp.Header.Get("Etag")
-	r.segments = featureResp.SegmentsMap()
-	if err := r.options.storage.Reset(featureResp.FeatureMap(), true); err != nil {
-		return fmt.Errorf("resetting storage: %w", err)
-	}
+	r.saveState(&featureResp)
 	r.successfulFetch()
-
+	r.Unlock()
 	return nil
-}
-
-// updateStorageWithDelta updates the storage with delta changes in a thread-safe manner
-func (r *repository) updateStorageWithDelta(features map[string]interface{}, segments map[int][]api.Constraint) error {
-	r.Lock()
-	defer r.Unlock()
-
-	// Update segments
-	r.segments = segments
-
-	// Update storage
-	return r.options.storage.Reset(features, true)
 }
 
 // IsStreaming returns whether the repository is currently in streaming mode
 func (r *repository) IsStreaming() bool {
-	r.RLock()
-	defer r.RUnlock()
 	return r.isStreaming
 }
 
@@ -267,46 +268,34 @@ func (r *repository) statusIsOK(resp *http.Response) error {
 	return fmt.Errorf("%s %s returned status code %d", resp.Request.Method, resp.Request.URL, s)
 }
 
-func (r *repository) getToggle(key string) *api.Feature {
-	r.RLock()
-	defer r.RUnlock()
-
-	if toggle, found := r.options.storage.Get(key); found {
-		if feature, ok := toggle.(api.Feature); ok {
-			return &feature
-		}
-	}
-	return nil
-}
-
-func (r *repository) resolveSegmentConstraints(strategy api.Strategy) ([]api.Constraint, error) {
-	segmentConstraints := []api.Constraint{}
-
-	// Use repository's segments (works for both polling and streaming modes)
-	r.RLock()
-	segments := r.segments
-	r.RUnlock()
-
-	for _, segmentId := range strategy.Segments {
-		if resolvedConstraints, ok := segments[segmentId]; ok {
-			segmentConstraints = append(segmentConstraints, resolvedConstraints...)
-		} else {
-			return segmentConstraints, fmt.Errorf("segment does not exist")
-		}
-	}
-
-	return segmentConstraints, nil
-}
-
 func (r *repository) list() []api.Feature {
-	r.RLock()
-	defer r.RUnlock()
 
-	var features []api.Feature
-	for _, feature := range r.options.storage.List() {
-		features = append(features, feature.(api.Feature))
+	snapshot := r.snapshot()
+	raw := snapshot.Features
+	features := make([]api.Feature, 0, len(raw))
+
+	// we're doing an explicit copy here, this function should not be on a hot path
+	// and we want to avoid exposing internal pointers or changing too much of the public API
+	for _, feature := range raw {
+		if feature == nil {
+			continue
+		}
+		features = append(features, *feature)
 	}
 	return features
+}
+
+func (r *repository) snapshot() *FeatureMemoryState {
+	v := r.featureState.Load()
+	if v == nil {
+		empty := &FeatureMemoryState{
+			Features: make(map[string]*api.Feature),
+			Segments: make(map[int][]api.Constraint),
+		}
+		r.featureState.Store(empty)
+		return empty
+	}
+	return v.(*FeatureMemoryState)
 }
 
 func (r *repository) Close() error {

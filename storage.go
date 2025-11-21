@@ -9,94 +9,52 @@ import (
 	"github.com/Unleash/unleash-go-sdk/v5/api"
 )
 
-// Storage is an interface that can be implemented in order to have control over how
-// the repository of feature toggles is persisted.
+// Storage controls persistence of the SDK state (features + segments).
 type Storage interface {
 	// Init is called to initialize the storage implementation. The backupPath
 	// is used to specify the location the data should be stored and the appName
 	// can be used in naming.
 	Init(backupPath string, appName string)
-
-	// Reset is called after the repository has fetched the feature toggles from the server.
-	// If persist is true the implementation of this function should call Persist(). The data
-	// passed in here should be owned by the implementer of this interface.
-	Reset(data map[string]any, persist bool) error
-
-	// Load is called to load the data from persistent storage and hold it in memory for fast
-	// querying.
-	Load() error
-
-	// Persist is called when the data in the storage implementation should be persisted to disk.
-	Persist() error
-
-	// Get returns the data for the specified feature toggle.
-	Get(string) (any, bool)
-
-	// List returns a list of all feature toggles.
-	List() []any
+	// Load retrieves data from the backing store but does not cache
+	Load() (*api.FeatureResponse, error)
+	// Persist is called when data in the storage implementation should be persisted to the backing data store
+	Persist(state *api.FeatureResponse) error
 }
 
-// DefaultStorage is a default Storage implementation.
 type DefaultStorage struct {
-	appName string
-	path    string
-	data    map[string]any
+	path string
 }
 
 func (ds *DefaultStorage) Init(backupPath, appName string) {
-	ds.appName = appName
 	ds.path = filepath.Join(backupPath, fmt.Sprintf("unleash-repo-schema-v1-%s.json", appName))
-	ds.data = map[string]any{}
-	ds.Load()
 }
 
-func (ds *DefaultStorage) Reset(data map[string]any, persist bool) error {
-	ds.data = data
-	if persist {
-		return ds.Persist()
+func (ds *DefaultStorage) Load() (*api.FeatureResponse, error) {
+	file, err := os.Open(ds.path)
+	if err != nil {
+		return nil, err
 	}
-	return nil
+	defer file.Close()
+
+	dec := json.NewDecoder(file)
+	var state api.FeatureResponse
+	if err := dec.Decode(&state); err != nil {
+		return nil, err
+	}
+
+	return &state, nil
 }
 
-func (ds *DefaultStorage) Load() error {
-	if file, err := os.Open(ds.path); err != nil {
+func (ds *DefaultStorage) Persist(state *api.FeatureResponse) error {
+	file, err := os.Create(ds.path)
+	if err != nil {
 		return err
-	} else {
-		dec := json.NewDecoder(file)
-		var featuresFromFile map[string]api.Feature
-		if err := dec.Decode(&featuresFromFile); err != nil {
-			return err
-		}
-
-		for key, value := range featuresFromFile {
-			ds.data[key] = value
-		}
 	}
-	return nil
-}
+	defer file.Close()
 
-func (ds *DefaultStorage) Persist() error {
-	if file, err := os.Create(ds.path); err != nil {
+	enc := json.NewEncoder(file)
+	if err := enc.Encode(state); err != nil {
 		return err
-	} else {
-		defer file.Close()
-		enc := json.NewEncoder(file)
-		if err := enc.Encode(ds.data); err != nil {
-			return err
-		}
 	}
 	return nil
-}
-
-func (ds DefaultStorage) Get(key string) (any, bool) {
-	val, ok := ds.data[key]
-	return val, ok
-}
-
-func (ds *DefaultStorage) List() []any {
-	var features []any
-	for _, val := range ds.data {
-		features = append(features, val)
-	}
-	return features
 }

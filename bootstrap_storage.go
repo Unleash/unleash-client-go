@@ -2,7 +2,6 @@ package unleash
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 
 	"github.com/Unleash/unleash-go-sdk/v5/api"
@@ -13,43 +12,31 @@ type BootstrapStorage struct {
 	Reader       io.Reader
 }
 
-func (bs *BootstrapStorage) Load() error {
-	if len(bs.backingStore.data) > 0 || bs.Reader == nil {
-		return nil
+func (ds *BootstrapStorage) Init(backupPath, appName string) {
+	ds.backingStore.Init(backupPath, appName)
+}
+
+func (bs *BootstrapStorage) Load() (*api.FeatureResponse, error) {
+	if bs.Reader == nil {
+		return nil, nil
 	}
 
 	dec := json.NewDecoder(bs.Reader)
 	clientFeatures := api.FeatureResponse{}
-	if err := dec.Decode(&clientFeatures); err != nil {
-		return err
+	if err := dec.Decode(&clientFeatures); err == nil {
+		return &clientFeatures, nil
 	}
 
-	bs.backingStore.data = clientFeatures.FeatureMap()
-	return nil
-}
-
-func (bs *BootstrapStorage) Init(backupPath string, appName string) {
-	bs.backingStore.Init(backupPath, appName)
-	err := bs.Load()
-
-	if err != nil {
-		fmt.Printf("Could not load bootstrap storage, because: %s", err.Error())
-		return
+	// If we reach here, there was an error decoding the features from the reader
+	// So we fall back to loading from the decorated store. If that also fails
+	// it's not a major issue since the SDK will hydrate from the API
+	if data, err := bs.backingStore.Load(); err == nil {
+		return data, nil
+	} else {
+		return nil, err
 	}
 }
 
-func (bs *BootstrapStorage) Reset(data map[string]any, persist bool) error {
-	return bs.backingStore.Reset(data, persist)
-}
-
-func (bs *BootstrapStorage) Persist() error {
-	return bs.backingStore.Persist()
-}
-
-func (bs *BootstrapStorage) Get(key string) (any, bool) {
-	return bs.backingStore.Get(key)
-}
-
-func (bs *BootstrapStorage) List() []any {
-	return bs.backingStore.List()
+func (bs *BootstrapStorage) Persist(features *api.FeatureResponse) error {
+	return bs.backingStore.Persist(features)
 }

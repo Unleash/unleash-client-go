@@ -132,7 +132,7 @@ func (suite *VariantTestSuite) TestGetVariantWhenFeatureHasNoVariant() {
 	variantSetup := VariantCollection{
 		GroupId:  mockFeature.Name,
 		Variants: mockFeature.Variants,
-	}.GetVariant(mockContext)
+	}.GetVariant(mockContext, nil)
 
 	suite.Equal(DISABLED_VARIANT, variantSetup, "Should return default variant")
 }
@@ -155,7 +155,7 @@ func (suite *VariantTestSuite) TestGetVariant_OverrideOnUserId() {
 	variantSetup := VariantCollection{
 		GroupId:  mockFeature.Name,
 		Variants: mockFeature.Variants,
-	}.GetVariant(mockContext)
+	}.GetVariant(mockContext, nil)
 	suite.Equal("VarA", variantSetup.Name, "Should return VarA")
 	suite.Equal(true, variantSetup.Enabled, "Should be equal")
 	suite.Equal(expectedPayload, variantSetup.Payload, "Should be equal")
@@ -178,7 +178,7 @@ func (suite *VariantTestSuite) TestGetVariant_OverrideOnRemoteAddress() {
 	variantSetup := VariantCollection{
 		GroupId:  mockFeature.Name,
 		Variants: mockFeature.Variants,
-	}.GetVariant(mockContext)
+	}.GetVariant(mockContext, nil)
 	suite.Equal("VarB", variantSetup.Name, "Should return VarB")
 	suite.Equal(true, variantSetup.Enabled, "Should be equal")
 	suite.Equal(expectedPayload, variantSetup.Payload, "Should be equal")
@@ -202,7 +202,7 @@ func (suite *VariantTestSuite) TestGetVariant_OverrideOnSessionId() {
 	variantSetup := VariantCollection{
 		GroupId:  mockFeature.Name,
 		Variants: mockFeature.Variants,
-	}.GetVariant(mockContext)
+	}.GetVariant(mockContext, nil)
 	suite.Equal("VarA", variantSetup.Name, "Should return VarA")
 	suite.Equal(true, variantSetup.Enabled, "Should be equal")
 	suite.Equal(expectedPayload, variantSetup.Payload, "Should be equal")
@@ -226,7 +226,7 @@ func (suite *VariantTestSuite) TestGetVariant_OverrideOnCustomProperties() {
 	variantSetup := VariantCollection{
 		GroupId:  mockFeature.Name,
 		Variants: mockFeature.Variants,
-	}.GetVariant(mockContext)
+	}.GetVariant(mockContext, nil)
 	suite.Equal("VarC", variantSetup.Name, "Should return VarC")
 	suite.Equal(true, variantSetup.Enabled, "Should be equal")
 	suite.Equal(expectedPayload, variantSetup.Payload, "Should be equal")
@@ -244,7 +244,7 @@ func (suite *VariantTestSuite) TestGetVariant_ShouldReturnVarD() {
 	variantSetup := VariantCollection{
 		GroupId:  mockFeature.Name,
 		Variants: mockFeature.Variants,
-	}.GetVariant(mockContext)
+	}.GetVariant(mockContext, nil)
 	suite.Equal("VarE", variantSetup.Name, "Should return VarE")
 	suite.Equal(true, variantSetup.Enabled, "Should be equal")
 }
@@ -261,7 +261,7 @@ func (suite *VariantTestSuite) TestGetVariant_ShouldReturnVarE() {
 	variantSetup := VariantCollection{
 		GroupId:  mockFeature.Name,
 		Variants: mockFeature.Variants,
-	}.GetVariant(mockContext)
+	}.GetVariant(mockContext, nil)
 	suite.Equal("VarF", variantSetup.Name, "Should return VarF")
 	suite.Equal(true, variantSetup.Enabled, "Should be equal")
 }
@@ -278,7 +278,7 @@ func (suite *VariantTestSuite) TestGetVariant_ShouldReturnVarF() {
 	variantSetup := VariantCollection{
 		GroupId:  mockFeature.Name,
 		Variants: mockFeature.Variants,
-	}.GetVariant(mockContext)
+	}.GetVariant(mockContext, nil)
 	suite.Equal("VarE", variantSetup.Name, "Should return VarE")
 	suite.Equal(true, variantSetup.Enabled, "Should be equal")
 }
@@ -304,7 +304,7 @@ func (suite *VariantTestSuite) TestGetVariant_OverrideOnAppName() {
 	variantSetup := VariantCollection{
 		GroupId:  mockFeature.Name,
 		Variants: mockFeature.Variants,
-	}.GetVariant(mockContext)
+	}.GetVariant(mockContext, nil)
 	suite.Equal("VarG", variantSetup.Name, "Should return VarG")
 	suite.Equal(true, variantSetup.Enabled, "Should be equal")
 	suite.Equal(expectedPayload, variantSetup.Payload, "Should be equal")
@@ -326,7 +326,7 @@ func (suite *VariantTestSuite) TestGetVariant_OverrideOnEnvironment() {
 	variantSetup := VariantCollection{
 		GroupId:  mockFeature.Name,
 		Variants: mockFeature.Variants,
-	}.GetVariant(mockContext)
+	}.GetVariant(mockContext, nil)
 	suite.Equal("VarG", variantSetup.Name, "Should return VarG")
 	suite.Equal(true, variantSetup.Enabled, "Should be equal")
 	suite.Equal(expectedPayload, variantSetup.Payload, "Should be equal")
