@@ -394,7 +394,14 @@ func (m *metrics) count(name string, enabled bool) {
 		return
 	}
 	m.add(name, enabled, 1)
-	m.metricsChannels.count <- metric{Name: name, Enabled: enabled}
+	// best effort delivery, if the channel is full, we skip notifying
+	// means under high load we lose some fidelity here, but we avoid blocking
+	// the main path. That's probably the correct trade-off. Impression data
+	// is the correct insight into this behaviour anyway
+	select {
+	case m.metricsChannels.count <- metric{Name: name, Enabled: enabled}:
+	default:
+	}
 }
 
 func (m *metrics) countVariants(name string, enabled bool, variantName string) {
@@ -403,7 +410,11 @@ func (m *metrics) countVariants(name string, enabled bool, variantName string) {
 	}
 
 	m.add(name, enabled, 1)
-	m.metricsChannels.count <- metric{Name: name, Enabled: enabled}
+	// again best effort delivery
+	select {
+	case m.metricsChannels.count <- metric{Name: name, Enabled: enabled}:
+	default:
+	}
 
 	c := m.getOrCreateCounter(name)
 
