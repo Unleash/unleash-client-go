@@ -81,12 +81,20 @@ func (s *FeatureMemoryState) evaluateFeature(
 				}, fmt.Errorf("invalid groupId type for feature %s", f.Name)
 			}
 
+			var stickiness *string
+
+			if v, ok := stCfg.Parameters[strategy.ParamStickiness]; ok {
+				if s, ok := v.(string); ok {
+					stickiness = &s
+				}
+			}
+
 			return api.StrategyResult{
 				Enabled: true,
 				Variant: api.VariantCollection{
 					GroupId:  groupId,
 					Variants: stCfg.Variants,
-				}.GetVariant(ctx),
+				}.GetVariant(ctx, stickiness),
 			}, nil
 		}
 
