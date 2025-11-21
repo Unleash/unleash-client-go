@@ -31,9 +31,9 @@ func (s flexibleRolloutStrategy) Name() string {
 func (s flexibleRolloutStrategy) resolveStickiness(st stickiness, ctx context.Context) string {
 	switch st {
 	case defaultStickiness:
-		return coalesce(ctx.UserId, ctx.SessionId, s.random.string())
+		return coalesce(ctx.UserId, ctx.SessionId, randomString())
 	case randomStickiness:
-		return s.random.string()
+		return randomString()
 	default:
 		return ctx.Field(string(st))
 	}

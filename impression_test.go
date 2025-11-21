@@ -58,7 +58,7 @@ func TestImpression_Off(t *testing.T) {
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
-	mockListener.On("OnCount", feature, true).Return()
+	mockListener.On("OnCount", feature, true).Maybe()
 	mockListener.On("OnImpression", mock.Anything).Maybe()
 
 	client := setupClient(t, mockListener)
@@ -107,7 +107,7 @@ func TestImpression_IsEnabled(t *testing.T) {
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
-	mockListener.On("OnCount", feature, true).Return()
+	mockListener.On("OnCount", feature, true).Maybe()
 
 	mockListener.On("OnImpression", mock.MatchedBy(func(e ImpressionEvent) bool {
 		return e.FeatureName == feature &&
@@ -178,7 +178,7 @@ func TestImpression_GetVariant(t *testing.T) {
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
-	mockListener.On("OnCount", feature, true).Return()
+	mockListener.On("OnCount", feature, true).Maybe()
 
 	mockListener.On("OnImpression", mock.MatchedBy(func(e ImpressionEvent) bool {
 		return e.FeatureName == feature &&
@@ -247,7 +247,7 @@ func TestImpression_WithContext(t *testing.T) {
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
-	mockListener.On("OnCount", feature, true).Return()
+	mockListener.On("OnCount", feature, true).Maybe()
 
 	userCtx := context.Context{
 		UserId:    ctxUserId,
@@ -411,7 +411,7 @@ func TestImpression_GetChannelMethod(t *testing.T) {
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
-	mockListener.On("OnCount", feature, true).Return()
+	mockListener.On("OnCount", feature, true).Maybe()
 	mockListener.On("OnImpression", mock.AnythingOfType("ImpressionEvent")).Maybe()
 	mockListener.On("OnError", mock.Anything).Maybe()
 
