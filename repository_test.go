@@ -126,6 +126,7 @@ func TestRepository_OnUpdateCalledWhenFeaturesChangeOnly(t *testing.T) {
 		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 		WithRefreshInterval(time.Millisecond),
+		WithDisableMetrics(true),
 	)
 	assert.Nil(err, "client should not return an error")
 

@@ -8,16 +8,14 @@ import (
 )
 
 type deltaProcessor struct {
-	storage            Storage
-	repository         *repository // Repository reference for segment manipulation
+	repository         *repository // ideally this shouldn't be necessary, but for now we're going going to use it to resolve a snapshot of the feature state
 	mu                 sync.RWMutex
 	repositoryChannels repositoryChannels
 	isReady            bool
 }
 
-func newDeltaProcessor(storage Storage, repo *repository, channels repositoryChannels) *deltaProcessor {
+func newDeltaProcessor(repo *repository, channels repositoryChannels) *deltaProcessor {
 	return &deltaProcessor{
-		storage:            storage,
 		repository:         repo,
 		repositoryChannels: channels,
 		isReady:            false,
@@ -25,6 +23,7 @@ func newDeltaProcessor(storage Storage, repo *repository, channels repositoryCha
 }
 
 // process processes a delta update from streaming or API events
+// this needs some love, currently it's too intertwined with the repository
 func (dp *deltaProcessor) process(delta *api.ClientFeaturesDelta) error {
 	if delta == nil {
 		return fmt.Errorf("delta is nil")
@@ -33,44 +32,43 @@ func (dp *deltaProcessor) process(delta *api.ClientFeaturesDelta) error {
 	dp.mu.Lock()
 	defer dp.mu.Unlock()
 
-	currentFeatures := make(map[string]*api.Feature)
-	for _, feature := range dp.storage.List() {
-		currentFeatures[feature.Name] = feature
+	snap := dp.repository.snapshot()
+
+	featMap := make(map[string]api.Feature, len(snap.Features))
+	for name, f := range snap.Features {
+		featMap[name] = *f
 	}
 
-	segments := make(map[int][]api.Constraint)
-	dp.repository.RLock()
-	for id, constraints := range dp.repository.segments {
-		segments[id] = constraints
+	segMap := make(map[int][]api.Constraint, len(snap.Segments))
+	for id, constraints := range snap.Segments {
+		segMap[id] = constraints
 	}
-	dp.repository.RUnlock()
 
-	// Apply delta events to the current state
+	// Apply deltas
 	for _, event := range delta.Events {
 		switch e := event.(type) {
+
 		case *api.FeatureUpdatedEvent:
-			currentFeatures[e.Feature.Name] = &e.Feature
+			featMap[e.Feature.Name] = e.Feature
 
 		case *api.FeatureRemovedEvent:
-			delete(currentFeatures, e.FeatureName)
+			delete(featMap, e.FeatureName)
 
 		case *api.SegmentUpdatedEvent:
-			segments[e.Segment.Id] = e.Segment.Constraints
+			segMap[e.Segment.Id] = e.Segment.Constraints
 
 		case *api.SegmentRemovedEvent:
-			delete(segments, e.SegmentId)
+			delete(segMap, e.SegmentId)
 
 		case *api.HydrationEvent:
-			// Replace entire state
-			currentFeatures = make(map[string]*api.Feature)
-			for _, feature := range e.Features {
-				currentFeatures[feature.Name] = &feature
+			featMap = make(map[string]api.Feature, len(e.Features))
+			for _, f := range e.Features {
+				featMap[f.Name] = f
 			}
 
-			// Replace segments
-			segments = make(map[int][]api.Constraint)
-			for _, segment := range e.Segments {
-				segments[segment.Id] = segment.Constraints
+			segMap = make(map[int][]api.Constraint, len(e.Segments))
+			for _, seg := range e.Segments {
+				segMap[seg.Id] = seg.Constraints
 			}
 
 		default:
@@ -79,9 +77,27 @@ func (dp *deltaProcessor) process(delta *api.ClientFeaturesDelta) error {
 		}
 	}
 
-	if err := dp.repository.updateStorageWithDelta(currentFeatures, segments); err != nil {
-		return fmt.Errorf("failed to reset storage after delta: %w", err)
+	newFeatureList := make([]api.Feature, 0, len(featMap))
+	for _, feature := range featMap {
+		newFeatureList = append(newFeatureList, feature)
 	}
+
+	newSegmentList := make([]api.Segment, 0, len(segMap))
+	for id, c := range segMap {
+		newSegmentList = append(newSegmentList, api.Segment{
+			Id:          id,
+			Constraints: c,
+		})
+	}
+
+	state := &api.FeatureResponse{
+		Features: newFeatureList,
+		Segments: newSegmentList,
+	}
+
+	// explicitly ignore error here, saveState fails if we cannot write to the persistent storage
+	// this no longer means that features are in an invalid state so we can enter a ready state
+	_ = dp.repository.saveState(state)
 
 	if !dp.isReady {
 		dp.isReady = true

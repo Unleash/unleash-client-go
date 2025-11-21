@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/Unleash/unleash-go-sdk/v5/internal/api"
@@ -87,20 +88,28 @@ type metric struct {
 	Enabled bool
 }
 
+type toggleCounters struct {
+	yes int64
+	no  int64
+
+	mu       sync.Mutex
+	variants map[string]int64
+}
+
 type metrics struct {
 	metricsChannels
-	options  metricsOptions
-	started  time.Time
-	bucketMu sync.Mutex
-	bucket   api.Bucket
-	ticker   *time.Ticker
-	close    chan struct{}
-	closed   chan struct{}
-	ctx      context.Context
-	cancel   func()
-	maxSkips float64
-	errors   float64
-	skips    float64
+	options       metricsOptions
+	started       time.Time
+	lastCloseTime time.Time
+	counters      sync.Map // map[string]*toggleCounters
+	ticker        *time.Ticker
+	close         chan struct{}
+	closed        chan struct{}
+	ctx           context.Context
+	cancel        func()
+	maxSkips      float64
+	errors        float64
+	skips         float64
 }
 
 func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
@@ -113,6 +122,7 @@ func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
 		maxSkips:        10,
 		errors:          0,
 		skips:           0,
+		lastCloseTime:   time.Now(),
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	m.ctx = ctx
@@ -122,7 +132,6 @@ func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
 		m.options.httpClient = http.DefaultClient
 	}
 
-	m.resetBucket()
 	if m.options.metricsInterval <= 0 {
 		m.options.disableMetrics = true
 	}
@@ -196,13 +205,70 @@ func (m *metrics) successfulPost() {
 func (m *metrics) decrementSkip() {
 	m.skips = math.Max(0, m.skips-1)
 }
+
+// This does not remove stale toggle names from the map. I don't think there's a safe, lock free way to do that
+// The consequence is that if the user archives a lot of toggles this internal representation will not lose those
+// toggles until the process is terminated. In practice, I don't believe this is a big problem, just means a
+// little bit more memory is held than necessary
+func (m *metrics) buildBucketAndReset(lastCloseTime time.Time) (api.Bucket, bool) {
+	bucket := api.Bucket{
+		Start:   lastCloseTime,
+		Toggles: make(map[string]api.ToggleCount),
+	}
+
+	m.counters.Range(func(key, value any) bool {
+		name := key.(string)
+		counter := value.(*toggleCounters)
+
+		yes := atomic.SwapInt64(&counter.yes, 0)
+		no := atomic.SwapInt64(&counter.no, 0)
+
+		if yes == 0 && no == 0 {
+			counter.mu.Lock()
+			emptyVariants := len(counter.variants) == 0
+			counter.mu.Unlock()
+			if emptyVariants {
+				return true
+			}
+		}
+
+		toggleCounters := api.ToggleCount{
+			Yes: int32(yes),
+			No:  int32(no),
+		}
+
+		// we can have a little locking, as a treat. Variants are likely a luke warm path at best
+		// until we have evidence that this is a hot path API, I'd like to keep this simple
+		// simple here means a local lock per toggle counter while we swap out the variants map
+		counter.mu.Lock()
+		if len(counter.variants) > 0 {
+			vars := make(map[string]int32, len(counter.variants))
+			for vName, cnt := range counter.variants {
+				vars[vName] = int32(cnt)
+			}
+			toggleCounters.Variants = vars
+
+			counter.variants = make(map[string]int64)
+		}
+		counter.mu.Unlock()
+
+		bucket.Toggles[name] = toggleCounters
+		return true
+	})
+
+	if len(bucket.Toggles) == 0 {
+		return api.Bucket{}, false
+	}
+
+	return bucket, true
+}
+
 func (m *metrics) sendMetrics() {
-	m.bucketMu.Lock()
-	bucket := m.resetBucket()
-	m.bucketMu.Unlock()
-	if bucket.IsEmpty() {
+	bucket, ok := m.buildBucketAndReset(m.lastCloseTime)
+	if !ok {
 		return
 	}
+	m.lastCloseTime = time.Now()
 	bucket.Stop = time.Now()
 	payload := MetricsData{
 		AppName:          m.options.appName,
@@ -233,23 +299,19 @@ func (m *metrics) sendMetrics() {
 		m.warn(fmt.Errorf("%s return %d", u.String(), resp.StatusCode))
 		// The post failed, re-add the metrics we attempted to send so
 		// they are included in the next post.
-		for name, tc := range bucket.Toggles {
-			m.add(name, true, tc.Yes)
-			m.add(name, false, tc.No)
-		}
+		m.reinsertBucket(bucket)
 
-		m.bucketMu.Lock()
 		// Set the start time of the current bucket to the one we
 		// attempted to send.
-		m.bucket.Start = bucket.Start
-		m.bucketMu.Unlock()
+		m.lastCloseTime = bucket.Start
+
 	} else {
 		m.successfulPost()
 		m.sent <- payload
 	}
 }
 
-func (m *metrics) doPost(url *url.URL, payload any) (*http.Response, error) {
+func (m *metrics) doPost(url *url.URL, payload interface{}) (*http.Response, error) {
 	var body bytes.Buffer
 	enc := json.NewEncoder(&body)
 	if err := enc.Encode(payload); err != nil {
@@ -274,24 +336,55 @@ func (m *metrics) doPost(url *url.URL, payload any) (*http.Response, error) {
 	return m.options.httpClient.Do(req)
 }
 
+func (m *metrics) getOrCreateCounter(name string) *toggleCounters {
+	c, ok := m.counters.Load(name)
+	if ok {
+		return c.(*toggleCounters)
+	}
+
+	nc := &toggleCounters{
+		variants: make(map[string]int64),
+	}
+	actual, _ := m.counters.LoadOrStore(name, nc)
+	return actual.(*toggleCounters)
+}
+
+func (m *metrics) reinsertBucket(bucket api.Bucket) {
+	for name, bucketToggle := range bucket.Toggles {
+		counter := m.getOrCreateCounter(name)
+		if bucketToggle.Yes != 0 {
+			atomic.AddInt64(&counter.yes, int64(bucketToggle.Yes))
+		}
+		if bucketToggle.No != 0 {
+			atomic.AddInt64(&counter.no, int64(bucketToggle.No))
+		}
+
+		if len(bucketToggle.Variants) > 0 {
+			counter.mu.Lock()
+			if counter.variants == nil {
+				counter.variants = make(map[string]int64, len(bucketToggle.Variants))
+			}
+			for vName, cnt := range bucketToggle.Variants {
+				if cnt == 0 {
+					continue
+				}
+				counter.variants[vName] += int64(cnt)
+			}
+			counter.mu.Unlock()
+		}
+	}
+}
+
 func (m *metrics) add(name string, enabled bool, num int32) {
 	if m.options.disableMetrics || num == 0 {
 		return
 	}
-	m.bucketMu.Lock()
-	defer m.bucketMu.Unlock()
-	t, exists := m.bucket.Toggles[name]
-	if !exists {
-		t = api.ToggleCount{
-			Variants: map[string]int32{},
-		}
-	}
+	c := m.getOrCreateCounter(name)
 	if enabled {
-		t.Yes += num
+		atomic.AddInt64(&c.yes, int64(num))
 	} else {
-		t.No += num
+		atomic.AddInt64(&c.no, int64(num))
 	}
-	m.bucket.Toggles[name] = t
 }
 
 func (m *metrics) count(name string, enabled bool) {
@@ -299,7 +392,14 @@ func (m *metrics) count(name string, enabled bool) {
 		return
 	}
 	m.add(name, enabled, 1)
-	m.metricsChannels.count <- metric{Name: name, Enabled: enabled}
+	// best effort delivery, if the channel is full, we skip notifying
+	// means under high load we lose some fidelity here, but we avoid blocking
+	// the main path. That's probably the correct trade-off. Impression data
+	// is the correct insight into this behaviour anyway
+	select {
+	case m.metricsChannels.count <- metric{Name: name, Enabled: enabled}:
+	default:
+	}
 }
 
 func (m *metrics) countVariants(name string, enabled bool, variantName string) {
@@ -308,31 +408,20 @@ func (m *metrics) countVariants(name string, enabled bool, variantName string) {
 	}
 
 	m.add(name, enabled, 1)
-	m.metricsChannels.count <- metric{Name: name, Enabled: enabled}
-
-	m.bucketMu.Lock()
-	defer m.bucketMu.Unlock()
-
-	t := m.bucket.Toggles[name]
-	if len(t.Variants) == 0 {
-		t.Variants = make(map[string]int32)
+	// again best effort delivery
+	select {
+	case m.metricsChannels.count <- metric{Name: name, Enabled: enabled}:
+	default:
 	}
 
-	if _, ok := t.Variants[variantName]; !ok {
-		t.Variants[variantName] = 1
-	} else {
-		t.Variants[variantName] += 1
-	}
-	m.bucket.Toggles[name] = t
-}
+	c := m.getOrCreateCounter(name)
 
-func (m *metrics) resetBucket() api.Bucket {
-	prev := m.bucket
-	m.bucket = api.Bucket{
-		Start:   time.Now(),
-		Toggles: map[string]api.ToggleCount{},
+	c.mu.Lock()
+	if c.variants == nil {
+		c.variants = make(map[string]int64)
 	}
-	return prev
+	c.variants[variantName]++
+	c.mu.Unlock()
 }
 
 func (m *metrics) getClientData() ClientData {

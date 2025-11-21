@@ -22,6 +22,18 @@ func (m *mockEvent) Id() string    { return m.id }
 func (m *mockEvent) Event() string { return m.event }
 func (m *mockEvent) Data() string  { return m.data }
 
+type NoOpStorage struct{}
+
+func (s *NoOpStorage) Persist(features *api.FeatureResponse) error {
+	return nil
+}
+
+func (s *NoOpStorage) Load() (*api.FeatureResponse, error) {
+	return &api.FeatureResponse{}, nil
+}
+
+func (s *NoOpStorage) Init(backupPath, appName string) {}
+
 func TestStreamingClient_Creation(t *testing.T) {
 	serverURL, _ := url.Parse("http://localhost:8080/")
 
@@ -43,14 +55,10 @@ func TestStreamingClient_Creation(t *testing.T) {
 		headers:    make(http.Header),
 	}
 
-	repo := &repository{
-		segments: make(map[int][]api.Constraint),
-	}
+	repo := &repository{}
 
 	// Create a delta processor for the test
-	storage := &DefaultStorage{}
-	storage.Init("/tmp", "test-app")
-	deltaProc := newDeltaProcessor(storage, repo, repoChannels)
+	deltaProc := newDeltaProcessor(repo, repoChannels)
 
 	client := newStreamingClient(options, repoChannels, deltaProc)
 
@@ -72,25 +80,21 @@ func TestStreamingClient_HandleEvents(t *testing.T) {
 		update:        make(chan bool, 1),
 	}
 
-	storage := &DefaultStorage{}
-	storage.Init("/tmp", "test-app")
-
 	options := repositoryOptions{
 		url:        url.URL{},
 		appName:    "test-app",
 		instanceId: "test-instance",
 		httpClient: &http.Client{},
 		headers:    make(http.Header),
-		storage:    storage,
+		storage:    &NoOpStorage{},
 	}
 
 	repo := &repository{
-		segments: make(map[int][]api.Constraint),
-		options:  options,
+		options: options,
 	}
 
 	// Create a delta processor for the test
-	deltaProc := newDeltaProcessor(storage, repo, repoChannels)
+	deltaProc := newDeltaProcessor(repo, repoChannels)
 
 	client := newStreamingClient(options, repoChannels, deltaProc)
 	client.ctx, client.cancel = context.WithCancel(context.Background())
@@ -118,7 +122,9 @@ func TestStreamingClient_HandleEvents(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	feature, found := storage.Get("test-feature")
+	snapshot := repo.snapshot()
+
+	feature, found := snapshot.Features["test-feature"]
 	assert.True(t, found)
 	assert.True(t, feature.Enabled)
 
@@ -142,7 +148,9 @@ func TestStreamingClient_HandleEvents(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	feature, found = storage.Get("test-feature")
+	snapshot = repo.snapshot()
+
+	feature, found = snapshot.Features["test-feature"]
 	assert.True(t, found)
 	assert.False(t, feature.Enabled)
 

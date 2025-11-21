@@ -86,12 +86,12 @@ func (fr FeatureResponse) SegmentsMap() map[int][]Constraint {
 }
 
 // Get variant for a given feature which is considered as enabled
-func (vc VariantCollection) GetVariant(ctx *context.Context) *Variant {
+func (vc VariantCollection) GetVariant(ctx *context.Context, stickinessOverride *string) *Variant {
 	if len(vc.Variants) > 0 {
 		v := vc.getOverrideVariant(ctx)
 		var variant *Variant
 		if v == nil {
-			variant = vc.getVariantFromWeights(ctx)
+			variant = vc.getVariantFromWeights(ctx, stickinessOverride)
 		} else {
 			variant = &v.Variant
 		}
@@ -102,7 +102,7 @@ func (vc VariantCollection) GetVariant(ctx *context.Context) *Variant {
 	return DISABLED_VARIANT
 }
 
-func (vc VariantCollection) getVariantFromWeights(ctx *context.Context) *Variant {
+func (vc VariantCollection) getVariantFromWeights(ctx *context.Context, stickinessOverride *string) *Variant {
 	totalWeight := 0
 	for _, variant := range vc.Variants {
 		totalWeight += variant.Weight
@@ -110,7 +110,11 @@ func (vc VariantCollection) getVariantFromWeights(ctx *context.Context) *Variant
 	if totalWeight == 0 {
 		return DISABLED_VARIANT
 	}
+
 	stickiness := vc.Variants[0].Stickiness
+	if stickinessOverride != nil {
+		stickiness = *stickinessOverride
+	}
 
 	target := strategies.NormalizedVariantValue(getSeed(ctx, stickiness), vc.GroupId, totalWeight, strategies.VariantNormalizationSeed)
 	counter := uint32(0)
