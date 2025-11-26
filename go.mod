@@ -1,4 +1,4 @@
-module github.com/Unleash/unleash-go-sdk/v5
+module github.com/Unleash/unleash-go-sdk/v6
 
 go 1.23
 
