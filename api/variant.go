@@ -2,7 +2,7 @@ package api
 
 import "slices"
 
-import "github.com/Unleash/unleash-go-sdk/v5/context"
+import "github.com/Unleash/unleash-go-sdk/v6/context"
 
 var DISABLED_VARIANT = &Variant{
 	Name:           "disabled",

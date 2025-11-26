@@ -3,8 +3,8 @@ package strategies
 import (
 	"strings"
 
-	"github.com/Unleash/unleash-go-sdk/v5/context"
-	"github.com/Unleash/unleash-go-sdk/v5/strategy"
+	"github.com/Unleash/unleash-go-sdk/v6/context"
+	"github.com/Unleash/unleash-go-sdk/v6/strategy"
 )
 
 type applicationHostnameStrategy struct {

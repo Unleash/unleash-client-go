@@ -3,7 +3,7 @@ package api
 import (
 	"time"
 
-	"github.com/Unleash/unleash-go-sdk/v5/api"
+	"github.com/Unleash/unleash-go-sdk/v6/api"
 )
 
 type EventResponse struct {

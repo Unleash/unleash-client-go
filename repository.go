@@ -12,7 +12,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/Unleash/unleash-go-sdk/v5/api"
+	"github.com/Unleash/unleash-go-sdk/v6/api"
 )
 
 var SEGMENT_CLIENT_SPEC_VERSION = "4.3.1"

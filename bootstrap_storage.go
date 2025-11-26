@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/Unleash/unleash-go-sdk/v5/api"
+	"github.com/Unleash/unleash-go-sdk/v6/api"
 )
 
 type BootstrapStorage struct {

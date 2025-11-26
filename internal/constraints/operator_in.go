@@ -1,8 +1,8 @@
 package constraints
 
 import (
-	"github.com/Unleash/unleash-go-sdk/v5/api"
-	"github.com/Unleash/unleash-go-sdk/v5/context"
+	"github.com/Unleash/unleash-go-sdk/v6/api"
+	"github.com/Unleash/unleash-go-sdk/v6/context"
 	"slices"
 )
 
