@@ -13,18 +13,14 @@ import (
 
 var VariantNormalizationSeed uint32 = 86028157
 
-// colonByte is a pre-allocated byte slice to avoid allocation in hot path
 var colonByte = []byte(":")
 
-// Hash pools for the two seed values used in the SDK
-// Pool for seed=0 (used by normalizedRolloutValue)
 var hashPoolSeed0 = sync.Pool{
 	New: func() any {
 		return murmur3.SeedNew32(0)
 	},
 }
 
-// Pool for VariantNormalizationSeed (used by variant selection)
 var hashPoolVariantSeed = sync.Pool{
 	New: func() any {
 		return murmur3.SeedNew32(VariantNormalizationSeed)
@@ -66,7 +62,6 @@ func normalizedRolloutValue(id string, groupId string) uint32 {
 }
 
 func NormalizedVariantValue(id string, groupId string, normalizer int, seed uint32) uint32 {
-	// Use pooled hash objects for known seeds, fall back to allocation for unknown seeds
 	var h hash.Hash32
 	var pool *sync.Pool
 
@@ -78,7 +73,6 @@ func NormalizedVariantValue(id string, groupId string, normalizer int, seed uint
 		pool = &hashPoolVariantSeed
 		h = pool.Get().(hash.Hash32)
 	default:
-		// Fallback for any other seed (shouldn't happen in practice)
 		h = murmur3.SeedNew32(seed)
 	}
 
