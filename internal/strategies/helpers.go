@@ -1,6 +1,7 @@
 package strategies
 
 import (
+	"hash"
 	"math/rand/v2"
 	"os"
 	"strconv"
@@ -11,6 +12,24 @@ import (
 )
 
 var VariantNormalizationSeed uint32 = 86028157
+
+// colonByte is a pre-allocated byte slice to avoid allocation in hot path
+var colonByte = []byte(":")
+
+// Hash pools for the two seed values used in the SDK
+// Pool for seed=0 (used by normalizedRolloutValue)
+var hashPoolSeed0 = sync.Pool{
+	New: func() any {
+		return murmur3.SeedNew32(0)
+	},
+}
+
+// Pool for VariantNormalizationSeed (used by variant selection)
+var hashPoolVariantSeed = sync.Pool{
+	New: func() any {
+		return murmur3.SeedNew32(VariantNormalizationSeed)
+	},
+}
 
 func resolveHostname() (string, error) {
 	var err error
@@ -47,9 +66,34 @@ func normalizedRolloutValue(id string, groupId string) uint32 {
 }
 
 func NormalizedVariantValue(id string, groupId string, normalizer int, seed uint32) uint32 {
-	hash := murmur3.SeedNew32(seed)
-	hash.Write([]byte(groupId + ":" + id))
-	hashCode := hash.Sum32()
+	// Use pooled hash objects for known seeds, fall back to allocation for unknown seeds
+	var h hash.Hash32
+	var pool *sync.Pool
+
+	switch seed {
+	case 0:
+		pool = &hashPoolSeed0
+		h = pool.Get().(hash.Hash32)
+	case VariantNormalizationSeed:
+		pool = &hashPoolVariantSeed
+		h = pool.Get().(hash.Hash32)
+	default:
+		// Fallback for any other seed (shouldn't happen in practice)
+		h = murmur3.SeedNew32(seed)
+	}
+
+	h.Reset()
+	// Write components separately to avoid string concatenation allocation
+	h.Write([]byte(groupId))
+	h.Write(colonByte)
+	h.Write([]byte(id))
+	hashCode := h.Sum32()
+
+	// Return to pool if we got it from there
+	if pool != nil {
+		pool.Put(h)
+	}
+
 	return hashCode%uint32(normalizer) + 1
 }
 
@@ -78,28 +122,13 @@ func (r *rng) float() float64 {
 	return float64(r.int())
 }
 
-func (r *rng) string() string {
-	r.Lock()
-	defer r.Unlock()
-	return strconv.Itoa(r.random.IntN(10000) + 1)
-}
-
 // newRng creates a new random number generator and uses a mutex
 // internally to ensure safe concurrent reads.
 func newRng() *rng {
 	return &rng{random: rand.New(rand.NewPCG(uint64(time.Now().UnixNano()), uint64(os.Getpid())))}
 }
 
-var rngPool = sync.Pool{
-	New: func() any {
-		return rand.New(rand.NewPCG(uint64(time.Now().UnixNano()), uint64(os.Getpid())))
-	},
-}
-
 func randomString() string {
-	r := rngPool.Get().(*rand.Rand)
-	n := r.IntN(10000) + 1
-	rngPool.Put(r)
-
-	return strconv.Itoa(n)
+	// rand.IntN from math/rand/v2 is thread-safe when using the global source
+	return strconv.Itoa(rand.IntN(10000) + 1)
 }

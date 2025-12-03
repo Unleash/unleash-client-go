@@ -77,13 +77,29 @@ func TestNewRng(t *testing.T) {
 	testGen := func(n int) {
 		for range n {
 			randomInt := rng.int()
-			assert.True(t, randomInt >= 0 && randomInt <= 100)
-
-			randomString := rng.string()
-			assert.True(t, len(randomString) <= 5)
+			assert.True(t, randomInt >= 1 && randomInt <= 101)
 
 			randomFloat := rng.float()
-			assert.True(t, randomFloat > 0.0 && randomFloat <= 100.0)
+			assert.True(t, randomFloat >= 1.0 && randomFloat <= 101.0)
+		}
+		wg.Done()
+	}
+
+	goRoutines := 20
+	wg.Add(goRoutines)
+	for range goRoutines {
+		go testGen(100)
+	}
+	wg.Wait()
+}
+
+func TestRandomString(t *testing.T) {
+	wg := sync.WaitGroup{}
+
+	testGen := func(n int) {
+		for range n {
+			rs := randomString()
+			assert.True(t, len(rs) >= 1 && len(rs) <= 5)
 		}
 		wg.Done()
 	}
