@@ -4,8 +4,6 @@ import (
 	"math/rand/v2"
 	"os"
 	"strconv"
-	"sync"
-	"time"
 
 	"github.com/twmb/murmur3"
 )
@@ -63,15 +61,10 @@ func coalesce(str ...string) string {
 	return ""
 }
 
-type rng struct {
-	sync.Mutex
-	random *rand.Rand
-}
+type rng struct{}
 
 func (r *rng) int() int {
-	r.Lock()
-	defer r.Unlock()
-	return r.random.IntN(100) + 1
+	return rand.IntN(100) + 1
 }
 
 func (r *rng) float() float64 {
@@ -79,13 +72,10 @@ func (r *rng) float() float64 {
 }
 
 func (r *rng) string() string {
-	r.Lock()
-	defer r.Unlock()
-	return strconv.Itoa(r.random.IntN(10000) + 1)
+	return strconv.Itoa(rand.IntN(10000) + 1)
 }
 
-// newRng creates a new random number generator and uses a mutex
-// internally to ensure safe concurrent reads.
+
 func newRng() *rng {
-	return &rng{random: rand.New(rand.NewPCG(uint64(time.Now().UnixNano()), uint64(os.Getpid())))}
+	return &rng{}
 }
