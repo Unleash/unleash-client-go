@@ -75,7 +75,6 @@ func (r *rng) string() string {
 	return strconv.Itoa(rand.IntN(10000) + 1)
 }
 
-
 func newRng() *rng {
 	return &rng{}
 }
