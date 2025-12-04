@@ -1,6 +1,7 @@
 package strategies
 
 import (
+	"hash"
 	"math/rand/v2"
 	"os"
 	"strconv"
@@ -11,6 +12,18 @@ import (
 )
 
 var VariantNormalizationSeed uint32 = 86028157
+
+var hashPoolSeed0 = sync.Pool{
+	New: func() any {
+		return murmur3.SeedNew32(0)
+	},
+}
+
+var hashPoolVariantSeed = sync.Pool{
+	New: func() any {
+		return murmur3.SeedNew32(VariantNormalizationSeed)
+	},
+}
 
 func resolveHostname() (string, error) {
 	var err error
@@ -47,9 +60,28 @@ func normalizedRolloutValue(id string, groupId string) uint32 {
 }
 
 func NormalizedVariantValue(id string, groupId string, normalizer int, seed uint32) uint32 {
-	hash := murmur3.SeedNew32(seed)
-	hash.Write([]byte(groupId + ":" + id))
-	hashCode := hash.Sum32()
+	var h hash.Hash32
+	var pool *sync.Pool
+
+	switch seed {
+	case 0:
+		pool = &hashPoolSeed0
+		h = pool.Get().(hash.Hash32)
+	case VariantNormalizationSeed:
+		pool = &hashPoolVariantSeed
+		h = pool.Get().(hash.Hash32)
+	default:
+		h = murmur3.SeedNew32(seed)
+	}
+
+	h.Reset()
+	h.Write([]byte(groupId + ":" + id))
+	hashCode := h.Sum32()
+
+	if pool != nil {
+		pool.Put(h)
+	}
+
 	return hashCode%uint32(normalizer) + 1
 }
 
