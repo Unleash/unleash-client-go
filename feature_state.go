@@ -156,7 +156,7 @@ func findStrategy(strats []strategy.Strategy, name string) strategy.Strategy {
 }
 
 func (featureState *FeatureMemoryState) resolveSegmentConstraints(strategy api.Strategy) ([]api.Constraint, error) {
-	segmentConstraints := []api.Constraint{}
+	segmentConstraints := make([]api.Constraint, 0, len(strategy.Segments)*4)
 
 	segments := featureState.Segments
 
