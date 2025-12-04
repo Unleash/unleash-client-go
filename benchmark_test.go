@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Unleash/unleash-go-sdk/v5"
-	"github.com/Unleash/unleash-go-sdk/v5/api"
+	"github.com/Unleash/unleash-go-sdk/v6"
+	"github.com/Unleash/unleash-go-sdk/v6/api"
 )
 
 type mockStorage map[string]api.Feature

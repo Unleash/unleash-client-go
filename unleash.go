@@ -1,6 +1,6 @@
 package unleash
 
-import "github.com/Unleash/unleash-go-sdk/v5/api"
+import "github.com/Unleash/unleash-go-sdk/v6/api"
 
 var defaultClient *Client
 

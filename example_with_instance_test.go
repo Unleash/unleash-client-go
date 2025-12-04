@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Unleash/unleash-go-sdk/v5"
+	"github.com/Unleash/unleash-go-sdk/v6"
 )
 
 // Sync runs the client event loop. All of the channels must be read to avoid blocking the

@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Unleash/unleash-go-sdk/v5/context"
-	"github.com/Unleash/unleash-go-sdk/v5/internal/strategies"
+	"github.com/Unleash/unleash-go-sdk/v6/context"
+	"github.com/Unleash/unleash-go-sdk/v6/internal/strategies"
 )
 
 type ParameterMap map[string]any

@@ -13,7 +13,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/Unleash/unleash-go-sdk/v5/internal/api"
+	"github.com/Unleash/unleash-go-sdk/v6/internal/api"
 )
 
 // MetricsData represents the data sent to the unleash server.

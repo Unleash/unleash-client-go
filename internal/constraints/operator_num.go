@@ -3,8 +3,8 @@ package constraints
 import (
 	"math/big"
 
-	"github.com/Unleash/unleash-go-sdk/v5/api"
-	"github.com/Unleash/unleash-go-sdk/v5/context"
+	"github.com/Unleash/unleash-go-sdk/v6/api"
+	"github.com/Unleash/unleash-go-sdk/v6/context"
 )
 
 func operatorNumEq(ctx *context.Context, constraint api.Constraint) (bool, error) {

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/Unleash/unleash-go-sdk/v5/api"
-	"github.com/Unleash/unleash-go-sdk/v5/context"
-	"github.com/Unleash/unleash-go-sdk/v5/internal/constraints"
-	"github.com/Unleash/unleash-go-sdk/v5/strategy"
+	"github.com/Unleash/unleash-go-sdk/v6/api"
+	"github.com/Unleash/unleash-go-sdk/v6/context"
+	"github.com/Unleash/unleash-go-sdk/v6/internal/constraints"
+	"github.com/Unleash/unleash-go-sdk/v6/strategy"
 )
 
 type FeatureMemoryState struct {

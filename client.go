@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Unleash/unleash-go-sdk/v5/api"
-	"github.com/Unleash/unleash-go-sdk/v5/context"
-	s "github.com/Unleash/unleash-go-sdk/v5/internal/strategies"
-	"github.com/Unleash/unleash-go-sdk/v5/strategy"
+	"github.com/Unleash/unleash-go-sdk/v6/api"
+	"github.com/Unleash/unleash-go-sdk/v6/context"
+	s "github.com/Unleash/unleash-go-sdk/v6/internal/strategies"
+	"github.com/Unleash/unleash-go-sdk/v6/strategy"
 )
 
 const (
