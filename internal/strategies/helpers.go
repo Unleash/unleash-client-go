@@ -12,6 +12,8 @@ import (
 
 var VariantNormalizationSeed uint32 = 86028157
 
+var colonByte = []byte(":")
+
 func resolveHostname() (string, error) {
 	var err error
 	hostname := os.Getenv("HOSTNAME")
@@ -48,7 +50,9 @@ func normalizedRolloutValue(id string, groupId string) uint32 {
 
 func NormalizedVariantValue(id string, groupId string, normalizer int, seed uint32) uint32 {
 	hash := murmur3.SeedNew32(seed)
-	hash.Write([]byte(groupId + ":" + id))
+	hash.Write([]byte(groupId))
+	hash.Write(colonByte)
+	hash.Write([]byte(id))
 	hashCode := hash.Sum32()
 	return hashCode%uint32(normalizer) + 1
 }
