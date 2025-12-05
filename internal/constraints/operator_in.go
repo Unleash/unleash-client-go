@@ -6,11 +6,11 @@ import (
 	"slices"
 )
 
-func operatorNotIn(ctx *context.Context, constraint api.Constraint) bool {
+func operatorNotIn(ctx context.Context, constraint api.Constraint) bool {
 	return !operatorIn(ctx, constraint)
 }
 
-func operatorIn(ctx *context.Context, constraint api.Constraint) bool {
+func operatorIn(ctx context.Context, constraint api.Constraint) bool {
 	contextValue := ctx.Field(constraint.ContextName)
 
 	return slices.Contains(constraint.Values, contextValue)

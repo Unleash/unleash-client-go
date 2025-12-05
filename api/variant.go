@@ -54,7 +54,7 @@ type VariantCollection struct {
 	Variants []VariantInternal
 }
 
-func (o Override) getIdentifier(ctx *context.Context) string {
+func (o Override) getIdentifier(ctx context.Context) string {
 	var value string
 	switch o.ContextName {
 	case "userId":
@@ -69,17 +69,13 @@ func (o Override) getIdentifier(ctx *context.Context) string {
 		value = ctx.AppName
 	default:
 		if len(ctx.Properties) > 0 {
-			for k, v := range ctx.Properties {
-				if k == o.ContextName {
-					value = v
-				}
-			}
+			value = ctx.Properties[o.ContextName]
 		}
 	}
 	return value
 }
 
-func (o Override) matchValue(ctx *context.Context) bool {
+func (o Override) matchValue(ctx context.Context) bool {
 	if len(o.Values) == 0 {
 		return false
 	}

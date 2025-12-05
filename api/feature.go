@@ -86,7 +86,7 @@ func (fr FeatureResponse) SegmentsMap() map[int][]Constraint {
 }
 
 // Get variant for a given feature which is considered as enabled
-func (vc VariantCollection) GetVariant(ctx *context.Context, stickinessOverride *string) *Variant {
+func (vc VariantCollection) GetVariant(ctx context.Context, stickinessOverride *string) *Variant {
 	if len(vc.Variants) > 0 {
 		v := vc.getOverrideVariant(ctx)
 		var variant *Variant
@@ -102,7 +102,7 @@ func (vc VariantCollection) GetVariant(ctx *context.Context, stickinessOverride 
 	return DISABLED_VARIANT
 }
 
-func (vc VariantCollection) getVariantFromWeights(ctx *context.Context, stickinessOverride *string) *Variant {
+func (vc VariantCollection) getVariantFromWeights(ctx context.Context, stickinessOverride *string) *Variant {
 	totalWeight := 0
 	for _, variant := range vc.Variants {
 		totalWeight += variant.Weight
@@ -128,7 +128,7 @@ func (vc VariantCollection) getVariantFromWeights(ctx *context.Context, stickine
 	return DISABLED_VARIANT
 }
 
-func (vc VariantCollection) getOverrideVariant(ctx *context.Context) *VariantInternal {
+func (vc VariantCollection) getOverrideVariant(ctx context.Context) *VariantInternal {
 	for _, variant := range vc.Variants {
 		for _, override := range variant.Overrides {
 			if override.matchValue(ctx) {
@@ -140,7 +140,7 @@ func (vc VariantCollection) getOverrideVariant(ctx *context.Context) *VariantInt
 	return nil
 }
 
-func getSeed(ctx *context.Context, stickiness string) string {
+func getSeed(ctx context.Context, stickiness string) string {
 	if stickiness != "default" && stickiness != "" {
 		value := ctx.Field(stickiness)
 		if value == "" {

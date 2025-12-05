@@ -7,20 +7,20 @@ import (
 	"github.com/Unleash/unleash-go-sdk/v6/context"
 )
 
-func operatorStrContains(ctx *context.Context, constraint api.Constraint) bool {
+func operatorStrContains(ctx context.Context, constraint api.Constraint) bool {
 	return operatorStr(ctx, constraint, strings.Contains)
 }
 
-func operatorStrStartsWith(ctx *context.Context, constraint api.Constraint) bool {
+func operatorStrStartsWith(ctx context.Context, constraint api.Constraint) bool {
 	return operatorStr(ctx, constraint, strings.HasPrefix)
 }
 
-func operatorStrEndsWith(ctx *context.Context, constraint api.Constraint) bool {
+func operatorStrEndsWith(ctx context.Context, constraint api.Constraint) bool {
 	return operatorStr(ctx, constraint, strings.HasSuffix)
 }
 
 func operatorStr(
-	ctx *context.Context,
+	ctx context.Context,
 	constraint api.Constraint,
 	check func(context string, constraint string) bool,
 ) bool {

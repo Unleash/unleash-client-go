@@ -1,6 +1,9 @@
 package unleash
 
-import "github.com/Unleash/unleash-go-sdk/v6/api"
+import (
+	"github.com/Unleash/unleash-go-sdk/v6/api"
+	"github.com/Unleash/unleash-go-sdk/v6/context"
+)
 
 var defaultClient *Client
 
@@ -53,7 +56,11 @@ func IsEnabled(feature string, options ...FeatureOption) bool {
 		for _, o := range options {
 			o(&opts)
 		}
-		return handleFallback(opts, feature, opts.ctx).Enabled
+		var ctx context.Context
+		if opts.ctx != nil {
+			ctx = *opts.ctx
+		}
+		return handleFallback(opts, feature, ctx).Enabled
 	}
 	return defaultClient.IsEnabled(feature, options...)
 }

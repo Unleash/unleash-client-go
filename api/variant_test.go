@@ -128,7 +128,7 @@ func (suite *VariantTestSuite) TestGetVariantWhenFeatureHasNoVariant() {
 		Name:    "test.variants",
 		Enabled: true,
 	}
-	mockContext := &context.Context{}
+	mockContext := context.Context{}
 	variantSetup := VariantCollection{
 		GroupId:  mockFeature.Name,
 		Variants: mockFeature.Variants,
@@ -143,7 +143,7 @@ func (suite *VariantTestSuite) TestGetVariant_OverrideOnUserId() {
 		Enabled:  true,
 		Variants: suite.VariantWithOverride,
 	}
-	mockContext := &context.Context{
+	mockContext := context.Context{
 		UserId:        "1",
 		SessionId:     "ABCDE",
 		RemoteAddress: "127.0.0.1",
@@ -167,7 +167,7 @@ func (suite *VariantTestSuite) TestGetVariant_OverrideOnRemoteAddress() {
 		Enabled:  true,
 		Variants: suite.VariantWithOverride,
 	}
-	mockContext := &context.Context{
+	mockContext := context.Context{
 		SessionId:     "FGHIJ",
 		RemoteAddress: "127.0.0.1",
 	}
@@ -190,7 +190,7 @@ func (suite *VariantTestSuite) TestGetVariant_OverrideOnSessionId() {
 		Enabled:  true,
 		Variants: suite.VariantWithOverride,
 	}
-	mockContext := &context.Context{
+	mockContext := context.Context{
 		UserId:        "123",
 		SessionId:     "ABCDE",
 		RemoteAddress: "127.0.0.1",
@@ -214,7 +214,7 @@ func (suite *VariantTestSuite) TestGetVariant_OverrideOnCustomProperties() {
 		Enabled:  true,
 		Variants: suite.VariantWithOverride,
 	}
-	mockContext := &context.Context{
+	mockContext := context.Context{
 		Properties: map[string]string{
 			"env": "dev",
 		},
@@ -238,7 +238,7 @@ func (suite *VariantTestSuite) TestGetVariant_ShouldReturnVarD() {
 		Enabled:  true,
 		Variants: suite.VariantWithoutOverride,
 	}
-	mockContext := &context.Context{
+	mockContext := context.Context{
 		UserId: "123",
 	}
 	variantSetup := VariantCollection{
@@ -255,7 +255,7 @@ func (suite *VariantTestSuite) TestGetVariant_ShouldReturnVarE() {
 		Enabled:  true,
 		Variants: suite.VariantWithoutOverride,
 	}
-	mockContext := &context.Context{
+	mockContext := context.Context{
 		UserId: "163",
 	}
 	variantSetup := VariantCollection{
@@ -272,7 +272,7 @@ func (suite *VariantTestSuite) TestGetVariant_ShouldReturnVarF() {
 		Enabled:  true,
 		Variants: suite.VariantWithoutOverride,
 	}
-	mockContext := &context.Context{
+	mockContext := context.Context{
 		UserId: "40",
 	}
 	variantSetup := VariantCollection{
@@ -294,7 +294,7 @@ func (suite *VariantTestSuite) TestGetVariant_OverrideOnAppName() {
 		Enabled:  true,
 		Variants: suite.VariantWithOverride,
 	}
-	mockContext := &context.Context{
+	mockContext := context.Context{
 		AppName: "test",
 	}
 	expectedPayload := Payload{
@@ -316,7 +316,7 @@ func (suite *VariantTestSuite) TestGetVariant_OverrideOnEnvironment() {
 		Enabled:  true,
 		Variants: suite.VariantWithOverride,
 	}
-	mockContext := &context.Context{
+	mockContext := context.Context{
 		Environment: "development",
 	}
 	expectedPayload := Payload{

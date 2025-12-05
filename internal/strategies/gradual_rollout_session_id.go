@@ -17,8 +17,8 @@ func (s gradualRolloutSessionId) Name() string {
 	return "gradualRolloutSessionId"
 }
 
-func (s gradualRolloutSessionId) IsEnabled(params map[string]any, ctx *context.Context) bool {
-	if ctx == nil || ctx.SessionId == "" {
+func (s gradualRolloutSessionId) IsEnabled(params map[string]any, ctx context.Context) bool {
+	if ctx.SessionId == "" {
 		return false
 	}
 

@@ -3,12 +3,21 @@ package unleash
 import (
 	"fmt"
 	"slices"
+	"sync"
 
 	"github.com/Unleash/unleash-go-sdk/v6/api"
 	"github.com/Unleash/unleash-go-sdk/v6/context"
 	"github.com/Unleash/unleash-go-sdk/v6/internal/constraints"
 	"github.com/Unleash/unleash-go-sdk/v6/strategy"
 )
+
+// constraintSlicePool reduces allocations for constraint slices during evaluation.
+var constraintSlicePool = sync.Pool{
+	New: func() any {
+		// Pre-allocate with typical capacity to avoid growth during append
+		return make([]api.Constraint, 0, 16)
+	},
+}
 
 type FeatureMemoryState struct {
 	Features map[string]*api.Feature
@@ -19,7 +28,7 @@ type FeatureMemoryState struct {
 // It does NOT handle fallbacks or missing features; that's the caller's job.
 func (s *FeatureMemoryState) evaluateFeature(
 	f *api.Feature,
-	ctx *context.Context,
+	ctx context.Context,
 	strategies []strategy.Strategy,
 ) (api.StrategyResult, error) {
 
@@ -45,6 +54,14 @@ func (s *FeatureMemoryState) evaluateFeature(
 		}, nil
 	}
 
+	// Get a pooled slice for constraints to reduce allocations
+	allConstraints := constraintSlicePool.Get().([]api.Constraint)
+	defer func() {
+		// Clear and return to pool
+		allConstraints = allConstraints[:0]
+		constraintSlicePool.Put(allConstraints)
+	}()
+
 	for _, stCfg := range f.Strategies {
 		foundStrategy := findStrategy(strategies, stCfg.Name)
 		if foundStrategy == nil {
@@ -52,15 +69,19 @@ func (s *FeatureMemoryState) evaluateFeature(
 			continue
 		}
 
-		segmentConstraints, err := s.resolveSegmentConstraints(stCfg)
-		if err != nil {
-			return api.StrategyResult{
-				Enabled: false,
-			}, err
-		}
+		// Reset slice for reuse across strategy iterations
+		allConstraints = allConstraints[:0]
 
-		allConstraints := make([]api.Constraint, 0, len(segmentConstraints)+len(stCfg.Constraints))
-		allConstraints = append(allConstraints, segmentConstraints...)
+		// Append segment constraints directly to pooled slice
+		for _, segmentId := range stCfg.Segments {
+			if resolvedConstraints, ok := s.Segments[segmentId]; ok {
+				allConstraints = append(allConstraints, resolvedConstraints...)
+			} else {
+				return api.StrategyResult{
+					Enabled: false,
+				}, fmt.Errorf("segment does not exist")
+			}
+		}
 		allConstraints = append(allConstraints, stCfg.Constraints...)
 
 		ok, _ := constraints.Check(ctx, allConstraints)
@@ -108,8 +129,8 @@ func (s *FeatureMemoryState) evaluateFeature(
 	}, nil
 }
 
-func (s *FeatureMemoryState) isParentDependencySatisfied(feature *api.Feature, ctx *context.Context, strategies []strategy.Strategy) bool {
-	warnOnce := &WarnOnce{}
+func (s *FeatureMemoryState) isParentDependencySatisfied(feature *api.Feature, ctx context.Context, strategies []strategy.Strategy) bool {
+	var warnOnce WarnOnce
 
 	dependenciesSatisfied := func(parent api.Dependency) bool {
 		parentToggle := s.Features[parent.Feature]
@@ -153,20 +174,4 @@ func findStrategy(strats []strategy.Strategy, name string) strategy.Strategy {
 		}
 	}
 	return nil
-}
-
-func (featureState *FeatureMemoryState) resolveSegmentConstraints(strategy api.Strategy) ([]api.Constraint, error) {
-	segmentConstraints := []api.Constraint{}
-
-	segments := featureState.Segments
-
-	for _, segmentId := range strategy.Segments {
-		if resolvedConstraints, ok := segments[segmentId]; ok {
-			segmentConstraints = append(segmentConstraints, resolvedConstraints...)
-		} else {
-			return segmentConstraints, fmt.Errorf("segment does not exist")
-		}
-	}
-
-	return segmentConstraints, nil
 }

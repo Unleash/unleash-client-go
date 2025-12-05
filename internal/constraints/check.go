@@ -8,7 +8,7 @@ import (
 )
 
 // Check checks if all the constraints are fulfilled by the context.
-func Check(ctx *context.Context, constraints []api.Constraint) (bool, error) {
+func Check(ctx context.Context, constraints []api.Constraint) (bool, error) {
 	for _, c := range constraints {
 		if ok, err := checkConstraintInvertible(ctx, c); !ok || err != nil {
 			return false, err
@@ -19,7 +19,7 @@ func Check(ctx *context.Context, constraints []api.Constraint) (bool, error) {
 }
 
 // checkConstraintInvertible inverts the result from checkConstraint if required.
-func checkConstraintInvertible(ctx *context.Context, constraint api.Constraint) (bool, error) {
+func checkConstraintInvertible(ctx context.Context, constraint api.Constraint) (bool, error) {
 	ok, err := checkConstraint(ctx, constraint)
 
 	if constraint.Inverted {
@@ -30,7 +30,7 @@ func checkConstraintInvertible(ctx *context.Context, constraint api.Constraint) 
 }
 
 // checkConstraint checks if a specific constraint is fulfilled by the context.
-func checkConstraint(ctx *context.Context, constraint api.Constraint) (bool, error) {
+func checkConstraint(ctx context.Context, constraint api.Constraint) (bool, error) {
 	switch constraint.Operator {
 	case api.OperatorIn:
 		return operatorIn(ctx, constraint), nil

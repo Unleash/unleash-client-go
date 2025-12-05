@@ -1,8 +1,10 @@
 package strategies
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/Unleash/unleash-go-sdk/v6/context"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDefaultStrategy_Name(t *testing.T) {
@@ -12,5 +14,5 @@ func TestDefaultStrategy_Name(t *testing.T) {
 
 func TestDefaultStrategy_IsEnabled(t *testing.T) {
 	s := NewDefaultStrategy()
-	assert.True(t, s.IsEnabled(nil, nil), "default strategy should be enabled")
+	assert.True(t, s.IsEnabled(nil, context.Context{}), "default strategy should be enabled")
 }

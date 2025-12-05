@@ -7,18 +7,18 @@ import (
 
 func TestOverride(t *testing.T) {
 	type testCase struct {
-		input    *Context
-		src      *Context
-		expected *Context
+		input    Context
+		src      Context
+		expected Context
 	}
 
 	testCases := []testCase{
 		{
-			input: &Context{
+			input: Context{
 				AppName:     "testApp",
 				Environment: "production",
 			},
-			src: &Context{
+			src: Context{
 				UserId:        "12345",
 				SessionId:     "ABCDE",
 				RemoteAddress: "127.0.0.1",
@@ -26,7 +26,7 @@ func TestOverride(t *testing.T) {
 					"IsAdmin": "true",
 				},
 			},
-			expected: &Context{
+			expected: Context{
 				UserId:        "12345",
 				SessionId:     "ABCDE",
 				RemoteAddress: "127.0.0.1",
@@ -40,7 +40,7 @@ func TestOverride(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		actual := tc.input.Override(*tc.src)
+		actual := tc.input.Override(tc.src)
 		assert.Equal(t, tc.expected, actual)
 	}
 }

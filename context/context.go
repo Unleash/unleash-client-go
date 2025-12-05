@@ -27,7 +27,8 @@ type Context struct {
 
 // Override will take all non-empty values in 'src' and replace the
 // corresponding values in this context with those.
-func (ctx Context) Override(src Context) *Context {
+// Returns the merged context by value to avoid heap allocation.
+func (ctx Context) Override(src Context) Context {
 	if src.UserId != "" {
 		ctx.UserId = src.UserId
 	}
@@ -50,7 +51,7 @@ func (ctx Context) Override(src Context) *Context {
 		ctx.Properties = src.Properties
 	}
 
-	return &ctx
+	return ctx
 }
 
 // Field allows accessing the fields of the context by name. The typed fields are searched

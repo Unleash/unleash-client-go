@@ -21,7 +21,7 @@ func TestUserWithIdStrategy_IsEnabled(t *testing.T) {
 		params := map[string]any{
 			strategy.ParamUserIds: "123",
 		}
-		ctx := &context.Context{
+		ctx := context.Context{
 			UserId: "123",
 		}
 		assert.True(s.IsEnabled(params, ctx), "user-with-id-strategy should be enabled for userId")
@@ -31,7 +31,7 @@ func TestUserWithIdStrategy_IsEnabled(t *testing.T) {
 		params := map[string]any{
 			strategy.ParamUserIds: "123, 122, 12312312",
 		}
-		ctx := &context.Context{
+		ctx := context.Context{
 			UserId: "12312312",
 		}
 		assert.True(s.IsEnabled(params, ctx), "user-with-id-strategy should be enabled for userId in list")
@@ -41,7 +41,7 @@ func TestUserWithIdStrategy_IsEnabled(t *testing.T) {
 		params := map[string]any{
 			strategy.ParamUserIds: "123, 122, 122",
 		}
-		ctx := &context.Context{
+		ctx := context.Context{
 			UserId: "12",
 		}
 		assert.False(s.IsEnabled(params, ctx), "user-with-id-strategy should not be enabled for userId NOT in list")
@@ -51,7 +51,7 @@ func TestUserWithIdStrategy_IsEnabled(t *testing.T) {
 		params := map[string]any{
 			strategy.ParamUserIds: "123,122,12312312",
 		}
-		ctx := &context.Context{
+		ctx := context.Context{
 			UserId: "122",
 		}
 		assert.True(s.IsEnabled(params, ctx), "user-with-id-strategy should be enabled for userId in list")
@@ -60,7 +60,7 @@ func TestUserWithIdStrategy_IsEnabled(t *testing.T) {
 		params := map[string]any{
 			strategy.ParamUserIds: "",
 		}
-		ctx := &context.Context{}
+		ctx := context.Context{}
 		assert.False(s.IsEnabled(params, ctx), "user-with-id-strategy should not be enabled for empty strategy")
 	})
 }

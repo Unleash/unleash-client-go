@@ -7,20 +7,20 @@ import (
 	"github.com/Unleash/unleash-go-sdk/v6/context"
 )
 
-func operatorDateBefore(ctx *context.Context, constraint api.Constraint) (bool, error) {
+func operatorDateBefore(ctx context.Context, constraint api.Constraint) (bool, error) {
 	return operatorDate(ctx, constraint, func(context time.Time, constraint time.Time) bool {
 		return context.Before(constraint)
 	})
 }
 
-func operatorDateAfter(ctx *context.Context, constraint api.Constraint) (bool, error) {
+func operatorDateAfter(ctx context.Context, constraint api.Constraint) (bool, error) {
 	return operatorDate(ctx, constraint, func(context time.Time, constraint time.Time) bool {
 		return context.After(constraint)
 	})
 }
 
 func operatorDate(
-	ctx *context.Context,
+	ctx context.Context,
 	constraint api.Constraint,
 	check func(context time.Time, constraint time.Time) bool,
 ) (bool, error) {
@@ -38,7 +38,7 @@ func operatorDate(
 	return check(contextParsed, constraintParsed), nil
 }
 
-func contextDateValueOrNow(ctx *context.Context, constraint api.Constraint) (time.Time, error) {
+func contextDateValueOrNow(ctx context.Context, constraint api.Constraint) (time.Time, error) {
 	contextValue := ctx.Field(constraint.ContextName)
 
 	if contextValue != "" {

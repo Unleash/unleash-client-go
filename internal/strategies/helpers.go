@@ -48,7 +48,10 @@ func normalizedRolloutValue(id string, groupId string) uint32 {
 
 func NormalizedVariantValue(id string, groupId string, normalizer int, seed uint32) uint32 {
 	hash := murmur3.SeedNew32(seed)
-	hash.Write([]byte(groupId + ":" + id))
+	// Write in parts to avoid string concatenation allocation
+	hash.Write([]byte(groupId))
+	hash.Write([]byte{':'})
+	hash.Write([]byte(id))
 	hashCode := hash.Sum32()
 	return hashCode%uint32(normalizer) + 1
 }

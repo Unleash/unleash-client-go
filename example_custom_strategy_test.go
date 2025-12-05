@@ -16,11 +16,7 @@ func (s ActiveForUserWithEmailStrategy) Name() string {
 	return "ActiveForUserWithEmail"
 }
 
-func (s ActiveForUserWithEmailStrategy) IsEnabled(params map[string]any, ctx *context.Context) bool {
-
-	if ctx == nil {
-		return false
-	}
+func (s ActiveForUserWithEmailStrategy) IsEnabled(params map[string]any, ctx context.Context) bool {
 	value, found := params["emails"]
 	if !found {
 		return false

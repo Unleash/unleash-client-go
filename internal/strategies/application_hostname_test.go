@@ -19,7 +19,7 @@ func TestApplicationHostnameStrategy_IsEnabled(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("h=''", func(t *testing.T) {
-		isEnabled := s.IsEnabled(nil, &context.Context{
+		isEnabled := s.IsEnabled(nil, context.Context{
 			Properties: map[string]string{
 				"hostNames": "",
 			},
@@ -32,7 +32,7 @@ func TestApplicationHostnameStrategy_IsEnabled(t *testing.T) {
 		hostname, _ := resolveHostname()
 		isEnabled := s.IsEnabled(map[string]any{
 			strategy.ParamHostNames: hostname,
-		}, nil)
+		}, context.Context{})
 
 		assert.True(isEnabled, "strategy should be enabled when hostname is defined")
 	})
@@ -41,7 +41,7 @@ func TestApplicationHostnameStrategy_IsEnabled(t *testing.T) {
 		hostname, _ := resolveHostname()
 		isEnabled := s.IsEnabled(map[string]any{
 			strategy.ParamHostNames: "localhost," + hostname,
-		}, nil)
+		}, context.Context{})
 
 		assert.True(isEnabled, "strategy should be enabled when hostname is defined in list")
 	})
@@ -54,7 +54,7 @@ func TestApplicationHostnameStrategy_IsEnabled(t *testing.T) {
 
 		isEnabled := s.IsEnabled(map[string]any{
 			strategy.ParamHostNames: "localhost,some-random-name",
-		}, nil)
+		}, context.Context{})
 
 		assert.True(isEnabled, "strategy should be enabled when hostname is defined via env")
 	})
@@ -67,7 +67,7 @@ func TestApplicationHostnameStrategy_IsEnabled(t *testing.T) {
 
 		isEnabled := s.IsEnabled(map[string]any{
 			strategy.ParamHostNames: "localhost,some-random-name",
-		}, nil)
+		}, context.Context{})
 
 		assert.True(isEnabled, "strategy should handle weird casing")
 	})

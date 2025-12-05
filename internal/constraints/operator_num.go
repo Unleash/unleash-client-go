@@ -7,38 +7,38 @@ import (
 	"github.com/Unleash/unleash-go-sdk/v6/context"
 )
 
-func operatorNumEq(ctx *context.Context, constraint api.Constraint) (bool, error) {
+func operatorNumEq(ctx context.Context, constraint api.Constraint) (bool, error) {
 	return operatorNum(ctx, constraint, func(context *big.Float, constraint *big.Float) bool {
 		return context.Cmp(constraint) == 0
 	})
 }
 
-func operatorNumLt(ctx *context.Context, constraint api.Constraint) (bool, error) {
+func operatorNumLt(ctx context.Context, constraint api.Constraint) (bool, error) {
 	return operatorNum(ctx, constraint, func(context *big.Float, constraint *big.Float) bool {
 		return context.Cmp(constraint) < 0
 	})
 }
 
-func operatorNumLte(ctx *context.Context, constraint api.Constraint) (bool, error) {
+func operatorNumLte(ctx context.Context, constraint api.Constraint) (bool, error) {
 	return operatorNum(ctx, constraint, func(context *big.Float, constraint *big.Float) bool {
 		return context.Cmp(constraint) <= 0
 	})
 }
 
-func operatorNumGt(ctx *context.Context, constraint api.Constraint) (bool, error) {
+func operatorNumGt(ctx context.Context, constraint api.Constraint) (bool, error) {
 	return operatorNum(ctx, constraint, func(context *big.Float, constraint *big.Float) bool {
 		return context.Cmp(constraint) > 0
 	})
 }
 
-func operatorNumGte(ctx *context.Context, constraint api.Constraint) (bool, error) {
+func operatorNumGte(ctx context.Context, constraint api.Constraint) (bool, error) {
 	return operatorNum(ctx, constraint, func(context *big.Float, constraint *big.Float) bool {
 		return context.Cmp(constraint) >= 0
 	})
 }
 
 func operatorNum(
-	ctx *context.Context,
+	ctx context.Context,
 	constraint api.Constraint,
 	check func(context *big.Float, constraint *big.Float) bool,
 ) (bool, error) {

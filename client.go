@@ -294,16 +294,16 @@ func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled b
 			for _, o := range options {
 				o(&opts)
 			}
-			ctx := uc.staticContext
+			ctxVal := *uc.staticContext
 			if opts.ctx != nil {
-				ctx = ctx.Override(*opts.ctx)
+				ctxVal = ctxVal.Override(*opts.ctx)
 			}
 
 			uc.impression <- ImpressionEvent{
 				FeatureName: feature,
 				EventType:   ImpressionEventTypeIsEnabled,
 				Enabled:     enabled,
-				Context:     ctx,
+				Context:     &ctxVal,
 			}
 		}
 	}()
@@ -325,16 +325,16 @@ func (uc *Client) isEnabled(feature string, snapshot *FeatureMemoryState, option
 	// However that problem should no longer exist since storage is no longer the caching layer and so this code path should be deprecated in the future.
 	f := resolveToggle(snapshot, opts, feature)
 
-	ctx := uc.staticContext
+	ctxVal := *uc.staticContext
 	if opts.ctx != nil {
-		ctx = ctx.Override(*opts.ctx)
+		ctxVal = ctxVal.Override(*opts.ctx)
 	}
 
 	if f == nil {
-		return handleFallback(opts, feature, ctx), nil
+		return handleFallback(opts, feature, ctxVal), nil
 	}
 
-	result, err := snapshot.evaluateFeature(f, ctx, uc.strategies)
+	result, err := snapshot.evaluateFeature(f, ctxVal, uc.strategies)
 	if err != nil {
 		uc.errors <- err
 		return api.StrategyResult{
@@ -361,9 +361,9 @@ func (uc *Client) GetVariant(feature string, options ...VariantOption) (variant 
 			for _, o := range options {
 				o(&opts)
 			}
-			ctx := uc.staticContext
+			ctxVal := *uc.staticContext
 			if opts.ctx != nil {
-				ctx = ctx.Override(*opts.ctx)
+				ctxVal = ctxVal.Override(*opts.ctx)
 			}
 
 			uc.impression <- ImpressionEvent{
@@ -371,7 +371,7 @@ func (uc *Client) GetVariant(feature string, options ...VariantOption) (variant 
 				EventType:   ImpressionEventTypeGetVariant,
 				Enabled:     variant.FeatureEnabled,
 				Variant:     variant.Name,
-				Context:     ctx,
+				Context:     &ctxVal,
 			}
 		}
 	}()
@@ -386,22 +386,22 @@ func (uc *Client) getVariantWithoutMetrics(feature string, snapshot *FeatureMemo
 		o(&opts)
 	}
 
-	ctx := uc.staticContext
+	ctxVal := *uc.staticContext
 	if opts.ctx != nil {
-		ctx = ctx.Override(*opts.ctx)
+		ctxVal = ctxVal.Override(*opts.ctx)
 	}
 
 	var strategyResult api.StrategyResult
 	var f *api.Feature
 	if opts.resolver != nil {
-		strategyResult, f = uc.isEnabled(feature, snapshot, WithContext(*ctx), WithResolver(opts.resolver))
+		strategyResult, f = uc.isEnabled(feature, snapshot, WithContext(ctxVal), WithResolver(opts.resolver))
 	} else {
-		strategyResult, f = uc.isEnabled(feature, snapshot, WithContext(*ctx))
+		strategyResult, f = uc.isEnabled(feature, snapshot, WithContext(ctxVal))
 	}
 
 	getFallbackVariant := func(featureEnabled bool) *api.Variant {
 		if opts.variantFallbackFunc != nil {
-			return opts.variantFallbackFunc(feature, ctx)
+			return opts.variantFallbackFunc(feature, &ctxVal)
 		} else if opts.variantFallback != nil {
 			return opts.variantFallback
 		}
@@ -431,7 +431,7 @@ func (uc *Client) getVariantWithoutMetrics(feature string, snapshot *FeatureMemo
 	return api.VariantCollection{
 		GroupId:  f.Name,
 		Variants: f.Variants,
-	}.GetVariant(ctx, nil)
+	}.GetVariant(ctxVal, nil)
 }
 
 // Close stops the client from syncing data from the server.
@@ -508,10 +508,10 @@ func (uc *Client) ListFeatures() []api.Feature {
 	return uc.repository.list()
 }
 
-func handleFallback(opts featureOption, featureName string, ctx *context.Context) api.StrategyResult {
+func handleFallback(opts featureOption, featureName string, ctx context.Context) api.StrategyResult {
 	if opts.fallbackFunc != nil {
 		return api.StrategyResult{
-			Enabled: opts.fallbackFunc(featureName, ctx),
+			Enabled: opts.fallbackFunc(featureName, &ctx),
 		}
 	} else if opts.fallback != nil {
 		return api.StrategyResult{

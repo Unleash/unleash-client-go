@@ -6,26 +6,26 @@ import (
 	"github.com/Unleash/unleash-go-sdk/v6/context"
 )
 
-func operatorSemverEq(ctx *context.Context, constraint api.Constraint) (bool, error) {
+func operatorSemverEq(ctx context.Context, constraint api.Constraint) (bool, error) {
 	return operatorSemver(ctx, constraint, func(context *semver.Version, constraint *semver.Version) bool {
 		return context.Equal(constraint)
 	})
 }
 
-func operatorSemverLt(ctx *context.Context, constraint api.Constraint) (bool, error) {
+func operatorSemverLt(ctx context.Context, constraint api.Constraint) (bool, error) {
 	return operatorSemver(ctx, constraint, func(context *semver.Version, constraint *semver.Version) bool {
 		return context.LessThan(constraint)
 	})
 }
 
-func operatorSemverGt(ctx *context.Context, constraint api.Constraint) (bool, error) {
+func operatorSemverGt(ctx context.Context, constraint api.Constraint) (bool, error) {
 	return operatorSemver(ctx, constraint, func(context *semver.Version, constraint *semver.Version) bool {
 		return context.GreaterThan(constraint)
 	})
 }
 
 func operatorSemver(
-	ctx *context.Context,
+	ctx context.Context,
 	constraint api.Constraint,
 	check func(context *semver.Version, constraint *semver.Version) bool,
 ) (bool, error) {

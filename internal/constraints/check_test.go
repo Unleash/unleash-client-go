@@ -10,7 +10,7 @@ import (
 )
 
 type checkTestCase struct {
-	ctx         *context.Context
+	ctx         context.Context
 	constraints []api.Constraint
 	expected    bool
 	error       string
@@ -22,11 +22,11 @@ func TestCheck(t *testing.T) {
 			expected: true,
 		},
 		{
-			ctx:      &context.Context{},
+			ctx:      context.Context{},
 			expected: true,
 		},
 		{
-			ctx:         &context.Context{},
+			ctx:         context.Context{},
 			constraints: []api.Constraint{},
 			expected:    true,
 		},
@@ -35,17 +35,17 @@ func TestCheck(t *testing.T) {
 			expected:    true,
 		},
 		{
-			ctx:         &context.Context{Environment: "dev"},
+			ctx:         context.Context{Environment: "dev"},
 			constraints: []api.Constraint{},
 			expected:    true,
 		},
 		{
-			ctx:         &context.Context{},
+			ctx:         context.Context{},
 			constraints: []api.Constraint{{ContextName: "environment", Operator: "IN", Values: []string{}}},
 			expected:    false,
 		},
 		{
-			ctx:         &context.Context{},
+			ctx:         context.Context{},
 			constraints: []api.Constraint{{ContextName: "environment", Operator: "IN", Values: []string{}, Inverted: true}},
 			expected:    true,
 		},
@@ -63,12 +63,12 @@ func TestCheck(t *testing.T) {
 func TestCheckUnknownOperator(t *testing.T) {
 	testCases := []checkTestCase{
 		{
-			ctx:         &context.Context{},
+			ctx:         context.Context{},
 			constraints: []api.Constraint{{ContextName: "environment", Operator: "UNKNOWN_OPERATOR"}},
 			expected:    false,
 		},
 		{
-			ctx:         &context.Context{},
+			ctx:         context.Context{},
 			constraints: []api.Constraint{{ContextName: "environment", Operator: "UNKNOWN_OPERATOR", Inverted: true}},
 			expected:    false,
 		},
