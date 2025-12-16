@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -20,6 +21,7 @@ import (
 	"github.com/nbio/st"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMetrics_RegisterInstance(t *testing.T) {
@@ -264,6 +266,49 @@ func TestMetrics_SendMetricsFail(t *testing.T) {
 
 	// Now OnSent should have been called as /client/metrics returned 200.
 	mockListener.AssertCalled(t, "OnSent", mock.AnythingOfType("MetricsData"))
+}
+
+func BenchmarkMetrics_IsEnabled(b *testing.B) {
+	defer gock.OffAll()
+
+	gock.New(mockerServer).
+		Post("/client/register").
+		Reply(200)
+
+	gock.New(mockerServer).
+		Get("/client/features").
+		Reply(200).
+		JSON(api.FeatureResponse{})
+
+	mockListener := &MockedListener{}
+	mockListener.On("OnReady").Return()
+	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithListener(NoopListener{}),
+	)
+	require.NoError(b, err, "client should not return an error")
+	b.Cleanup(func() { _ = client.Close() })
+
+	const thresholdMs = 50
+	var callsOverThreshold int
+
+	var wg sync.WaitGroup
+	for b.Loop() {
+		wg.Go(func() {
+			start := time.Now()
+			client.IsEnabled("foo")
+			if time.Since(start) >= thresholdMs*time.Millisecond {
+				callsOverThreshold++
+			}
+		})
+	}
+	wg.Wait()
+
+	b.Logf("Calls over threshold of %d ms: %d / %d (%.2f %%)", thresholdMs, callsOverThreshold, b.N, float64(callsOverThreshold)/float64(b.N)*100)
 }
 
 func TestMetrics_ShouldNotCountMetricsForParentToggles(t *testing.T) {
