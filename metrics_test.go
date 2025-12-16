@@ -13,6 +13,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	"github.com/Unleash/unleash-go-sdk/v5/api"
@@ -378,7 +379,10 @@ func TestMetrics_ShouldNotCountMetricsForParentToggles(t *testing.T) {
 	)
 	assert.Nil(err, "client should not return an error")
 	client.WaitForReady()
-	client.IsEnabled("child")
+
+	synctest.Test(t, func(*testing.T) {
+		client.IsEnabled("child")
+	})
 
 	assert.EqualValues(client.metrics.bucket.Toggles["child"].Yes, 1)
 	assert.EqualValues(client.metrics.bucket.Toggles["parent"].Yes, 0)

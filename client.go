@@ -286,7 +286,7 @@ func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled b
 	result, f := uc.isEnabled(feature, options...)
 	enabled = result.Enabled
 
-	defer func() {
+	go func() {
 		uc.metrics.count(feature, enabled)
 
 		if f != nil && f.ImpressionData && uc.impressionListener != nil {
