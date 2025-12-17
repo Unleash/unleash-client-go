@@ -2,10 +2,10 @@ package unleash
 
 import (
 	"fmt"
-
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Unleash/unleash-go-sdk/v5/api"
@@ -46,6 +46,7 @@ type Client struct {
 	errorChannels
 	options            configOption
 	repository         *repository
+	counters           sync.WaitGroup
 	metrics            *metrics
 	strategies         []strategy.Strategy
 	errorListener      ErrorListener
@@ -529,6 +530,7 @@ func (uc *Client) getVariantWithoutMetrics(feature string, options ...VariantOpt
 // Close stops the client from syncing data from the server.
 func (uc *Client) Close() error {
 	uc.repository.Close()
+	uc.counters.Wait()
 	uc.metrics.Close()
 	if uc.options.listener != nil {
 		// Wait for sync to exit.

@@ -376,7 +376,13 @@ func TestMetrics_ShouldNotCountMetricsForParentToggles(t *testing.T) {
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnError").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
-	mockListener.On("OnCount", "child", true).Return()
+
+	// We need to know when the count happened to reliably inspect the underlying metrics data structure.
+	// Buffer size 1 to prevent the test from blocking if the metric gets reported before we register the receiver.
+	countReporter := make(chan struct{}, 1)
+	mockListener.On("OnCount", "child", true).Run(func(mock.Arguments) {
+		countReporter <- struct{}{}
+	}).Return()
 
 	client, err := NewClient(
 		WithUrl(mockerServer),
@@ -389,9 +395,10 @@ func TestMetrics_ShouldNotCountMetricsForParentToggles(t *testing.T) {
 
 	client.IsEnabled("child")
 
-	// Give the metric recorder goroutine time to finish writing
-	// before we start looking inside the underlying maps.
-	time.Sleep(10 * time.Millisecond)
+	// Let the metric recorder goroutine finish writing
+	// before we start looking inside the underlying data structure.
+	<-countReporter
+
 	assert.EqualValues(client.metrics.bucket.Toggles["child"].Yes, 1)
 	assert.EqualValues(client.metrics.bucket.Toggles["parent"].Yes, 0)
 	err = client.Close()
