@@ -294,7 +294,7 @@ func BenchmarkMetrics_IsEnabled(b *testing.B) {
 	b.Cleanup(func() { _ = client.Close() })
 
 	const thresholdMs = 50
-	var callsOverThreshold int
+	var callsOverThreshold atomic.Uint32
 
 	var wg sync.WaitGroup
 	wg.Add(b.N)
@@ -304,7 +304,7 @@ func BenchmarkMetrics_IsEnabled(b *testing.B) {
 			start := time.Now()
 			client.IsEnabled("foo")
 			if time.Since(start) >= thresholdMs*time.Millisecond {
-				callsOverThreshold++
+				callsOverThreshold.Add(1)
 			}
 
 			wg.Done()
@@ -313,7 +313,10 @@ func BenchmarkMetrics_IsEnabled(b *testing.B) {
 	wg.Wait()
 	b.StopTimer()
 
-	b.Logf("Calls over threshold of %d ms: %d / %d (%.2f %%)", thresholdMs, callsOverThreshold, b.N, float64(callsOverThreshold)/float64(b.N)*100)
+	b.Logf(
+		"Calls over threshold of %d ms: %d / %d (%.2f %%)",
+		thresholdMs, callsOverThreshold.Load(), b.N, float64(callsOverThreshold.Load())/float64(b.N)*100,
+	)
 }
 
 func TestMetrics_ShouldNotCountMetricsForParentToggles(t *testing.T) {
