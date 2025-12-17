@@ -445,7 +445,7 @@ func (uc *Client) isParentDependencySatisfied(feature *api.Feature, context cont
 func (uc *Client) GetVariant(feature string, options ...VariantOption) (variant *api.Variant) {
 	variant = uc.getVariantWithoutMetrics(feature, options...)
 
-	defer func() {
+	go func() {
 		uc.metrics.countVariants(feature, variant.FeatureEnabled, variant.Name)
 
 		f := uc.repository.getToggle(feature)
