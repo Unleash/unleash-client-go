@@ -13,7 +13,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
-	"testing/synctest"
 	"time"
 
 	"github.com/Unleash/unleash-go-sdk/v5/api"
@@ -298,16 +297,21 @@ func BenchmarkMetrics_IsEnabled(b *testing.B) {
 	var callsOverThreshold int
 
 	var wg sync.WaitGroup
-	for b.Loop() {
-		wg.Go(func() {
+	wg.Add(b.N)
+	b.ResetTimer()
+	for range b.N {
+		go func() {
 			start := time.Now()
 			client.IsEnabled("foo")
 			if time.Since(start) >= thresholdMs*time.Millisecond {
 				callsOverThreshold++
 			}
-		})
+
+			wg.Done()
+		}()
 	}
 	wg.Wait()
+	b.StopTimer()
 
 	b.Logf("Calls over threshold of %d ms: %d / %d (%.2f %%)", thresholdMs, callsOverThreshold, b.N, float64(callsOverThreshold)/float64(b.N)*100)
 }
@@ -380,10 +384,11 @@ func TestMetrics_ShouldNotCountMetricsForParentToggles(t *testing.T) {
 	assert.Nil(err, "client should not return an error")
 	client.WaitForReady()
 
-	synctest.Test(t, func(*testing.T) {
-		client.IsEnabled("child")
-	})
+	client.IsEnabled("child")
 
+	// Give the metric recorder goroutine time to finish writing
+	// before we start looking inside the underlying maps.
+	time.Sleep(10 * time.Millisecond)
 	assert.EqualValues(client.metrics.bucket.Toggles["child"].Yes, 1)
 	assert.EqualValues(client.metrics.bucket.Toggles["parent"].Yes, 0)
 	err = client.Close()
