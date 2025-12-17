@@ -46,7 +46,6 @@ type Client struct {
 	errorChannels
 	options            configOption
 	repository         *repository
-	counters           sync.WaitGroup
 	metrics            *metrics
 	strategies         []strategy.Strategy
 	errorListener      ErrorListener
@@ -58,6 +57,7 @@ type Client struct {
 	update             chan bool
 	close              chan struct{}
 	closed             chan struct{}
+	counters           sync.WaitGroup
 	count              chan metric
 	sent               chan MetricsData
 	registered         chan ClientData
@@ -287,7 +287,10 @@ func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled b
 	result, f := uc.isEnabled(feature, options...)
 	enabled = result.Enabled
 
+	uc.counters.Add(1)
 	go func() {
+		defer uc.counters.Done()
+
 		uc.metrics.count(feature, enabled)
 
 		if f != nil && f.ImpressionData && uc.impressionListener != nil {
@@ -445,7 +448,10 @@ func (uc *Client) isParentDependencySatisfied(feature *api.Feature, context cont
 func (uc *Client) GetVariant(feature string, options ...VariantOption) (variant *api.Variant) {
 	variant = uc.getVariantWithoutMetrics(feature, options...)
 
+	uc.counters.Add(1)
 	go func() {
+		defer uc.counters.Done()
+
 		uc.metrics.countVariants(feature, variant.FeatureEnabled, variant.Name)
 
 		f := uc.repository.getToggle(feature)

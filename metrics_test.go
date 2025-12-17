@@ -84,14 +84,17 @@ func TestMetrics_VariantsCountToggles(t *testing.T) {
 		WithInstanceId(mockInstanceId),
 		WithListener(mockListener),
 	)
+	require.NoError(t, err, "client should not return an error")
 
 	client.WaitForReady()
 	client.GetVariant("foo")
 
-	assert.EqualValues(client.metrics.bucket.Toggles["foo"].No, 1)
-	client.Close()
+	// Let the metric recorder goroutine finish writing before we start looking inside the underlying data structure.
+	client.counters.Wait()
 
-	assert.Nil(err, "client should not return an error")
+	assert.EqualValues(client.metrics.bucket.Toggles["foo"].No, 1)
+	_ = client.Close()
+
 	assert.True(gock.IsDone(), "there should be no more mocks")
 }
 
@@ -376,13 +379,7 @@ func TestMetrics_ShouldNotCountMetricsForParentToggles(t *testing.T) {
 	mockListener.On("OnReady").Return()
 	mockListener.On("OnError").Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
-
-	// We need to know when the count happened to reliably inspect the underlying metrics data structure.
-	// Buffer size 1 to prevent the test from blocking if the metric gets reported before we register the receiver.
-	countReporter := make(chan struct{}, 1)
-	mockListener.On("OnCount", "child", true).Run(func(mock.Arguments) {
-		countReporter <- struct{}{}
-	}).Return()
+	mockListener.On("OnCount", "child", true).Return()
 
 	client, err := NewClient(
 		WithUrl(mockerServer),
@@ -395,9 +392,8 @@ func TestMetrics_ShouldNotCountMetricsForParentToggles(t *testing.T) {
 
 	client.IsEnabled("child")
 
-	// Let the metric recorder goroutine finish writing
-	// before we start looking inside the underlying data structure.
-	<-countReporter
+	// Let the metric recorder goroutine finish writing before we start looking inside the underlying data structure.
+	client.counters.Wait()
 
 	assert.EqualValues(client.metrics.bucket.Toggles["child"].Yes, 1)
 	assert.EqualValues(client.metrics.bucket.Toggles["parent"].Yes, 0)
