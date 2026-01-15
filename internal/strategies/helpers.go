@@ -11,6 +11,16 @@ import (
 )
 
 var VariantNormalizationSeed uint32 = 86028157
+var randStrings [10001]string
+
+// Precompute a lookup table of random strings from "1" to "10000"
+// Generating string garbage is expensive in hot loops
+// Dumps ~200k into resident but that's small enough to not cry
+func init() {
+	for i := 1; i <= 10000; i++ {
+		randStrings[i] = strconv.Itoa(i)
+	}
+}
 
 func resolveHostname() (string, error) {
 	var err error
@@ -46,11 +56,36 @@ func normalizedRolloutValue(id string, groupId string) uint32 {
 	return NormalizedVariantValue(id, groupId, 100, 0)
 }
 
-func NormalizedVariantValue(id string, groupId string, normalizer int, seed uint32) uint32 {
-	hash := murmur3.SeedNew32(seed)
-	hash.Write([]byte(groupId + ":" + id))
-	hashCode := hash.Sum32()
-	return hashCode%uint32(normalizer) + 1
+// This comment exists for the purposes of preventing a future maintainer from "simplifying" this function
+// If you want to do that, please benchmark your resulting code for allocations
+//
+// We're gonna do something a little different from other SDKs here to avoid allocations
+// Typically an SDK concatenates a bunch of strings and applies a murmur3 hash to the result
+// That's surprisingly expensive in Go. So for cases where we know the input fits into
+// a 256 byte buffer, we can avoid allocations entirely and just use a stack buffer.
+// In practice that's most cases.
+func NormalizedVariantValue(id, groupId string, normalizer int, seed uint32) uint32 {
+	n := len(groupId) + 1 + len(id)
+
+	// So if we assume that this all fits into 256 bytes, we can do this on the stack!
+	if n <= 256 {
+		var buf [256]byte
+		i := copy(buf[:], groupId)
+		buf[i] = ':'
+		i++
+		i += copy(buf[i:], id)
+		x := murmur3.SeedSum32(seed, buf[:i])
+		return (x % uint32(normalizer)) + 1
+	}
+
+	// ...but of course life doesn't work like that so we still need a fallback
+	b := make([]byte, n)
+	i := copy(b, groupId)
+	b[i] = ':'
+	i++
+	copy(b[i:], id)
+	x := murmur3.SeedSum32(seed, b)
+	return (x % uint32(normalizer)) + 1
 }
 
 // coalesce returns the first non-empty string in the list of arguments
@@ -100,6 +135,5 @@ func randomString() string {
 	r := rngPool.Get().(*rand.Rand)
 	n := r.IntN(10000) + 1
 	rngPool.Put(r)
-
-	return strconv.Itoa(n)
+	return randStrings[n]
 }
