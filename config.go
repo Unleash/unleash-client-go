@@ -173,6 +173,17 @@ type featureOption struct {
 	resolver     FeatureResolver
 }
 
+type FeatureOptions struct {
+	Ctx    context.Context
+	HasCtx bool
+
+	Fallback    bool
+	HasFallback bool
+
+	FallbackFunc FallbackFunc
+	Resolver     FeatureResolver
+}
+
 // FeatureOption provides options for querying if a feature is enabled or not.
 type FeatureOption func(*featureOption)
 

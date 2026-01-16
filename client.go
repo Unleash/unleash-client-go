@@ -311,12 +311,86 @@ func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled b
 	return
 }
 
+func (uc *Client) IsEnabledWithOptions(feature string, options FeatureOptions) (enabled bool) {
+	snapshot := uc.repository.snapshot()
+	result, f := uc.isEnabledWithOptions(feature, snapshot, options)
+	enabled = result.Enabled
+
+	defer func() {
+		uc.metrics.count(feature, enabled)
+
+		if f != nil && f.ImpressionData && uc.impressionListener != nil {
+			ctx := uc.staticContext
+			if options.HasCtx {
+				ctx = ctx.Override(options.Ctx)
+			}
+
+			uc.impression <- ImpressionEvent{
+				FeatureName: feature,
+				EventType:   ImpressionEventTypeIsEnabled,
+				Enabled:     enabled,
+				Context:     ctx,
+			}
+		}
+	}()
+
+	return
+}
+
+// IsEnabledWithOptions is the hot-path friendly API.
+func (uc *Client) isEnabledWithOptions(
+	feature string,
+	snapshot *FeatureMemoryState,
+	opts FeatureOptions,
+) (api.StrategyResult, *api.Feature) {
+	var internal featureOption
+
+	if opts.HasFallback {
+		fb := opts.Fallback
+		internal.fallback = &fb
+	}
+
+	if opts.FallbackFunc != nil {
+		internal.fallbackFunc = opts.FallbackFunc
+	}
+	if opts.Resolver != nil {
+		internal.resolver = opts.Resolver
+	}
+	if opts.HasCtx {
+		ctx := opts.Ctx
+		internal.ctx = &ctx
+	}
+
+	f := resolveToggle(snapshot, internal, feature)
+
+	ctx := uc.staticContext
+	if internal.ctx != nil {
+		ctx = ctx.Override(*internal.ctx)
+	}
+
+	if f == nil {
+		return handleFallback(internal, feature, ctx), nil
+	}
+
+	result, err := snapshot.evaluateFeature(f, ctx, uc.strategies)
+	if err != nil {
+		uc.errors <- err
+		return api.StrategyResult{Enabled: false}, f
+	}
+
+	return result, f
+}
+
 // isEnabled abstracts away the details of checking if a toggle is turned on or off
 // without metrics
 func (uc *Client) isEnabled(feature string, snapshot *FeatureMemoryState, options ...FeatureOption) (api.StrategyResult, *api.Feature) {
 	var opts featureOption
-	for _, o := range options {
-		o(&opts)
+	if len(options) != 0 {
+		local := featureOption{}
+		for _, o := range options {
+			o(&local)
+		}
+		opts = local
 	}
 
 	// Because we're not reading directly from the snapshot, we run the risk of getting a torn feature response - one where
