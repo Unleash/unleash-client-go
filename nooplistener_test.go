@@ -17,7 +17,8 @@ func Test_defaultsToNoopListener(t *testing.T) {
 	if result != nil {
 		t.Fail()
 	}
-	res := IsEnabled("test", WithFallback(false))
+	fallback := false
+	res := IsEnabled("test", FeatureOptions{Fallback: &fallback})
 	assert.Equal(t, false, res)
 
 	assert.IsType(t, &NoopListener{}, defaultClient.errorListener)

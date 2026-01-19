@@ -281,39 +281,9 @@ func (uc *Client) sync() {
 // IsEnabled queries whether the specified feature is enabled or not.
 //
 // It is safe to call this method from multiple goroutines concurrently.
-func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled bool) {
+func (uc *Client) IsEnabled(feature string, options FeatureOptions) (enabled bool) {
 	snapshot := uc.repository.snapshot()
-	result, f := uc.isEnabled(feature, snapshot, options...)
-	enabled = result.Enabled
-
-	defer func() {
-		uc.metrics.count(feature, enabled)
-
-		if f != nil && f.ImpressionData && uc.impressionListener != nil {
-			var opts featureOption
-			for _, o := range options {
-				o(&opts)
-			}
-			ctx := uc.staticContext
-			if opts.ctx != nil {
-				ctx = ctx.Override(*opts.ctx)
-			}
-
-			uc.impression <- ImpressionEvent{
-				FeatureName: feature,
-				EventType:   ImpressionEventTypeIsEnabled,
-				Enabled:     enabled,
-				Context:     ctx,
-			}
-		}
-	}()
-
-	return
-}
-
-func (uc *Client) IsEnabledWithOptions(feature string, options FeatureOptions) (enabled bool) {
-	snapshot := uc.repository.snapshot()
-	result, f := uc.isEnabledWithOptions(feature, snapshot, options)
+	result, f := uc.isEnabled(feature, snapshot, options)
 	enabled = result.Enabled
 
 	defer func() {
@@ -335,25 +305,20 @@ func (uc *Client) IsEnabledWithOptions(feature string, options FeatureOptions) (
 	return
 }
 
-func (uc *Client) isEnabledWithOptions(
+// isEnabled abstracts away the details of checking if a toggle is turned on or off
+// without metrics
+func (uc *Client) isEnabled(
 	feature string,
 	snapshot *FeatureMemoryState,
 	opts FeatureOptions,
 ) (api.StrategyResult, *api.Feature) {
-	var internal featureOption
-
-	internal.fallback = opts.Fallback
-	internal.fallbackFunc = opts.FallbackFunc
-	internal.resolver = opts.Resolver
-	internal.resolver = opts.Resolver
-
-	f := resolveToggle(snapshot, internal, feature)
+	f := resolveToggle(snapshot, opts.Resolver, feature)
 
 	ctx := uc.staticContext
 	ctx = ctx.Override(opts.Ctx)
 
 	if f == nil {
-		return handleFallback(internal, feature, ctx), nil
+		return handleFallback(opts.FallbackFunc, opts.Fallback, feature, ctx), nil
 	}
 
 	result, err := snapshot.evaluateFeature(f, ctx, uc.strategies)
@@ -365,47 +330,12 @@ func (uc *Client) isEnabledWithOptions(
 	return result, f
 }
 
-// isEnabled abstracts away the details of checking if a toggle is turned on or off
-// without metrics
-func (uc *Client) isEnabled(feature string, snapshot *FeatureMemoryState, options ...FeatureOption) (api.StrategyResult, *api.Feature) {
-	var opts featureOption
-	if len(options) != 0 {
-		local := featureOption{}
-		for _, o := range options {
-			o(&local)
-		}
-		opts = local
-	}
-
-	// Because we're not reading directly from the snapshot, we run the risk of getting a torn feature response - one where
-	// a segment is not in sync with the feature requesting it. However, that problem has existed since the feature resolver feature was added.
-	// That feature exists to work around a performance problem where a custom storage implementation wasn't caching.
-	// However that problem should no longer exist since storage is no longer the caching layer and so this code path should be deprecated in the future.
-	f := resolveToggle(snapshot, opts, feature)
-
-	ctx := uc.staticContext
-	if opts.ctx != nil {
-		ctx = ctx.Override(*opts.ctx)
-	}
-
-	if f == nil {
-		return handleFallback(opts, feature, ctx), nil
-	}
-
-	result, err := snapshot.evaluateFeature(f, ctx, uc.strategies)
-	if err != nil {
-		uc.errors <- err
-		return api.StrategyResult{
-			Enabled: false,
-		}, f
-	}
-
-	return result, f
-}
-
-func (uc *Client) GetVariantWithOptions(feature string, options VariantOptions) (variant *api.Variant) {
+// GetVariant queries a variant as the specified feature is enabled.
+//
+// It is safe to call this method from multiple goroutines concurrently.
+func (uc *Client) GetVariant(feature string, options VariantOptions) (variant *api.Variant) {
 	snapshot := uc.repository.snapshot()
-	variant = uc.getVariantWithOptions(feature, snapshot, options)
+	variant = uc.getVariant(feature, snapshot, options)
 
 	defer func() {
 		uc.metrics.countVariants(feature, variant.FeatureEnabled, variant.Name)
@@ -427,7 +357,7 @@ func (uc *Client) GetVariantWithOptions(feature string, options VariantOptions) 
 	return
 }
 
-func (uc *Client) getVariantWithOptions(feature string, snapshot *FeatureMemoryState, opts VariantOptions) *api.Variant {
+func (uc *Client) getVariant(feature string, snapshot *FeatureMemoryState, opts VariantOptions) *api.Variant {
 	internal := variantOption{}
 
 	internal.variantFallback = opts.VariantFallback
@@ -440,7 +370,7 @@ func (uc *Client) getVariantWithOptions(feature string, snapshot *FeatureMemoryS
 
 	var strategyResult api.StrategyResult
 	var f *api.Feature
-	strategyResult, f = uc.isEnabledWithOptions(feature, snapshot, FeatureOptions{
+	strategyResult, f = uc.isEnabled(feature, snapshot, FeatureOptions{
 		Ctx:      *ctx,
 		Resolver: internal.resolver,
 	})
@@ -456,95 +386,6 @@ func (uc *Client) getVariantWithOptions(feature string, snapshot *FeatureMemoryS
 			return disabledVariantFeatureEnabled
 		}
 		return api.GetDefaultVariant()
-	}
-
-	if !strategyResult.Enabled {
-		return getFallbackVariant(false)
-	}
-
-	if f == nil || !f.Enabled {
-		return getFallbackVariant(false)
-	}
-
-	if strategyResult.Variant != nil {
-		return strategyResult.Variant
-	}
-
-	if len(f.Variants) == 0 {
-		return getFallbackVariant(true)
-	}
-
-	return api.VariantCollection{
-		GroupId:  f.Name,
-		Variants: f.Variants,
-	}.GetVariant(ctx, nil)
-}
-
-// GetVariant queries a variant as the specified feature is enabled.
-//
-// It is safe to call this method from multiple goroutines concurrently.
-func (uc *Client) GetVariant(feature string, options ...VariantOption) (variant *api.Variant) {
-	snapshot := uc.repository.snapshot()
-	variant = uc.getVariantWithoutMetrics(feature, snapshot, options...)
-
-	defer func() {
-		uc.metrics.countVariants(feature, variant.FeatureEnabled, variant.Name)
-
-		f := snapshot.Features[feature]
-		if f != nil && f.ImpressionData && uc.impressionListener != nil {
-			var opts variantOption
-			for _, o := range options {
-				o(&opts)
-			}
-			ctx := uc.staticContext
-			if opts.ctx != nil {
-				ctx = ctx.Override(*opts.ctx)
-			}
-
-			uc.impression <- ImpressionEvent{
-				FeatureName: feature,
-				EventType:   ImpressionEventTypeGetVariant,
-				Enabled:     variant.FeatureEnabled,
-				Variant:     variant.Name,
-				Context:     ctx,
-			}
-		}
-	}()
-	return
-}
-
-// getVariantWithoutMetrics abstracts away the logic for resolving a variant without metrics
-func (uc *Client) getVariantWithoutMetrics(feature string, snapshot *FeatureMemoryState, options ...VariantOption) *api.Variant {
-	defaultVariant := api.GetDefaultVariant()
-	var opts variantOption
-	for _, o := range options {
-		o(&opts)
-	}
-
-	ctx := uc.staticContext
-	if opts.ctx != nil {
-		ctx = ctx.Override(*opts.ctx)
-	}
-
-	var strategyResult api.StrategyResult
-	var f *api.Feature
-	if opts.resolver != nil {
-		strategyResult, f = uc.isEnabled(feature, snapshot, WithContext(*ctx), WithResolver(opts.resolver))
-	} else {
-		strategyResult, f = uc.isEnabled(feature, snapshot, WithContext(*ctx))
-	}
-
-	getFallbackVariant := func(featureEnabled bool) *api.Variant {
-		if opts.variantFallbackFunc != nil {
-			return opts.variantFallbackFunc(feature, ctx)
-		} else if opts.variantFallback != nil {
-			return opts.variantFallback
-		}
-
-		if featureEnabled {
-			return disabledVariantFeatureEnabled
-		}
-		return defaultVariant
 	}
 
 	if !strategyResult.Enabled {
@@ -643,14 +484,14 @@ func (uc *Client) ListFeatures() []api.Feature {
 	return uc.repository.list()
 }
 
-func handleFallback(opts featureOption, featureName string, ctx *context.Context) api.StrategyResult {
-	if opts.fallbackFunc != nil {
+func handleFallback(fallbackFunc FallbackFunc, fallback *bool, featureName string, ctx *context.Context) api.StrategyResult {
+	if fallbackFunc != nil {
 		return api.StrategyResult{
-			Enabled: opts.fallbackFunc(featureName, ctx),
+			Enabled: fallbackFunc(featureName, ctx),
 		}
-	} else if opts.fallback != nil {
+	} else if fallback != nil {
 		return api.StrategyResult{
-			Enabled: *opts.fallback,
+			Enabled: *fallback,
 		}
 	}
 
@@ -659,9 +500,9 @@ func handleFallback(opts featureOption, featureName string, ctx *context.Context
 	}
 }
 
-func resolveToggle(snapshot *FeatureMemoryState, opts featureOption, featureName string) *api.Feature {
-	if opts.resolver != nil {
-		return opts.resolver(featureName)
+func resolveToggle(snapshot *FeatureMemoryState, resolver FeatureResolver, featureName string) *api.Feature {
+	if resolver != nil {
+		return resolver(featureName)
 	} else {
 		return snapshot.Features[featureName]
 	}

@@ -21,7 +21,7 @@ func Example_simpleUsage() {
 
 	for {
 		<-timer.C
-		fmt.Printf("'%s' enabled? %v\n", PropertyName, unleash.IsEnabled(PropertyName))
+		fmt.Printf("'%s' enabled? %v\n", PropertyName, unleash.IsEnabled(PropertyName, unleash.FeatureOptions{}))
 		timer.Reset(1 * time.Second)
 	}
 

@@ -60,7 +60,7 @@ func BenchmarkFeatureToggleEvaluation(b *testing.B) {
 	b.ReportAllocs()
 
 	for i := 0; i < b.N; i++ {
-		_ = unleash.IsEnabled("foo")
+		_ = unleash.IsEnabled("foo", unleash.FeatureOptions{})
 	}
 
 	endTime := time.Now()

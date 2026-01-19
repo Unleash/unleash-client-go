@@ -77,7 +77,7 @@ func TestClient_WithFallbackFunc(t *testing.T) {
 		return f == feature
 	}
 
-	isEnabled := client.IsEnabled("does_not_exist", WithFallbackFunc(fallback))
+	isEnabled := client.IsEnabled("does_not_exist", FeatureOptions{FallbackFunc: fallback})
 	assert.True(isEnabled)
 
 	assert.True(gock.IsDone(), "there should be no more mocks")
@@ -140,7 +140,7 @@ func TestClient_WithResolver(t *testing.T) {
 		}
 	}
 
-	isEnabled := client.IsEnabled(feature, WithResolver(resolver))
+	isEnabled := client.IsEnabled(feature, FeatureOptions{Resolver: resolver})
 	assert.True(isEnabled)
 
 	assert.True(gock.IsDone(), "there should be no more mocks")
@@ -350,24 +350,28 @@ func TestClientWithVariantContext(t *testing.T) {
 
 	client.WaitForReady()
 
-	defaultVariant := client.GetVariant("feature-name")
+	defaultVariant := client.GetVariant("feature-name", VariantOptions{})
 
 	assert.Equal(api.GetDefaultVariant(), defaultVariant)
-	variant := client.GetVariant("feature-name", WithVariantContext(context.Context{
-		Properties: map[string]string{"custom-id": "custom-ctx"},
-	}))
+	variant := client.GetVariant("feature-name",
+		VariantOptions{Ctx: context.Context{
+			Properties: map[string]string{"custom-id": "custom-ctx"},
+		}})
 	assert.Equal("custom-variant", variant.Name)
 
-	variantFromResolver := client.GetVariant("feature-name", WithVariantContext(context.Context{
-		Properties: map[string]string{"custom-id": "custom-ctx"},
-	}), WithVariantResolver(func(featureName string) *api.Feature {
-		if featureName == features[0].Name {
-			return &features[0]
-		} else {
-			t.Fatalf("the feature name passed %s was not the expected one %s", featureName, features[0].Name)
-			return nil
-		}
-	}))
+	variantFromResolver := client.GetVariant("feature-name",
+		VariantOptions{Ctx: context.Context{
+			Properties: map[string]string{"custom-id": "custom-ctx"},
+		},
+			Resolver: func(featureName string) *api.Feature {
+				if featureName == features[0].Name {
+					return &features[0]
+				} else {
+					t.Fatalf("the feature name passed %s was not the expected one %s", featureName, features[0].Name)
+					return nil
+				}
+			},
+		})
 
 	assert.Equal("custom-variant", variantFromResolver.Name)
 
@@ -437,22 +441,25 @@ func TestClient_WithSegment(t *testing.T) {
 	assert.NoError(err)
 	client.WaitForReady()
 
-	isEnabled := client.IsEnabled(feature, WithContext(context.Context{
+	isEnabled := client.IsEnabled(feature, FeatureOptions{Ctx: context.Context{
 		Properties: map[string]string{"custom-id": "custom-ctx"},
-	}))
+	}})
 
 	assert.True(isEnabled)
 
-	isEnabledWithResolver := client.IsEnabled(feature, WithContext(context.Context{
-		Properties: map[string]string{"custom-id": "custom-ctx"},
-	}), WithResolver(func(featureName string) *api.Feature {
-		if featureName == features[0].Name {
-			return &features[0]
-		} else {
-			t.Fatalf("the feature name passed %s was not the expected one %s", featureName, features[0].Name)
-			return nil
-		}
-	}))
+	isEnabledWithResolver := client.IsEnabled(feature, FeatureOptions{
+		Ctx: context.Context{
+			Properties: map[string]string{"custom-id": "custom-ctx"},
+		},
+		Resolver: func(featureName string) *api.Feature {
+			if featureName == features[0].Name {
+				return &features[0]
+			} else {
+				t.Fatalf("the feature name passed %s was not the expected one %s", featureName, features[0].Name)
+				return nil
+			}
+		},
+	})
 
 	assert.True(isEnabledWithResolver)
 
@@ -516,22 +523,25 @@ func TestClient_WithNonExistingSegment(t *testing.T) {
 
 	client.WaitForReady()
 
-	isEnabled := client.IsEnabled(feature, WithContext(context.Context{
+	isEnabled := client.IsEnabled(feature, FeatureOptions{Ctx: context.Context{
 		Properties: map[string]string{"custom-id": "custom-ctx"},
-	}))
+	}})
 
 	assert.False(isEnabled)
 
-	isEnabledWithResolver := client.IsEnabled(feature, WithContext(context.Context{
-		Properties: map[string]string{"custom-id": "custom-ctx"},
-	}), WithResolver(func(featureName string) *api.Feature {
-		if featureName == features[0].Name {
-			return &features[0]
-		} else {
-			t.Fatalf("the feature name passed %s was not the expected one %s", featureName, features[0].Name)
-			return nil
-		}
-	}))
+	isEnabledWithResolver := client.IsEnabled(feature, FeatureOptions{
+		Ctx: context.Context{
+			Properties: map[string]string{"custom-id": "custom-ctx"},
+		},
+		Resolver: func(featureName string) *api.Feature {
+			if featureName == features[0].Name {
+				return &features[0]
+			} else {
+				t.Fatalf("the feature name passed %s was not the expected one %s", featureName, features[0].Name)
+				return nil
+			}
+		},
+	})
 
 	assert.False(isEnabledWithResolver)
 
@@ -619,22 +629,22 @@ func TestClient_WithMultipleSegments(t *testing.T) {
 	assert.NoError(err)
 	client.WaitForReady()
 
-	isEnabled := client.IsEnabled(feature, WithContext(context.Context{
+	isEnabled := client.IsEnabled(feature, FeatureOptions{Ctx: context.Context{
 		Properties: map[string]string{"custom-id": "custom-ctx", "semver": "3.2.2", "age": "18", "domain": "unleashtest"},
-	}))
+	}})
 
 	assert.True(isEnabled)
 
-	isEnabledWithResolver := client.IsEnabled(feature, WithContext(context.Context{
+	isEnabledWithResolver := client.IsEnabled(feature, FeatureOptions{Ctx: context.Context{
 		Properties: map[string]string{"custom-id": "custom-ctx", "semver": "3.2.2", "age": "18", "domain": "unleashtest"},
-	}), WithResolver(func(featureName string) *api.Feature {
+	}, Resolver: func(featureName string) *api.Feature {
 		if featureName == features[0].Name {
 			return &features[0]
 		} else {
 			t.Fatalf("the feature name passed %s was not the expected one %s", featureName, features[0].Name)
 			return nil
 		}
-	}))
+	}})
 
 	assert.True(isEnabledWithResolver)
 
@@ -734,24 +744,24 @@ func TestClient_VariantShouldRespectConstraint(t *testing.T) {
 	assert.NoError(err)
 	client.WaitForReady()
 
-	variant := client.GetVariant(feature, WithVariantContext(context.Context{
+	variant := client.GetVariant(feature, VariantOptions{Ctx: context.Context{
 		Properties: map[string]string{"custom-id": "custom-ctx", "semver": "3.2.2", "age": "18", "domain": "unleashtest"},
-	}))
+	}})
 
 	assert.True(variant.Enabled)
 
 	assert.True(variant.FeatureEnabled)
 
-	variantFromResolver := client.GetVariant(feature, WithVariantContext(context.Context{
+	variantFromResolver := client.GetVariant(feature, VariantOptions{Ctx: context.Context{
 		Properties: map[string]string{"custom-id": "custom-ctx", "semver": "3.2.2", "age": "18", "domain": "unleashtest"},
-	}), WithVariantResolver(func(featureName string) *api.Feature {
+	}, Resolver: func(featureName string) *api.Feature {
 		if featureName == features[0].Name {
 			return &features[0]
 		} else {
 			t.Fatalf("the feature name passed %s was not the expected one %s", featureName, features[0].Name)
 			return nil
 		}
-	}))
+	}})
 
 	assert.True(variantFromResolver.Enabled)
 
@@ -853,24 +863,24 @@ func TestClient_VariantShouldFailWhenSegmentConstraintsDontMatch(t *testing.T) {
 	assert.NoError(err)
 	client.WaitForReady()
 
-	variant := client.GetVariant(feature, WithVariantContext(context.Context{
+	variant := client.GetVariant(feature, VariantOptions{Ctx: context.Context{
 		Properties: map[string]string{"custom-id": "custom-ctx", "semver": "3.2.2", "age": "18", "domain": "unleashtest"},
-	}))
+	}})
 
 	assert.False(variant.Enabled)
 
 	assert.False(variant.FeatureEnabled)
 
-	variantFromResolver := client.GetVariant(feature, WithVariantContext(context.Context{
+	variantFromResolver := client.GetVariant(feature, VariantOptions{Ctx: context.Context{
 		Properties: map[string]string{"custom-id": "custom-ctx", "semver": "3.2.2", "age": "18", "domain": "unleashtest"},
-	}), WithVariantResolver(func(featureName string) *api.Feature {
+	}, Resolver: func(featureName string) *api.Feature {
 		if featureName == features[0].Name {
 			return &features[0]
 		} else {
 			t.Fatalf("the feature name passed %s was not the expected one %s", featureName, features[0].Name)
 			return nil
 		}
-	}))
+	}})
 
 	assert.False(variantFromResolver.Enabled)
 
@@ -957,7 +967,7 @@ func TestClient_ShouldFavorStrategyVariantOverFeatureVariant(t *testing.T) {
 
 	client.WaitForReady()
 
-	strategyVariant := client.GetVariant("feature-x")
+	strategyVariant := client.GetVariant("feature-x", VariantOptions{})
 
 	assert.True(strategyVariant.Enabled)
 
@@ -1057,7 +1067,7 @@ func TestClient_ShouldReturnOldVariantForNonMatchingStrategyVariant(t *testing.T
 
 	client.WaitForReady()
 
-	strategyVariant := client.GetVariant("feature-x")
+	strategyVariant := client.GetVariant("feature-x", VariantOptions{})
 
 	assert.True(strategyVariant.Enabled)
 
@@ -1119,7 +1129,7 @@ func TestClient_VariantFromEnabledFeatureWithNoVariants(t *testing.T) {
 	assert.NoError(err)
 	client.WaitForReady()
 
-	variant := client.GetVariant(feature, WithVariantContext(context.Context{}))
+	variant := client.GetVariant(feature, VariantOptions{Ctx: context.Context{}})
 
 	assert.False(variant.Enabled)
 
@@ -1127,14 +1137,17 @@ func TestClient_VariantFromEnabledFeatureWithNoVariants(t *testing.T) {
 
 	assert.Equal(disabledVariantFeatureEnabled, variant)
 
-	variantFromResolver := client.GetVariant(feature, WithVariantContext(context.Context{}), WithVariantResolver(func(featureName string) *api.Feature {
-		if featureName == features[0].Name {
-			return &features[0]
-		} else {
-			t.Fatalf("the feature name passed %s was not the expected one %s", featureName, features[0].Name)
-			return nil
-		}
-	}))
+	variantFromResolver := client.GetVariant(feature, VariantOptions{
+		Ctx: context.Context{},
+		Resolver: func(featureName string) *api.Feature {
+			if featureName == features[0].Name {
+				return &features[0]
+			} else {
+				t.Fatalf("the feature name passed %s was not the expected one %s", featureName, features[0].Name)
+				return nil
+			}
+		},
+	})
 
 	assert.False(variantFromResolver.Enabled)
 
@@ -1194,7 +1207,7 @@ func TestGetVariantWithFallbackVariantWhenFeatureDisabled(t *testing.T) {
 		Name: "fallback-variant",
 	}
 
-	variant := client.GetVariant(feature, WithVariantFallback(&fallbackVariant))
+	variant := client.GetVariant(feature, VariantOptions{VariantFallback: &fallbackVariant})
 
 	assert.False(variant.Enabled)
 
@@ -1206,7 +1219,7 @@ func TestGetVariantWithFallbackVariantWhenFeatureDisabled(t *testing.T) {
 		return &fallbackVariant
 	}
 
-	variantWithFallbackFunc := client.GetVariant(feature, WithVariantFallbackFunc(fallbackFunc))
+	variantWithFallbackFunc := client.GetVariant(feature, VariantOptions{VariantFallbackFunc: fallbackFunc})
 
 	assert.Equal(fallbackVariant, *variantWithFallbackFunc)
 
@@ -1262,7 +1275,7 @@ func TestGetVariantWithFallbackVariantWhenFeatureEnabledButNoVariants(t *testing
 		Name: "fallback-variant",
 	}
 
-	variant := client.GetVariant(feature, WithVariantFallback(&fallbackVariant))
+	variant := client.GetVariant(feature, VariantOptions{VariantFallback: &fallbackVariant})
 
 	assert.False(variant.Enabled)
 
@@ -1278,7 +1291,7 @@ func TestGetVariantWithFallbackVariantWhenFeatureEnabledButNoVariants(t *testing
 		return &fallbackVariant
 	}
 
-	variantWithFallbackFunc := client.GetVariant(feature, WithVariantFallbackFunc(fallbackFunc))
+	variantWithFallbackFunc := client.GetVariant(feature, VariantOptions{VariantFallbackFunc: fallbackFunc})
 
 	assert.Equal(fallbackVariant, *variantWithFallbackFunc)
 
@@ -1320,7 +1333,7 @@ func TestGetVariantWithFallbackVariantWhenFeatureDoesntExist(t *testing.T) {
 		Name: "fallback-variant",
 	}
 
-	variant := client.GetVariant(feature, WithVariantFallback(&fallbackVariant))
+	variant := client.GetVariant(feature, VariantOptions{VariantFallback: &fallbackVariant})
 
 	assert.False(variant.Enabled)
 
@@ -1332,7 +1345,7 @@ func TestGetVariantWithFallbackVariantWhenFeatureDoesntExist(t *testing.T) {
 		return &fallbackVariant
 	}
 
-	variantWithFallbackFunc := client.GetVariant(feature, WithVariantFallbackFunc(fallbackFunc))
+	variantWithFallbackFunc := client.GetVariant(feature, VariantOptions{VariantFallbackFunc: fallbackFunc})
 
 	assert.Equal(fallbackVariant, *variantWithFallbackFunc)
 
@@ -1407,12 +1420,11 @@ func TestGetVariant_FallbackVariantFeatureEnabledSettingIsLeftUnchanged(t *testi
 		FeatureEnabled: false,
 	}
 
-	variantForEnabledFeatureNoVariants := client.GetVariant(enabledFeatureNoVariants, WithVariantFallback(&fallbackVariantFeatureDisabled))
+	variantForEnabledFeatureNoVariants := client.GetVariant(enabledFeatureNoVariants, VariantOptions{VariantFallback: &fallbackVariantFeatureDisabled})
 
 	assert.False(variantForEnabledFeatureNoVariants.FeatureEnabled)
 
-	variantForDisabledFeature := client.GetVariant(disabledFeature, WithVariantFallback(&fallbackVariantFeatureEnabled))
-
+	variantForDisabledFeature := client.GetVariant(disabledFeature, VariantOptions{VariantFallback: &fallbackVariantFeatureEnabled})
 	assert.True(variantForDisabledFeature.FeatureEnabled)
 
 	assert.True(gock.IsDone(), "there should be no more mocks")
@@ -1489,7 +1501,7 @@ func TestConnectionAndIntervalHeadersAndBody(t *testing.T) {
 
 	assert.NoError(err)
 
-	client.IsEnabled("foo")
+	client.IsEnabled("foo", FeatureOptions{})
 
 	time.Sleep(100 * time.Millisecond)
 	err = client.Close()

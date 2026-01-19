@@ -28,7 +28,7 @@ func Sync(client *unleash.Client) {
 		case ie := <-client.Impression():
 			fmt.Printf("IMPRESSION: %+v\n", ie)
 		case <-timer.C:
-			fmt.Printf("ISENABLED: %v\n", client.IsEnabled("eid.enabled"))
+			fmt.Printf("ISENABLED: %v\n", client.IsEnabled("eid.enabled", unleash.FeatureOptions{}))
 			timer.Reset(1 * time.Second)
 		}
 	}

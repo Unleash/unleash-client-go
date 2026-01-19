@@ -62,7 +62,7 @@ func TestImpression_Off(t *testing.T) {
 	mockListener.On("OnImpression", mock.Anything).Maybe()
 
 	client := setupClient(t, mockListener)
-	client.IsEnabled(feature)
+	client.IsEnabled(feature, FeatureOptions{})
 
 	assert.NoError(client.Close())
 	mockListener.AssertNotCalled(t, "OnImpression", mock.Anything)
@@ -118,7 +118,7 @@ func TestImpression_IsEnabled(t *testing.T) {
 	}).Once()
 
 	client := setupClient(t, mockListener)
-	client.IsEnabled(feature)
+	client.IsEnabled(feature, FeatureOptions{})
 
 	wg.Wait()
 	assert.NoError(client.Close())
@@ -190,7 +190,7 @@ func TestImpression_GetVariant(t *testing.T) {
 	}).Once()
 
 	client := setupClient(t, mockListener)
-	client.GetVariant(feature)
+	client.GetVariant(feature, VariantOptions{})
 
 	wg.Wait()
 	assert.NoError(client.Close())
@@ -270,7 +270,7 @@ func TestImpression_WithContext(t *testing.T) {
 	}).Once()
 
 	client := setupClient(t, mockListener)
-	client.IsEnabled(feature, WithContext(userCtx))
+	client.IsEnabled(feature, FeatureOptions{Ctx: userCtx})
 
 	wg.Wait()
 	assert.NoError(client.Close())
@@ -361,10 +361,10 @@ func TestImpression_WithContextAndMultipleEvents(t *testing.T) {
 
 	client := setupClient(t, mockListener)
 
-	resultWithCtx := client.IsEnabled(feature, WithContext(userCtx))
+	resultWithCtx := client.IsEnabled(feature, FeatureOptions{Ctx: userCtx})
 	assert.True(resultWithCtx)
 
-	resultWithoutCtx := client.IsEnabled(feature)
+	resultWithoutCtx := client.IsEnabled(feature, FeatureOptions{})
 	assert.False(resultWithoutCtx)
 
 	wg.Wait()
@@ -433,7 +433,7 @@ func TestImpression_GetChannelMethod(t *testing.T) {
 	}()
 
 	<-ready
-	client.IsEnabled(feature)
+	client.IsEnabled(feature, FeatureOptions{})
 
 	wg.Wait()
 	assert.NoError(client.Close())

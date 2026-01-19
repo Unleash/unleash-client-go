@@ -26,7 +26,7 @@ func Example_fallbackFunc() {
 
 	for {
 		<-timer.C
-		isEnabled := unleash.IsEnabled(MissingFeature, unleash.WithFallbackFunc(fallback))
+		isEnabled := unleash.IsEnabled(MissingFeature, unleash.FeatureOptions{FallbackFunc: fallback})
 		fmt.Printf("'%s' enabled? %v\n", PropertyName, isEnabled)
 		timer.Reset(1 * time.Second)
 	}

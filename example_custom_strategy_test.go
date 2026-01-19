@@ -55,7 +55,7 @@ func Example_customStrategy() {
 
 	for {
 		<-timer.C
-		enabled := unleash.IsEnabled("unleash.me", unleash.WithContext(ctx))
+		enabled := unleash.IsEnabled("unleash.me", unleash.FeatureOptions{Ctx: ctx})
 		fmt.Printf("feature is enabled? %v\n", enabled)
 		timer.Reset(1 * time.Second)
 	}
