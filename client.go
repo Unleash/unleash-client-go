@@ -321,9 +321,7 @@ func (uc *Client) IsEnabledWithOptions(feature string, options FeatureOptions) (
 
 		if f != nil && f.ImpressionData && uc.impressionListener != nil {
 			ctx := uc.staticContext
-			if options.HasCtx {
-				ctx = ctx.Override(options.Ctx)
-			}
+			ctx = ctx.Override(options.Ctx)
 
 			uc.impression <- ImpressionEvent{
 				FeatureName: feature,
@@ -344,28 +342,15 @@ func (uc *Client) isEnabledWithOptions(
 ) (api.StrategyResult, *api.Feature) {
 	var internal featureOption
 
-	if opts.HasFallback {
-		fb := opts.Fallback
-		internal.fallback = &fb
-	}
-
-	if opts.FallbackFunc != nil {
-		internal.fallbackFunc = opts.FallbackFunc
-	}
-	if opts.Resolver != nil {
-		internal.resolver = opts.Resolver
-	}
-	if opts.HasCtx {
-		ctx := opts.Ctx
-		internal.ctx = &ctx
-	}
+	internal.fallback = opts.Fallback
+	internal.fallbackFunc = opts.FallbackFunc
+	internal.resolver = opts.Resolver
+	internal.resolver = opts.Resolver
 
 	f := resolveToggle(snapshot, internal, feature)
 
 	ctx := uc.staticContext
-	if internal.ctx != nil {
-		ctx = ctx.Override(*internal.ctx)
-	}
+	ctx = ctx.Override(opts.Ctx)
 
 	if f == nil {
 		return handleFallback(internal, feature, ctx), nil
@@ -416,6 +401,83 @@ func (uc *Client) isEnabled(feature string, snapshot *FeatureMemoryState, option
 	}
 
 	return result, f
+}
+
+func (uc *Client) GetVariantWithOptions(feature string, options VariantOptions) (variant *api.Variant) {
+	snapshot := uc.repository.snapshot()
+	variant = uc.getVariantWithOptions(feature, snapshot, options)
+
+	defer func() {
+		uc.metrics.countVariants(feature, variant.FeatureEnabled, variant.Name)
+
+		f := snapshot.Features[feature]
+		if f != nil && f.ImpressionData && uc.impressionListener != nil {
+			ctx := uc.staticContext
+			ctx = ctx.Override(options.Ctx)
+
+			uc.impression <- ImpressionEvent{
+				FeatureName: feature,
+				EventType:   ImpressionEventTypeGetVariant,
+				Enabled:     variant.FeatureEnabled,
+				Variant:     variant.Name,
+				Context:     ctx,
+			}
+		}
+	}()
+	return
+}
+
+func (uc *Client) getVariantWithOptions(feature string, snapshot *FeatureMemoryState, opts VariantOptions) *api.Variant {
+	internal := variantOption{}
+
+	internal.variantFallback = opts.VariantFallback
+	internal.variantFallbackFunc = opts.VariantFallbackFunc
+	internal.resolver = opts.Resolver
+	internal.ctx = &opts.Ctx
+
+	ctx := uc.staticContext
+	ctx = ctx.Override(opts.Ctx)
+
+	var strategyResult api.StrategyResult
+	var f *api.Feature
+	strategyResult, f = uc.isEnabledWithOptions(feature, snapshot, FeatureOptions{
+		Ctx:      *ctx,
+		Resolver: internal.resolver,
+	})
+
+	getFallbackVariant := func(featureEnabled bool) *api.Variant {
+		if internal.variantFallbackFunc != nil {
+			return internal.variantFallbackFunc(feature, ctx)
+		} else if internal.variantFallback != nil {
+			return internal.variantFallback
+		}
+
+		if featureEnabled {
+			return disabledVariantFeatureEnabled
+		}
+		return api.GetDefaultVariant()
+	}
+
+	if !strategyResult.Enabled {
+		return getFallbackVariant(false)
+	}
+
+	if f == nil || !f.Enabled {
+		return getFallbackVariant(false)
+	}
+
+	if strategyResult.Variant != nil {
+		return strategyResult.Variant
+	}
+
+	if len(f.Variants) == 0 {
+		return getFallbackVariant(true)
+	}
+
+	return api.VariantCollection{
+		GroupId:  f.Name,
+		Variants: f.Variants,
+	}.GetVariant(ctx, nil)
 }
 
 // GetVariant queries a variant as the specified feature is enabled.
