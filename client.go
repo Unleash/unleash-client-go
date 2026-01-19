@@ -337,7 +337,6 @@ func (uc *Client) IsEnabledWithOptions(feature string, options FeatureOptions) (
 	return
 }
 
-// IsEnabledWithOptions is the hot-path friendly API.
 func (uc *Client) isEnabledWithOptions(
 	feature string,
 	snapshot *FeatureMemoryState,
