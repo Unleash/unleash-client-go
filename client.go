@@ -311,12 +311,70 @@ func (uc *Client) IsEnabled(feature string, options ...FeatureOption) (enabled b
 	return
 }
 
+func (uc *Client) IsEnabledWithOptions(feature string, options FeatureOptions) (enabled bool) {
+	snapshot := uc.repository.snapshot()
+	result, f := uc.isEnabledWithOptions(feature, snapshot, options)
+	enabled = result.Enabled
+
+	defer func() {
+		uc.metrics.count(feature, enabled)
+
+		if f != nil && f.ImpressionData && uc.impressionListener != nil {
+			ctx := uc.staticContext
+			ctx = ctx.Override(options.Ctx)
+
+			uc.impression <- ImpressionEvent{
+				FeatureName: feature,
+				EventType:   ImpressionEventTypeIsEnabled,
+				Enabled:     enabled,
+				Context:     ctx,
+			}
+		}
+	}()
+
+	return
+}
+
+func (uc *Client) isEnabledWithOptions(
+	feature string,
+	snapshot *FeatureMemoryState,
+	opts FeatureOptions,
+) (api.StrategyResult, *api.Feature) {
+	var internal featureOption
+
+	internal.fallback = opts.Fallback
+	internal.fallbackFunc = opts.FallbackFunc
+	internal.resolver = opts.Resolver
+	internal.resolver = opts.Resolver
+
+	f := resolveToggle(snapshot, internal, feature)
+
+	ctx := uc.staticContext
+	ctx = ctx.Override(opts.Ctx)
+
+	if f == nil {
+		return handleFallback(internal, feature, ctx), nil
+	}
+
+	result, err := snapshot.evaluateFeature(f, ctx, uc.strategies)
+	if err != nil {
+		uc.errors <- err
+		return api.StrategyResult{Enabled: false}, f
+	}
+
+	return result, f
+}
+
 // isEnabled abstracts away the details of checking if a toggle is turned on or off
 // without metrics
 func (uc *Client) isEnabled(feature string, snapshot *FeatureMemoryState, options ...FeatureOption) (api.StrategyResult, *api.Feature) {
 	var opts featureOption
-	for _, o := range options {
-		o(&opts)
+	if len(options) != 0 {
+		local := featureOption{}
+		for _, o := range options {
+			o(&local)
+		}
+		opts = local
 	}
 
 	// Because we're not reading directly from the snapshot, we run the risk of getting a torn feature response - one where
@@ -343,6 +401,83 @@ func (uc *Client) isEnabled(feature string, snapshot *FeatureMemoryState, option
 	}
 
 	return result, f
+}
+
+func (uc *Client) GetVariantWithOptions(feature string, options VariantOptions) (variant *api.Variant) {
+	snapshot := uc.repository.snapshot()
+	variant = uc.getVariantWithOptions(feature, snapshot, options)
+
+	defer func() {
+		uc.metrics.countVariants(feature, variant.FeatureEnabled, variant.Name)
+
+		f := snapshot.Features[feature]
+		if f != nil && f.ImpressionData && uc.impressionListener != nil {
+			ctx := uc.staticContext
+			ctx = ctx.Override(options.Ctx)
+
+			uc.impression <- ImpressionEvent{
+				FeatureName: feature,
+				EventType:   ImpressionEventTypeGetVariant,
+				Enabled:     variant.FeatureEnabled,
+				Variant:     variant.Name,
+				Context:     ctx,
+			}
+		}
+	}()
+	return
+}
+
+func (uc *Client) getVariantWithOptions(feature string, snapshot *FeatureMemoryState, opts VariantOptions) *api.Variant {
+	internal := variantOption{}
+
+	internal.variantFallback = opts.VariantFallback
+	internal.variantFallbackFunc = opts.VariantFallbackFunc
+	internal.resolver = opts.Resolver
+	internal.ctx = &opts.Ctx
+
+	ctx := uc.staticContext
+	ctx = ctx.Override(opts.Ctx)
+
+	var strategyResult api.StrategyResult
+	var f *api.Feature
+	strategyResult, f = uc.isEnabledWithOptions(feature, snapshot, FeatureOptions{
+		Ctx:      *ctx,
+		Resolver: internal.resolver,
+	})
+
+	getFallbackVariant := func(featureEnabled bool) *api.Variant {
+		if internal.variantFallbackFunc != nil {
+			return internal.variantFallbackFunc(feature, ctx)
+		} else if internal.variantFallback != nil {
+			return internal.variantFallback
+		}
+
+		if featureEnabled {
+			return disabledVariantFeatureEnabled
+		}
+		return api.GetDefaultVariant()
+	}
+
+	if !strategyResult.Enabled {
+		return getFallbackVariant(false)
+	}
+
+	if f == nil || !f.Enabled {
+		return getFallbackVariant(false)
+	}
+
+	if strategyResult.Variant != nil {
+		return strategyResult.Variant
+	}
+
+	if len(f.Variants) == 0 {
+		return getFallbackVariant(true)
+	}
+
+	return api.VariantCollection{
+		GroupId:  f.Name,
+		Variants: f.Variants,
+	}.GetVariant(ctx, nil)
 }
 
 // GetVariant queries a variant as the specified feature is enabled.
