@@ -213,7 +213,12 @@ ctx := context.Context{
 	RemoteAddress: "127.0.0.1",
 }
 
-unleash.IsEnabled("someToggle", unleash.WithContext(ctx))
+unleash.IsEnabled(
+	"someToggle",
+	unleash.FeatureOptions{
+		Ctx: ctx,
+	},
+)
 ```
 
 ### Caveat
@@ -222,9 +227,9 @@ This client uses go routines to report several events and doesn't drain the chan
 
 ### Feature Resolver
 
-`FeatureResolver` is a `FeatureOption` used in `IsEnabled` via the `WithResolver`.
+`FeatureResolver` is a `FeatureOption` used in `IsEnabled`. This was originally added to work around a cache issue, this should no longer be necessary as of v6 and may be removed in a later release.
 
-The `FeatureResolver` can be used to provide a feature instance in a different way than the client would normally retrieve it. This alternative resolver can be useful if you already have the feature instance and don't want to incur the cost to retrieve it from the repository.
+The `FeatureResolver` can be used to provide a feature instance in a different way than the client would normally retrieve it.
 
 An example of its usage is below:
 
@@ -259,7 +264,13 @@ resolver := func(featureName string) *api.Feature {
 }
 
 // This would return true because the matched strategy is default and the feature is Enabled
-unleash.IsEnabled("someToggle", unleash.WithContext(ctx), unleash.WithResolver(resolver))
+unleash.IsEnabled(
+	"someToggle",
+	unleash.FeatureOptions{
+		Ctx: ctx,
+		Resolver: resolver,
+	},
+)
 ```
 
 ### Impression data
