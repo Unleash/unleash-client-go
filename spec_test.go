@@ -69,10 +69,10 @@ func (tc TestCase) RunWithClient(client *Client) func(*testing.T) {
 		go func() {
 			// Call IsEnabled concurrently with itself to catch
 			// potential data races with go test -race.
-			client.IsEnabledWithOptions(tc.ToggleName, FeatureOptions{Ctx: tc.Context})
+			client.IsEnabled(tc.ToggleName, FeatureOptions{Ctx: tc.Context})
 			wg.Done()
 		}()
-		result := client.IsEnabled(tc.ToggleName, WithContext(tc.Context))
+		result := client.IsEnabled(tc.ToggleName, FeatureOptions{Ctx: tc.Context})
 		wg.Wait()
 		assert.Equal(t, tc.ExpectedResult, result)
 	}
@@ -91,10 +91,10 @@ func (vtc VariantTestCase) RunWithClient(client *Client) func(*testing.T) {
 		go func() {
 			// Call IsEnabled concurrently with itself to catch
 			// potential data races with go test -race.
-			client.GetVariantWithOptions(vtc.ToggleName, VariantOptions{Ctx: vtc.Context})
+			client.GetVariant(vtc.ToggleName, VariantOptions{Ctx: vtc.Context})
 			wg.Done()
 		}()
-		result := client.GetVariantWithOptions(vtc.ToggleName, VariantOptions{Ctx: vtc.Context})
+		result := client.GetVariant(vtc.ToggleName, VariantOptions{Ctx: vtc.Context})
 		wg.Wait()
 		assert.Equal(t, vtc.ExpectedResult.Enabled, result.Enabled)
 		// copy over the FeatureEnabled field with different JSON tag

@@ -47,15 +47,11 @@ type ImpressionListener interface {
 }
 
 // IsEnabled queries the default client whether or not the specified feature is enabled or not.
-func IsEnabled(feature string, options ...FeatureOption) bool {
+func IsEnabled(feature string, options FeatureOptions) bool {
 	if defaultClient == nil {
-		var opts featureOption
-		for _, o := range options {
-			o(&opts)
-		}
-		return handleFallback(opts, feature, opts.ctx).Enabled
+		return handleFallback(options.FallbackFunc, options.Fallback, feature, &options.Ctx).Enabled
 	}
-	return defaultClient.IsEnabled(feature, options...)
+	return defaultClient.IsEnabled(feature, options)
 }
 
 // Initialize will specify the options to be used by the default client.
@@ -64,11 +60,11 @@ func Initialize(options ...ConfigOption) (err error) {
 	return err
 }
 
-func GetVariant(feature string, options ...VariantOption) *api.Variant {
+func GetVariant(feature string, options VariantOptions) *api.Variant {
 	if defaultClient == nil {
 		return api.GetDefaultVariant()
 	}
-	return defaultClient.GetVariant(feature, options...)
+	return defaultClient.GetVariant(feature, options)
 }
 
 // Close will close the default client.

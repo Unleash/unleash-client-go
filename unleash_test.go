@@ -48,7 +48,7 @@ func Test_withVariants(t *testing.T) {
 		t.Fail()
 	}
 
-	variant := unleash.GetVariant("Demo")
+	variant := unleash.GetVariant("Demo", unleash.VariantOptions{})
 	if variant.Enabled == false {
 		t.Fatalf("Expected variant to be enabled")
 	}
@@ -107,7 +107,7 @@ func Test_withVariantsAndANonExistingStrategyName(t *testing.T) {
 		t.Fail()
 	}
 
-	feature := unleash.GetVariant("AuditLog")
+	feature := unleash.GetVariant("AuditLog", unleash.VariantOptions{})
 	if feature.Enabled == true {
 		t.Fatalf("Expected feature to be disabled because Environment does not exist as strategy")
 	}
@@ -116,7 +116,8 @@ func Test_withVariantsAndANonExistingStrategyName(t *testing.T) {
 }
 
 func Test_IsEnabledWithUninitializedClient(t *testing.T) {
-	result := unleash.IsEnabled("foo", unleash.WithFallback(true))
+	fallback := true
+	result := unleash.IsEnabled("foo", unleash.FeatureOptions{Fallback: &fallback})
 	if !result {
 		t.Fatalf("Expected true")
 	}

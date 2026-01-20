@@ -156,77 +156,64 @@ func (o *configOption) IsStreamingMode() bool {
 // FeatureResolver represents a function to be called to resolve the feature instead of using the repository
 type FeatureResolver func(feature string) *api.Feature
 
-// WithResolver allows you to bypass the repository when resolving a feature name to its actual instance.
-func WithResolver(resolver FeatureResolver) FeatureOption {
-	return func(opts *featureOption) {
-		opts.resolver = resolver
-	}
-}
-
 // FallbackFunc represents a function to be called if the feature is not found.
 type FallbackFunc func(feature string, ctx *context.Context) bool
 
-type featureOption struct {
-	fallback     *bool
-	fallbackFunc FallbackFunc
-	ctx          *context.Context
-	resolver     FeatureResolver
-}
-
+// FeatureOptions controls how IsEnabled evaluates a feature toggle.
+//
+// Resolver:
+//   - If Resolver is non-nil, it is used to resolve the feature by name instead of the repository.
+//     This bypasses the normal resolution path and should no longer be necessary in v6.
+//     It exists for backwards compatibility and may be removed in a future release.
+//
+// Context:
+//   - If Ctx is non-nil, it is merged with the client's static context and used when
+//     evaluating strategies, segments, and constraints.
+//   - It's recommended to provide a context and set at least one of userId or sessionId
+//     to get stable rollout and stickiness behavior.
+//
+// Fallback behavior (when the feature cannot be resolved):
+//   - If FallbackFunc is non-nil, it is called and its result is returned.
+//   - Else if Fallback is non-nil, *Fallback is returned.
+//   - Else the result defaults to false.
 type FeatureOptions struct {
-	Ctx          context.Context
-	Fallback     *bool
+	// Ctx provides the base request context for evaluation. If nil, the client's static
+	// context is used.
+	Ctx context.Context
+
+	// Fallback is returned when the feature cannot be resolved and FallbackFunc is nil.
+	Fallback *bool
+
+	// FallbackFunc is called when the feature cannot be resolved. If set, it takes
+	// precedence over Fallback.
 	FallbackFunc FallbackFunc
-	Resolver     FeatureResolver
+
+	// Resolver bypasses repository lookup for resolving the feature by name.
+	Resolver FeatureResolver
 }
 
+// VariantOptions controls how GetVariant evaluates a feature's variant.
+//
+// Resolver:
+//   - If Resolver is non-nil, it is used to resolve the feature by name instead of the repository.
+//     This bypasses the normal resolution path and should no longer be necessary in v6.
+//     It exists for backwards compatibility and may be removed in a future release.
+//
+// Context:
+//   - If Ctx is non-nil, it is merged with the client's static context and used when
+//     evaluating strategies, segments, and constraints.
+//   - It's recommended to provide a context and set at least one of userId or sessionId
+//     to get stable rollout and stickiness behavior.
+//
+// Fallback behavior (when no variant can be resolved):
+//   - If VariantFallbackFunc is non-nil, it is called and its result is returned.
+//   - Else if VariantFallback is non-nil, *VariantFallback is returned.
+//   - Else a default disabled variant is returned.
 type VariantOptions struct {
 	Ctx                 context.Context
 	VariantFallback     *api.Variant
 	VariantFallbackFunc VariantFallbackFunc
 	Resolver            FeatureResolver
-}
-
-// FeatureOption provides options for querying if a feature is enabled or not.
-type FeatureOption func(*featureOption)
-
-// WithFallback specifies what the value should be if the feature toggle is not found on the
-// unleash service.
-func WithFallback(fallback bool) FeatureOption {
-	return func(opts *featureOption) {
-		opts.fallback = &fallback
-	}
-}
-
-// WithFallbackFunc specifies a fallback function to evaluate a feature
-// toggle in the event that it is not found on the service.
-func WithFallbackFunc(fallback FallbackFunc) FeatureOption {
-	return func(opts *featureOption) {
-		opts.fallbackFunc = fallback
-	}
-}
-
-// WithContext allows the user to provide a context that will be passed into the active strategy
-// for determining if a specified feature should be enabled or not.
-func WithContext(ctx context.Context) FeatureOption {
-	return func(opts *featureOption) {
-		opts.ctx = &ctx
-	}
-}
-
-// WithVariantContext specifies a context for the GetVariant
-// call
-func WithVariantContext(ctx context.Context) VariantOption {
-	return func(opts *variantOption) {
-		opts.ctx = &ctx
-	}
-}
-
-// WithVariantResolver allows you to bypass the repository when resolving a feature name to its actual instance.
-func WithVariantResolver(resolver FeatureResolver) VariantOption {
-	return func(opts *variantOption) {
-		opts.resolver = resolver
-	}
 }
 
 // VariantFallbackFunc represents a function to be called if the variant is not found.
@@ -237,39 +224,6 @@ type variantOption struct {
 	variantFallbackFunc VariantFallbackFunc
 	ctx                 *context.Context
 	resolver            FeatureResolver
-}
-
-// VariantOption provides options for querying if a variant is found or not.
-type VariantOption func(*variantOption)
-
-// WithVariantFallback specifies what the value should be if the
-// variant is not found on the unleash service. This could be because
-// the feature doesn't exist, because it is disabled, or because it
-// has no variants.
-//
-// If you specify a fallback variant, note that its `FeatureEnabled`
-// field will be set to whatever you pass in or `false` by default. In
-// other words, it will not reflect the feature's actual enabled
-// state.
-func WithVariantFallback(variantFallback *api.Variant) VariantOption {
-	return func(opts *variantOption) {
-		opts.variantFallback = variantFallback
-	}
-}
-
-// WithVariantFallbackFunc specifies a fallback function to evaluate
-// to a variant when a variant is not found for a feature. This could
-// be because the feature doesn't exist, because it is disabled, or
-// because it has no variants.
-//
-// If you specify a fallback variant, note that its `FeatureEnabled`
-// field will be set to whatever you pass in or `false` by default. In
-// other words, it will not reflect the feature's actual enabled
-// state.
-func WithVariantFallbackFunc(variantFallbackFunc VariantFallbackFunc) VariantOption {
-	return func(opts *variantOption) {
-		opts.variantFallbackFunc = variantFallbackFunc
-	}
 }
 
 type repositoryOptions struct {

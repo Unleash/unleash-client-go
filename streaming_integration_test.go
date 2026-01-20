@@ -92,10 +92,10 @@ func TestStreamingMode_UnleashConnectedEvent(t *testing.T) {
 	client.WaitForReady()
 
 	// Verify the feature is enabled after hydration
-	assert.True(t, client.IsEnabled("test-feature"), "test-feature should be enabled after hydration")
+	assert.True(t, client.IsEnabled("test-feature", FeatureOptions{}), "test-feature should be enabled after hydration")
 
 	// Test with a non-existent feature
-	assert.False(t, client.IsEnabled("non-existent-feature"), "non-existent-feature should be disabled")
+	assert.False(t, client.IsEnabled("non-existent-feature", FeatureOptions{}), "non-existent-feature should be disabled")
 }
 
 // TestStreamingMode_UnleashUpdatedEvent tests processing of a simple unleash-updated event
@@ -128,7 +128,7 @@ func TestStreamingMode_UnleashUpdatedEvent(t *testing.T) {
 	client.WaitForReady()
 
 	// Feature should initially be disabled
-	assert.False(t, client.IsEnabled("feature-1"), "feature-1 should be initially disabled")
+	assert.False(t, client.IsEnabled("feature-1", FeatureOptions{}), "feature-1 should be initially disabled")
 
 	// Wait for the update event to be processed
 	select {
@@ -139,5 +139,5 @@ func TestStreamingMode_UnleashUpdatedEvent(t *testing.T) {
 	}
 
 	// Feature should now be enabled after update
-	assert.True(t, client.IsEnabled("feature-1"), "feature-1 should be enabled after update")
+	assert.True(t, client.IsEnabled("feature-1", FeatureOptions{}), "feature-1 should be enabled after update")
 }

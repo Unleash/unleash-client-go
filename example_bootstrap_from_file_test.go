@@ -48,7 +48,7 @@ func Test_bootstrapFromFile(t *testing.T) {
 		t.Fail()
 	}
 
-	enabled := unleash.IsEnabled("DateExample", unleash.WithContext(context.Context{}))
+	enabled := unleash.IsEnabled("DateExample", unleash.FeatureOptions{Ctx: context.Context{}})
 	a.True(enabled)
 	err = unleash.Close()
 	a.Nil(err)

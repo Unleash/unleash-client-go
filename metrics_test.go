@@ -87,7 +87,7 @@ func TestMetrics_VariantsCountToggles(t *testing.T) {
 	)
 
 	client.WaitForReady()
-	client.GetVariant("foo")
+	client.GetVariant("foo", VariantOptions{})
 
 	registered_metric, ok := client.metrics.counters.Load("foo")
 	assert.True(ok, "should have a count for 'foo'")
@@ -164,9 +164,9 @@ func TestMetrics_DisabledMetrics(t *testing.T) {
 	assert.Nil(err, "client should not return an error")
 
 	client.WaitForReady()
-	client.IsEnabled("foo")
-	client.IsEnabled("bar")
-	client.IsEnabled("baz")
+	client.IsEnabled("foo", FeatureOptions{})
+	client.IsEnabled("bar", FeatureOptions{})
+	client.IsEnabled("baz", FeatureOptions{})
 
 	time.Sleep(300 * time.Millisecond)
 	client.Close()
@@ -338,7 +338,7 @@ func TestMetrics_ShouldNotCountMetricsForParentToggles(t *testing.T) {
 	)
 	assert.Nil(err, "client should not return an error")
 	client.WaitForReady()
-	client.IsEnabled("child")
+	client.IsEnabled("child", FeatureOptions{})
 
 	child_metric, ok := client.metrics.counters.Load("child")
 	assert.True(ok, "should have a count for 'child'")
@@ -389,9 +389,9 @@ func TestMetrics_ShouldBackoffOn500(t *testing.T) {
 	assert.Nil(err, "client should not return an error")
 
 	client.WaitForReady()
-	client.IsEnabled("foo")
-	client.IsEnabled("bar")
-	client.IsEnabled("baz")
+	client.IsEnabled("foo", FeatureOptions{})
+	client.IsEnabled("bar", FeatureOptions{})
+	client.IsEnabled("baz", FeatureOptions{})
 
 	time.Sleep(320 * time.Millisecond)
 	err = client.Close()
@@ -429,11 +429,11 @@ func TestMetrics_ErrorCountShouldDecreaseIfSuccessful(t *testing.T) {
 	assert.Nil(err, "client should not return an error")
 
 	client.WaitForReady()
-	client.IsEnabled("foo")
-	client.IsEnabled("bar")
-	client.IsEnabled("baz")
+	client.IsEnabled("foo", FeatureOptions{})
+	client.IsEnabled("bar", FeatureOptions{})
+	client.IsEnabled("baz", FeatureOptions{})
 	time.Sleep(360 * time.Millisecond)
-	client.IsEnabled("foo")
+	client.IsEnabled("foo", FeatureOptions{})
 	time.Sleep(100 * time.Millisecond)
 	err = client.Close()
 	assert.Equal(float64(0), client.metrics.errors)
@@ -591,9 +591,9 @@ func TestMetrics_metricsData_includes_new_metadata(t *testing.T) {
 	assert.Nil(err, "Client should open without a problem")
 
 	client.WaitForReady()
-	client.IsEnabled("foo")
-	client.IsEnabled("bar")
-	client.IsEnabled("baz")
+	client.IsEnabled("foo", FeatureOptions{})
+	client.IsEnabled("bar", FeatureOptions{})
+	client.IsEnabled("baz", FeatureOptions{})
 
 	time.Sleep(320 * time.Millisecond)
 	err = client.Close()
