@@ -1,6 +1,7 @@
 package impactmetrics
 
 import (
+	"math"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -188,6 +189,181 @@ func TestRestoreReinsertsCollectedMetricsIntoTheRegistry(t *testing.T) {
 			},
 		},
 	}, restored)
+}
+
+func TestHistogramObservesValues(t *testing.T) {
+	registry := NewInMemoryMetricRegistry()
+	histogram := registry.Histogram("test_histogram", "testing histogram", []float64{0.1, 0.5, 1, 2.5, 5})
+
+	histogram.Observe(0.05, MetricLabels{"env": "prod"})
+	histogram.Observe(0.75, MetricLabels{"env": "prod"})
+	histogram.Observe(3, MetricLabels{"env": "prod"})
+
+	result := registry.Collect()
+
+	assert.Equal(t, []CollectedMetric{
+		{
+			Name: "test_histogram",
+			Help: "testing histogram",
+			Type: "histogram",
+			Samples: []interface{}{
+				BucketMetricSample{
+					Labels: MetricLabels{"env": "prod"},
+					Count:  3,
+					Sum:    3.8,
+					Buckets: []BucketEntry{
+						{Le: 0.1, Count: 1},
+						{Le: 0.5, Count: 1},
+						{Le: 1.0, Count: 2},
+						{Le: 2.5, Count: 2},
+						{Le: 5.0, Count: 3},
+						{Le: "+Inf", Count: 3},
+					},
+				},
+			},
+		},
+	}, result)
+}
+
+func TestHistogramTracksDifferentLabelCombinationsSeparately(t *testing.T) {
+	registry := NewInMemoryMetricRegistry()
+	histogram := registry.Histogram("multi_label_histogram", "histogram with multiple labels", []float64{1, 10})
+
+	histogram.Observe(0.5, MetricLabels{"method": "GET"})
+	histogram.Observe(5, MetricLabels{"method": "POST"})
+	histogram.Observe(15, nil)
+
+	result := registry.Collect()
+
+	assert.Equal(t, []CollectedMetric{
+		{
+			Name: "multi_label_histogram",
+			Help: "histogram with multiple labels",
+			Type: "histogram",
+			Samples: []interface{}{
+				BucketMetricSample{
+					Labels: MetricLabels{"method": "GET"},
+					Count:  1,
+					Sum:    0.5,
+					Buckets: []BucketEntry{
+						{Le: 1.0, Count: 1},
+						{Le: 10.0, Count: 1},
+						{Le: "+Inf", Count: 1},
+					},
+				},
+				BucketMetricSample{
+					Labels: MetricLabels{"method": "POST"},
+					Count:  1,
+					Sum:    5.0,
+					Buckets: []BucketEntry{
+						{Le: 1.0, Count: 0},
+						{Le: 10.0, Count: 1},
+						{Le: "+Inf", Count: 1},
+					},
+				},
+				BucketMetricSample{
+					Labels: MetricLabels{},
+					Count:  1,
+					Sum:    15.0,
+					Buckets: []BucketEntry{
+						{Le: 1.0, Count: 0},
+						{Le: 10.0, Count: 0},
+						{Le: "+Inf", Count: 1},
+					},
+				},
+			},
+		},
+	}, result)
+}
+
+func TestHistogramRestorationPreservesExactData(t *testing.T) {
+	registry := NewInMemoryMetricRegistry()
+	histogram := registry.Histogram("restore_histogram", "testing histogram restore", []float64{0.1, 1, 10})
+
+	histogram.Observe(0.05, MetricLabels{"method": "GET"})
+	histogram.Observe(0.5, MetricLabels{"method": "GET"})
+	histogram.Observe(5, MetricLabels{"method": "POST"})
+	histogram.Observe(15, MetricLabels{"method": "POST"})
+
+	firstCollect := registry.Collect()
+	assert.Len(t, firstCollect, 1)
+
+	emptyCollect := registry.Collect()
+	assert.Equal(t, []CollectedMetric{
+		{
+			Name: "restore_histogram",
+			Help: "testing histogram restore",
+			Type: "histogram",
+			Samples: []interface{}{
+				BucketMetricSample{
+					Labels: MetricLabels{},
+					Count:  0,
+					Sum:    0,
+					Buckets: []BucketEntry{
+						{Le: 0.1, Count: 0},
+						{Le: 1.0, Count: 0},
+						{Le: 10.0, Count: 0},
+						{Le: "+Inf", Count: 0},
+					},
+				},
+			},
+		},
+	}, emptyCollect)
+
+	registry.Restore(firstCollect)
+
+	restoredCollect := registry.Collect()
+	assert.Equal(t, firstCollect, restoredCollect)
+}
+
+func TestAllMetricOperationsSilentlyDropInvalidValues(t *testing.T) {
+	tests := []struct {
+		name  string
+		value float64
+	}{
+		{"Infinity", math.Inf(1)},
+		{"-Infinity", math.Inf(-1)},
+		{"NaN", math.NaN()},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			registry := NewInMemoryMetricRegistry()
+			counter := registry.Counter("c", "h")
+			gauge := registry.Gauge("g", "h")
+			histogram := registry.Histogram("h", "h", []float64{1})
+
+			counter.Inc(1, nil)
+			gauge.Set(5, nil)
+			gauge.Set(tt.value, nil)
+			gauge.Inc(tt.value, nil)
+			gauge.Dec(tt.value, nil)
+			histogram.Observe(0.5, nil)
+			histogram.Observe(tt.value, nil)
+
+			result := registry.Collect()
+
+			assert.Equal(t, []CollectedMetric{
+				{Name: "c", Help: "h", Type: "counter", Samples: []interface{}{
+					NumericMetricSample{Labels: MetricLabels{}, Value: 1},
+				}},
+				{Name: "g", Help: "h", Type: "gauge", Samples: []interface{}{
+					NumericMetricSample{Labels: MetricLabels{}, Value: 5},
+				}},
+				{Name: "h", Help: "h", Type: "histogram", Samples: []interface{}{
+					BucketMetricSample{
+						Labels: MetricLabels{},
+						Count:  1,
+						Sum:    0.5,
+						Buckets: []BucketEntry{
+							{Le: 1.0, Count: 1},
+							{Le: "+Inf", Count: 1},
+						},
+					},
+				}},
+			}, result)
+		})
+	}
 }
 
 func findMetric(metrics []CollectedMetric, name string) *CollectedMetric {

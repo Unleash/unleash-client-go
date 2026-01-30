@@ -25,6 +25,20 @@ type CollectedMetric struct {
 	Samples []interface{} `json:"samples"`
 }
 
+type BucketEntry struct {
+	Le    interface{} `json:"le"`
+	Count int64       `json:"count"`
+}
+
+type BucketMetricSample struct {
+	Labels  MetricLabels  `json:"labels"`
+	Count   int64         `json:"count"`
+	Sum     float64       `json:"sum"`
+	Buckets []BucketEntry `json:"buckets"`
+}
+
+var DefaultHistogramBuckets = []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10}
+
 type ImpactMetricsDataSource interface {
 	Collect() []CollectedMetric
 	Restore(metrics []CollectedMetric)
@@ -204,18 +218,180 @@ func (g *gaugeImpl) collect() CollectedMetric {
 	}
 }
 
+type Histogram interface {
+	Observe(value float64, labels MetricLabels)
+}
+
+type histogramData struct {
+	count   int64
+	sum     float64
+	buckets map[float64]int64
+}
+
+type histogramImpl struct {
+	mu      sync.Mutex
+	name    string
+	help    string
+	buckets []float64
+	values  map[string]*histogramData
+	keys    []string // insertion order
+}
+
+func newHistogram(name, help string, buckets []float64) *histogramImpl {
+	if len(buckets) == 0 {
+		buckets = DefaultHistogramBuckets
+	}
+	seen := map[float64]bool{}
+	var filtered []float64
+	for _, b := range buckets {
+		if b != math.Inf(1) && !seen[b] {
+			seen[b] = true
+			filtered = append(filtered, b)
+		}
+	}
+	sort.Float64s(filtered)
+	filtered = append(filtered, math.Inf(1))
+
+	return &histogramImpl{
+		name:    name,
+		help:    help,
+		buckets: filtered,
+		values:  map[string]*histogramData{},
+	}
+}
+
+func (h *histogramImpl) Observe(value float64, labels MetricLabels) {
+	if isInvalidValue(value) {
+		return
+	}
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	key := LabelKey(labels)
+	data, exists := h.values[key]
+	if !exists {
+		data = &histogramData{
+			buckets: make(map[float64]int64, len(h.buckets)),
+		}
+		for _, b := range h.buckets {
+			data.buckets[b] = 0
+		}
+		h.values[key] = data
+		h.keys = append(h.keys, key)
+	}
+
+	data.count++
+	data.sum += value
+	for _, b := range h.buckets {
+		if value <= b {
+			data.buckets[b]++
+		}
+	}
+}
+
+func (h *histogramImpl) restore(sample BucketMetricSample) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	key := LabelKey(sample.Labels)
+	data := &histogramData{
+		count:   sample.Count,
+		sum:     sample.Sum,
+		buckets: make(map[float64]int64, len(sample.Buckets)),
+	}
+	for _, b := range sample.Buckets {
+		le := bucketLeToFloat(b.Le)
+		data.buckets[le] = b.Count
+	}
+	if _, exists := h.values[key]; !exists {
+		h.keys = append(h.keys, key)
+	}
+	h.values[key] = data
+}
+
+func bucketLeToFloat(le interface{}) float64 {
+	switch v := le.(type) {
+	case string:
+		if v == "+Inf" {
+			return math.Inf(1)
+		}
+	case float64:
+		return v
+	}
+	return 0
+}
+
+func formatLe(b float64) interface{} {
+	if math.IsInf(b, 1) {
+		return "+Inf"
+	}
+	return b
+}
+
+func (h *histogramImpl) collect() CollectedMetric {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	samples := make([]interface{}, 0, len(h.values))
+	for _, key := range h.keys {
+		data := h.values[key]
+		bucketEntries := make([]BucketEntry, len(h.buckets))
+		for i, b := range h.buckets {
+			bucketEntries[i] = BucketEntry{
+				Le:    formatLe(b),
+				Count: data.buckets[b],
+			}
+		}
+		samples = append(samples, BucketMetricSample{
+			Labels:  ParseLabelKey(key),
+			Count:   data.count,
+			Sum:     data.sum,
+			Buckets: bucketEntries,
+		})
+	}
+
+	h.values = map[string]*histogramData{}
+	h.keys = nil
+
+	if len(samples) == 0 {
+		bucketEntries := make([]BucketEntry, len(h.buckets))
+		for i, b := range h.buckets {
+			bucketEntries[i] = BucketEntry{
+				Le:    formatLe(b),
+				Count: 0,
+			}
+		}
+		samples = append(samples, BucketMetricSample{
+			Labels:  MetricLabels{},
+			Count:   0,
+			Sum:     0,
+			Buckets: bucketEntries,
+		})
+	}
+
+	return CollectedMetric{
+		Name:    h.name,
+		Help:    h.help,
+		Type:    "histogram",
+		Samples: samples,
+	}
+}
+
 type InMemoryMetricRegistry struct {
-	mu          sync.RWMutex
-	counters    map[string]*counterImpl
-	counterKeys []string // insertion order
-	gauges      map[string]*gaugeImpl
-	gaugeKeys   []string // insertion order
+	mu            sync.RWMutex
+	counters      map[string]*counterImpl
+	counterKeys   []string // insertion order
+	gauges        map[string]*gaugeImpl
+	gaugeKeys     []string // insertion order
+	histograms    map[string]*histogramImpl
+	histogramKeys []string // insertion order
 }
 
 func NewInMemoryMetricRegistry() *InMemoryMetricRegistry {
 	return &InMemoryMetricRegistry{
-		counters: map[string]*counterImpl{},
-		gauges:   map[string]*gaugeImpl{},
+		counters:   map[string]*counterImpl{},
+		gauges:     map[string]*gaugeImpl{},
+		histograms: map[string]*histogramImpl{},
 	}
 }
 
@@ -261,6 +437,27 @@ func (r *InMemoryMetricRegistry) GetGauge(name string) Gauge {
 	return nil
 }
 
+func (r *InMemoryMetricRegistry) Histogram(name, help string, buckets []float64) Histogram {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if h, exists := r.histograms[name]; exists {
+		return h
+	}
+	h := newHistogram(name, help, buckets)
+	r.histograms[name] = h
+	r.histogramKeys = append(r.histogramKeys, name)
+	return h
+}
+
+func (r *InMemoryMetricRegistry) GetHistogram(name string) Histogram {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	if h, exists := r.histograms[name]; exists {
+		return h
+	}
+	return nil
+}
+
 func (r *InMemoryMetricRegistry) Collect() []CollectedMetric {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -274,6 +471,12 @@ func (r *InMemoryMetricRegistry) Collect() []CollectedMetric {
 	}
 	for _, name := range r.gaugeKeys {
 		m := r.gauges[name].collect()
+		if len(m.Samples) > 0 {
+			result = append(result, m)
+		}
+	}
+	for _, name := range r.histogramKeys {
+		m := r.histograms[name].collect()
 		if len(m.Samples) > 0 {
 			result = append(result, m)
 		}
@@ -306,6 +509,24 @@ func (r *InMemoryMetricRegistry) Restore(metrics []CollectedMetric) {
 			for _, s := range m.Samples {
 				if sample, ok := s.(NumericMetricSample); ok {
 					g.Set(sample.Value, sample.Labels)
+				}
+			}
+		case "histogram":
+			var buckets []float64
+			if len(m.Samples) > 0 {
+				if first, ok := m.Samples[0].(BucketMetricSample); ok {
+					for _, b := range first.Buckets {
+						buckets = append(buckets, bucketLeToFloat(b.Le))
+					}
+				}
+			}
+			h, ok := r.Histogram(m.Name, m.Help, buckets).(*histogramImpl)
+			if !ok {
+				continue
+			}
+			for _, s := range m.Samples {
+				if sample, ok := s.(BucketMetricSample); ok {
+					h.restore(sample)
 				}
 			}
 		}
