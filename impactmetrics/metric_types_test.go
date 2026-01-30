@@ -68,9 +68,54 @@ func TestDifferentLabelCombinationsAreStoredSeparately(t *testing.T) {
 	}, *metric)
 }
 
+func TestGaugeSupportsIncDecAndSet(t *testing.T) {
+	registry := NewInMemoryMetricRegistry()
+	gauge := registry.Gauge("test_gauge", "gauge test")
+
+	gauge.Inc(5, MetricLabels{"env": "prod"})
+	gauge.Dec(2, MetricLabels{"env": "prod"})
+	gauge.Set(10, MetricLabels{"env": "prod"})
+
+	result := registry.Collect()
+	metric := findMetric(result, "test_gauge")
+
+	assert.Equal(t, CollectedMetric{
+		Name: "test_gauge",
+		Help: "gauge test",
+		Type: "gauge",
+		Samples: []interface{}{
+			NumericMetricSample{Labels: MetricLabels{"env": "prod"}, Value: 10},
+		},
+	}, *metric)
+}
+
+func TestGaugeTracksValuesSeparatelyPerLabelSet(t *testing.T) {
+	registry := NewInMemoryMetricRegistry()
+	gauge := registry.Gauge("multi_env_gauge", "tracks multiple envs")
+
+	gauge.Inc(5, MetricLabels{"env": "prod"})
+	gauge.Dec(2, MetricLabels{"env": "dev"})
+	gauge.Set(10, MetricLabels{"env": "test"})
+
+	result := registry.Collect()
+	metric := findMetric(result, "multi_env_gauge")
+
+	assert.Equal(t, CollectedMetric{
+		Name: "multi_env_gauge",
+		Help: "tracks multiple envs",
+		Type: "gauge",
+		Samples: []interface{}{
+			NumericMetricSample{Labels: MetricLabels{"env": "prod"}, Value: 5},
+			NumericMetricSample{Labels: MetricLabels{"env": "dev"}, Value: -2},
+			NumericMetricSample{Labels: MetricLabels{"env": "test"}, Value: 10},
+		},
+	}, *metric)
+}
+
 func TestCollectReturnsCounterWithZeroValueWhenCounterIsEmpty(t *testing.T) {
 	registry := NewInMemoryMetricRegistry()
 	registry.Counter("noop_counter", "noop")
+	registry.Gauge("noop_gauge", "noop")
 
 	result := registry.Collect()
 
