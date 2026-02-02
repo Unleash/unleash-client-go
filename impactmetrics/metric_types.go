@@ -170,10 +170,7 @@ func (r *InMemoryMetricRegistry) Restore(metrics []CollectedMetric) {
 	for _, m := range metrics {
 		switch m.Type {
 		case "counter":
-			c, ok := r.Counter(m.Name, m.Help).(*counterImpl)
-			if !ok {
-				continue
-			}
+			c := r.Counter(m.Name, m.Help)
 			for _, s := range m.Samples {
 				if ns, ok := s.(IntMetricSample); ok {
 					c.Inc(ns.Value, ns.Labels)
