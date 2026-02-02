@@ -13,6 +13,11 @@ func isInvalidValue(v float64) bool {
 
 type MetricLabels map[string]string
 
+type IntMetricSample struct {
+	Labels MetricLabels `json:"labels"`
+	Value  int64        `json:"value"`
+}
+
 type NumericMetricSample struct {
 	Labels MetricLabels `json:"labels"`
 	Value  float64      `json:"value"`
@@ -69,7 +74,6 @@ type counterImpl struct {
 	name   string
 	help   string
 	values map[string]int64
-	keys   []string // insertion order
 }
 
 func newCounter(name, help string) *counterImpl {
@@ -81,12 +85,12 @@ func newCounter(name, help string) *counterImpl {
 }
 
 func (c *counterImpl) Inc(value int64, labels MetricLabels) {
+	if value <= 0 {
+		return
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	key := LabelKey(labels)
-	if _, exists := c.values[key]; !exists {
-		c.keys = append(c.keys, key)
-	}
 	c.values[key] += value
 }
 
@@ -94,19 +98,24 @@ func (c *counterImpl) collect() CollectedMetric {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	keys := make([]string, 0, len(c.values))
+	for k := range c.values {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
 	samples := make([]interface{}, 0, len(c.values))
-	for _, key := range c.keys {
-		samples = append(samples, NumericMetricSample{
+	for _, key := range keys {
+		samples = append(samples, IntMetricSample{
 			Labels: ParseLabelKey(key),
-			Value:  float64(c.values[key]),
+			Value:  c.values[key],
 		})
 	}
 
 	c.values = map[string]int64{}
-	c.keys = nil
 
 	if len(samples) == 0 {
-		samples = append(samples, NumericMetricSample{
+		samples = append(samples, IntMetricSample{
 			Labels: MetricLabels{},
 			Value:  0,
 		})
@@ -131,7 +140,6 @@ type gaugeImpl struct {
 	name   string
 	help   string
 	values map[string]float64
-	keys   []string // insertion order
 }
 
 func newGauge(name, help string) *gaugeImpl {
@@ -149,9 +157,6 @@ func (g *gaugeImpl) Inc(value float64, labels MetricLabels) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	key := LabelKey(labels)
-	if _, exists := g.values[key]; !exists {
-		g.keys = append(g.keys, key)
-	}
 	g.values[key] += value
 }
 
@@ -162,9 +167,6 @@ func (g *gaugeImpl) Dec(value float64, labels MetricLabels) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	key := LabelKey(labels)
-	if _, exists := g.values[key]; !exists {
-		g.keys = append(g.keys, key)
-	}
 	g.values[key] -= value
 }
 
@@ -175,9 +177,6 @@ func (g *gaugeImpl) Set(value float64, labels MetricLabels) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	key := LabelKey(labels)
-	if _, exists := g.values[key]; !exists {
-		g.keys = append(g.keys, key)
-	}
 	g.values[key] = value
 }
 
@@ -185,8 +184,14 @@ func (g *gaugeImpl) collect() CollectedMetric {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
+	keys := make([]string, 0, len(g.values))
+	for k := range g.values {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
 	samples := make([]interface{}, 0, len(g.values))
-	for _, key := range g.keys {
+	for _, key := range keys {
 		samples = append(samples, NumericMetricSample{
 			Labels: ParseLabelKey(key),
 			Value:  g.values[key],
@@ -194,7 +199,6 @@ func (g *gaugeImpl) collect() CollectedMetric {
 	}
 
 	g.values = map[string]float64{}
-	g.keys = nil
 
 	return CollectedMetric{
 		Name:    g.name,
@@ -205,11 +209,9 @@ func (g *gaugeImpl) collect() CollectedMetric {
 }
 
 type InMemoryMetricRegistry struct {
-	mu          sync.RWMutex
-	counters    map[string]*counterImpl
-	counterKeys []string // insertion order
-	gauges      map[string]*gaugeImpl
-	gaugeKeys   []string // insertion order
+	mu       sync.RWMutex
+	counters map[string]*counterImpl
+	gauges   map[string]*gaugeImpl
 }
 
 func NewInMemoryMetricRegistry() *InMemoryMetricRegistry {
@@ -227,7 +229,6 @@ func (r *InMemoryMetricRegistry) Counter(name, help string) Counter {
 	}
 	c := newCounter(name, help)
 	r.counters[name] = c
-	r.counterKeys = append(r.counterKeys, name)
 	return c
 }
 
@@ -248,7 +249,6 @@ func (r *InMemoryMetricRegistry) Gauge(name, help string) Gauge {
 	}
 	g := newGauge(name, help)
 	r.gauges[name] = g
-	r.gaugeKeys = append(r.gaugeKeys, name)
 	return g
 }
 
@@ -262,17 +262,30 @@ func (r *InMemoryMetricRegistry) GetGauge(name string) Gauge {
 }
 
 func (r *InMemoryMetricRegistry) Collect() []CollectedMetric {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	names := make([]string, 0, len(r.counters)+len(r.gauges))
+	for name := range r.counters {
+		names = append(names, name)
+	}
+	sort.Strings(names)
 
 	var result []CollectedMetric
-	for _, name := range r.counterKeys {
+	for _, name := range names {
 		m := r.counters[name].collect()
 		if len(m.Samples) > 0 {
 			result = append(result, m)
 		}
 	}
-	for _, name := range r.gaugeKeys {
+
+	gaugeNames := make([]string, 0, len(r.gauges))
+	for name := range r.gauges {
+		gaugeNames = append(gaugeNames, name)
+	}
+	sort.Strings(gaugeNames)
+
+	for _, name := range gaugeNames {
 		m := r.gauges[name].collect()
 		if len(m.Samples) > 0 {
 			result = append(result, m)
@@ -289,23 +302,17 @@ func (r *InMemoryMetricRegistry) Restore(metrics []CollectedMetric) {
 	for _, m := range metrics {
 		switch m.Type {
 		case "counter":
-			c, ok := r.Counter(m.Name, m.Help).(*counterImpl)
-			if !ok {
-				continue
-			}
+			c := r.Counter(m.Name, m.Help)
 			for _, s := range m.Samples {
-				if sample, ok := s.(NumericMetricSample); ok {
-					c.Inc(int64(sample.Value), sample.Labels)
+				if ns, ok := s.(IntMetricSample); ok {
+					c.Inc(ns.Value, ns.Labels)
 				}
 			}
 		case "gauge":
-			g, ok := r.Gauge(m.Name, m.Help).(*gaugeImpl)
-			if !ok {
-				continue
-			}
+			g := r.Gauge(m.Name, m.Help)
 			for _, s := range m.Samples {
-				if sample, ok := s.(NumericMetricSample); ok {
-					g.Set(sample.Value, sample.Labels)
+				if ns, ok := s.(NumericMetricSample); ok {
+					g.Set(ns.Value, ns.Labels)
 				}
 			}
 		}

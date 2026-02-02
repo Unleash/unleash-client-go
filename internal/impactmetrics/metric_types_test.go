@@ -20,7 +20,7 @@ func TestCounterIncrementsByDefaultValue(t *testing.T) {
 		Help: "testing",
 		Type: "counter",
 		Samples: []interface{}{
-			NumericMetricSample{Labels: MetricLabels{}, Value: 1},
+			IntMetricSample{Labels: MetricLabels{}, Value: 1},
 		},
 	}, *metric)
 }
@@ -30,6 +30,8 @@ func TestCounterIncrementsWithCustomValueAndLabels(t *testing.T) {
 	counter := registry.Counter("labeled_counter", "with labels")
 
 	counter.Inc(3, MetricLabels{"foo": "bar"})
+	counter.Inc(-1, MetricLabels{"foo": "bar"})
+	counter.Inc(0, MetricLabels{"foo": "bar"})
 	counter.Inc(2, MetricLabels{"foo": "bar"})
 
 	result := registry.Collect()
@@ -40,7 +42,7 @@ func TestCounterIncrementsWithCustomValueAndLabels(t *testing.T) {
 		Help: "with labels",
 		Type: "counter",
 		Samples: []interface{}{
-			NumericMetricSample{Labels: MetricLabels{"foo": "bar"}, Value: 5},
+			IntMetricSample{Labels: MetricLabels{"foo": "bar"}, Value: 5},
 		},
 	}, *metric)
 }
@@ -61,9 +63,9 @@ func TestDifferentLabelCombinationsAreStoredSeparately(t *testing.T) {
 		Help: "label test",
 		Type: "counter",
 		Samples: []interface{}{
-			NumericMetricSample{Labels: MetricLabels{"a": "x"}, Value: 1},
-			NumericMetricSample{Labels: MetricLabels{"b": "y"}, Value: 2},
-			NumericMetricSample{Labels: MetricLabels{}, Value: 3},
+			IntMetricSample{Labels: MetricLabels{}, Value: 3},
+			IntMetricSample{Labels: MetricLabels{"a": "x"}, Value: 1},
+			IntMetricSample{Labels: MetricLabels{"b": "y"}, Value: 2},
 		},
 	}, *metric)
 }
@@ -105,8 +107,8 @@ func TestGaugeTracksValuesSeparatelyPerLabelSet(t *testing.T) {
 		Help: "tracks multiple envs",
 		Type: "gauge",
 		Samples: []interface{}{
-			NumericMetricSample{Labels: MetricLabels{"env": "prod"}, Value: 5},
 			NumericMetricSample{Labels: MetricLabels{"env": "dev"}, Value: -2},
+			NumericMetricSample{Labels: MetricLabels{"env": "prod"}, Value: 5},
 			NumericMetricSample{Labels: MetricLabels{"env": "test"}, Value: 10},
 		},
 	}, *metric)
@@ -125,7 +127,7 @@ func TestCollectReturnsCounterWithZeroValueWhenCounterIsEmpty(t *testing.T) {
 			Help: "noop",
 			Type: "counter",
 			Samples: []interface{}{
-				NumericMetricSample{Labels: MetricLabels{}, Value: 0},
+				IntMetricSample{Labels: MetricLabels{}, Value: 0},
 			},
 		},
 	}, result)
@@ -146,7 +148,7 @@ func TestCollectReturnsCounterWithZeroValueAfterFlushingPreviousValues(t *testin
 			Help: "flush",
 			Type: "counter",
 			Samples: []interface{}{
-				NumericMetricSample{Labels: MetricLabels{}, Value: 0},
+				IntMetricSample{Labels: MetricLabels{}, Value: 0},
 			},
 		},
 	}, second)
@@ -169,7 +171,7 @@ func TestRestoreReinsertsCollectedMetricsIntoTheRegistry(t *testing.T) {
 			Help: "testing restore",
 			Type: "counter",
 			Samples: []interface{}{
-				NumericMetricSample{Labels: MetricLabels{}, Value: 0},
+				IntMetricSample{Labels: MetricLabels{}, Value: 0},
 			},
 		},
 	}, afterFlush)
@@ -183,8 +185,8 @@ func TestRestoreReinsertsCollectedMetricsIntoTheRegistry(t *testing.T) {
 			Help: "testing restore",
 			Type: "counter",
 			Samples: []interface{}{
-				NumericMetricSample{Labels: MetricLabels{"tag": "a"}, Value: 5},
-				NumericMetricSample{Labels: MetricLabels{"tag": "b"}, Value: 2},
+				IntMetricSample{Labels: MetricLabels{"tag": "a"}, Value: 5},
+				IntMetricSample{Labels: MetricLabels{"tag": "b"}, Value: 2},
 			},
 		},
 	}, restored)
