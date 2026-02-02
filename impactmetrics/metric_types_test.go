@@ -61,9 +61,9 @@ func TestDifferentLabelCombinationsAreStoredSeparately(t *testing.T) {
 		Help: "label test",
 		Type: "counter",
 		Samples: []interface{}{
+			IntMetricSample{Labels: MetricLabels{}, Value: 3},
 			IntMetricSample{Labels: MetricLabels{"a": "x"}, Value: 1},
 			IntMetricSample{Labels: MetricLabels{"b": "y"}, Value: 2},
-			IntMetricSample{Labels: MetricLabels{}, Value: 3},
 		},
 	}, *metric)
 }

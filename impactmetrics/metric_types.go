@@ -64,7 +64,6 @@ type counterImpl struct {
 	name   string
 	help   string
 	values map[string]int64
-	keys   []string // insertion order
 }
 
 func newCounter(name, help string) *counterImpl {
@@ -79,9 +78,6 @@ func (c *counterImpl) Inc(value int64, labels MetricLabels) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	key := LabelKey(labels)
-	if _, exists := c.values[key]; !exists {
-		c.keys = append(c.keys, key)
-	}
 	c.values[key] += value
 }
 
@@ -89,8 +85,14 @@ func (c *counterImpl) collect() CollectedMetric {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	keys := make([]string, 0, len(c.values))
+	for k := range c.values {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
 	samples := make([]interface{}, 0, len(c.values))
-	for _, key := range c.keys {
+	for _, key := range keys {
 		samples = append(samples, IntMetricSample{
 			Labels: ParseLabelKey(key),
 			Value:  c.values[key],
@@ -98,7 +100,6 @@ func (c *counterImpl) collect() CollectedMetric {
 	}
 
 	c.values = map[string]int64{}
-	c.keys = nil
 
 	if len(samples) == 0 {
 		samples = append(samples, IntMetricSample{
@@ -116,9 +117,8 @@ func (c *counterImpl) collect() CollectedMetric {
 }
 
 type InMemoryMetricRegistry struct {
-	mu          sync.RWMutex
-	counters    map[string]*counterImpl
-	counterKeys []string // insertion order
+	mu       sync.RWMutex
+	counters map[string]*counterImpl
 }
 
 func NewInMemoryMetricRegistry() *InMemoryMetricRegistry {
@@ -135,7 +135,6 @@ func (r *InMemoryMetricRegistry) Counter(name, help string) Counter {
 	}
 	c := newCounter(name, help)
 	r.counters[name] = c
-	r.counterKeys = append(r.counterKeys, name)
 	return c
 }
 
@@ -152,8 +151,14 @@ func (r *InMemoryMetricRegistry) Collect() []CollectedMetric {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
+	names := make([]string, 0, len(r.counters))
+	for name := range r.counters {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
 	var result []CollectedMetric
-	for _, name := range r.counterKeys {
+	for _, name := range names {
 		m := r.counters[name].collect()
 		if len(m.Samples) > 0 {
 			result = append(result, m)
