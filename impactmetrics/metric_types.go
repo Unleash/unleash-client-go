@@ -8,9 +8,9 @@ import (
 
 type MetricLabels map[string]string
 
-type NumericMetricSample struct {
+type IntMetricSample struct {
 	Labels MetricLabels `json:"labels"`
-	Value  float64      `json:"value"`
+	Value  int64        `json:"value"`
 }
 
 type CollectedMetric struct {
@@ -91,9 +91,9 @@ func (c *counterImpl) collect() CollectedMetric {
 
 	samples := make([]interface{}, 0, len(c.values))
 	for _, key := range c.keys {
-		samples = append(samples, NumericMetricSample{
+		samples = append(samples, IntMetricSample{
 			Labels: ParseLabelKey(key),
-			Value:  float64(c.values[key]),
+			Value:  c.values[key],
 		})
 	}
 
@@ -101,7 +101,7 @@ func (c *counterImpl) collect() CollectedMetric {
 	c.keys = nil
 
 	if len(samples) == 0 {
-		samples = append(samples, NumericMetricSample{
+		samples = append(samples, IntMetricSample{
 			Labels: MetricLabels{},
 			Value:  0,
 		})
@@ -175,8 +175,8 @@ func (r *InMemoryMetricRegistry) Restore(metrics []CollectedMetric) {
 				continue
 			}
 			for _, s := range m.Samples {
-				if ns, ok := s.(NumericMetricSample); ok {
-					c.Inc(int64(ns.Value), ns.Labels)
+				if ns, ok := s.(IntMetricSample); ok {
+					c.Inc(ns.Value, ns.Labels)
 				}
 			}
 		}
