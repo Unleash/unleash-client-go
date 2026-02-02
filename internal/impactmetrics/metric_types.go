@@ -75,6 +75,9 @@ func newCounter(name, help string) *counterImpl {
 }
 
 func (c *counterImpl) Inc(value int64, labels MetricLabels) {
+	if value <= 0 {
+		return
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	key := LabelKey(labels)

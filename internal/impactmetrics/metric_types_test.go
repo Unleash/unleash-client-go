@@ -30,6 +30,8 @@ func TestCounterIncrementsWithCustomValueAndLabels(t *testing.T) {
 	counter := registry.Counter("labeled_counter", "with labels")
 
 	counter.Inc(3, MetricLabels{"foo": "bar"})
+	counter.Inc(-1, MetricLabels{"foo": "bar"})
+	counter.Inc(0, MetricLabels{"foo": "bar"})
 	counter.Inc(2, MetricLabels{"foo": "bar"})
 
 	result := registry.Collect()
