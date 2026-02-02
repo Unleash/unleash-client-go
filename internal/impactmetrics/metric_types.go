@@ -151,8 +151,8 @@ func (r *InMemoryMetricRegistry) GetCounter(name string) Counter {
 }
 
 func (r *InMemoryMetricRegistry) Collect() []CollectedMetric {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
 	names := make([]string, 0, len(r.counters))
 	for name := range r.counters {
