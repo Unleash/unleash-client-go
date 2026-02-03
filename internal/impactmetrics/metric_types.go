@@ -43,7 +43,7 @@ func LabelKey(labels MetricLabels) string {
 	for k := range labels {
 		keys = append(keys, k)
 	}
-	// Sort keys for deterministic output since Go map iteration order is random
+	// Sort keys for deterministic output since Go map iteration order is random - this is a detail to make testing easier and isn't a requirement for the logic to be correct
 	sort.Strings(keys)
 	parts := make([]string, len(keys))
 	for i, k := range keys {
