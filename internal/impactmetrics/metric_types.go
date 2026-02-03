@@ -13,12 +13,12 @@ func isInvalidValue(v float64) bool {
 
 type MetricLabels map[string]string
 
-type IntMetricSample struct {
+type CounterMetricSample struct {
 	Labels MetricLabels `json:"labels"`
 	Value  int64        `json:"value"`
 }
 
-type NumericMetricSample struct {
+type GaugeMetricSample struct {
 	Labels MetricLabels `json:"labels"`
 	Value  float64      `json:"value"`
 }
@@ -108,7 +108,7 @@ func (c *counterImpl) collect() CollectedMetric {
 
 	samples := make([]interface{}, 0, len(c.values))
 	for _, key := range keys {
-		samples = append(samples, IntMetricSample{
+		samples = append(samples, CounterMetricSample{
 			Labels: ParseLabelKey(key),
 			Value:  c.values[key],
 		})
@@ -117,7 +117,7 @@ func (c *counterImpl) collect() CollectedMetric {
 	c.values = map[string]int64{}
 
 	if len(samples) == 0 {
-		samples = append(samples, IntMetricSample{
+		samples = append(samples, CounterMetricSample{
 			Labels: MetricLabels{},
 			Value:  0,
 		})
@@ -195,7 +195,7 @@ func (g *gaugeImpl) collect() CollectedMetric {
 
 	samples := make([]interface{}, 0, len(g.values))
 	for _, key := range keys {
-		samples = append(samples, NumericMetricSample{
+		samples = append(samples, GaugeMetricSample{
 			Labels: ParseLabelKey(key),
 			Value:  g.values[key],
 		})
@@ -309,14 +309,14 @@ func (r *InMemoryMetricRegistry) Restore(metrics []CollectedMetric) {
 		case "counter":
 			c := r.Counter(m.Name, m.Help)
 			for _, s := range m.Samples {
-				if ns, ok := s.(IntMetricSample); ok {
+				if ns, ok := s.(CounterMetricSample); ok {
 					c.Inc(ns.Value, ns.Labels)
 				}
 			}
 		case "gauge":
 			g := r.Gauge(m.Name, m.Help)
 			for _, s := range m.Samples {
-				if ns, ok := s.(NumericMetricSample); ok {
+				if ns, ok := s.(GaugeMetricSample); ok {
 					g.Set(ns.Value, ns.Labels)
 				}
 			}
