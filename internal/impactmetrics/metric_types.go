@@ -43,6 +43,7 @@ func LabelKey(labels MetricLabels) string {
 	for k := range labels {
 		keys = append(keys, k)
 	}
+	// Sort keys for deterministic output since Go map iteration order is random
 	sort.Strings(keys)
 	parts := make([]string, len(keys))
 	for i, k := range keys {
@@ -102,6 +103,7 @@ func (c *counterImpl) collect() CollectedMetric {
 	for k := range c.values {
 		keys = append(keys, k)
 	}
+	// Sort keys for deterministic output since Go map iteration order is random
 	sort.Strings(keys)
 
 	samples := make([]interface{}, 0, len(c.values))
@@ -188,6 +190,7 @@ func (g *gaugeImpl) collect() CollectedMetric {
 	for k := range g.values {
 		keys = append(keys, k)
 	}
+	// Sort keys for deterministic output since Go map iteration order is random
 	sort.Strings(keys)
 
 	samples := make([]interface{}, 0, len(g.values))
@@ -269,6 +272,7 @@ func (r *InMemoryMetricRegistry) Collect() []CollectedMetric {
 	for name := range r.counters {
 		names = append(names, name)
 	}
+	// Sort names for deterministic output since Go map iteration order is random
 	sort.Strings(names)
 
 	var result []CollectedMetric
@@ -283,6 +287,7 @@ func (r *InMemoryMetricRegistry) Collect() []CollectedMetric {
 	for name := range r.gauges {
 		gaugeNames = append(gaugeNames, name)
 	}
+	// Sort names for deterministic output since Go map iteration order is random
 	sort.Strings(gaugeNames)
 
 	for _, name := range gaugeNames {
