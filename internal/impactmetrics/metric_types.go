@@ -288,13 +288,10 @@ func (h *histogramImpl) Observe(value float64, labels MetricLabels) {
 	defer h.mu.Unlock()
 
 	key := LabelKey(labels)
-	data, exists := h.values[key]
-	if !exists {
+	data, ok := h.values[key]
+	if !ok {
 		data = &histogramData{
-			buckets: make(map[float64]int64, len(h.buckets)),
-		}
-		for _, b := range h.buckets {
-			data.buckets[b] = 0
+			buckets: make(map[float64]int64),
 		}
 		h.values[key] = data
 	}
@@ -417,7 +414,7 @@ func NewInMemoryMetricRegistry() *InMemoryMetricRegistry {
 func (r *InMemoryMetricRegistry) Counter(name, help string) Counter {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	if c, exists := r.counters[name]; exists {
+	if c, ok := r.counters[name]; ok {
 		return c
 	}
 	c := newCounter(name, help)
@@ -428,7 +425,7 @@ func (r *InMemoryMetricRegistry) Counter(name, help string) Counter {
 func (r *InMemoryMetricRegistry) GetCounter(name string) Counter {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	if c, exists := r.counters[name]; exists {
+	if c, ok := r.counters[name]; ok {
 		return c
 	}
 	return nil
@@ -437,7 +434,7 @@ func (r *InMemoryMetricRegistry) GetCounter(name string) Counter {
 func (r *InMemoryMetricRegistry) Gauge(name, help string) Gauge {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	if g, exists := r.gauges[name]; exists {
+	if g, ok := r.gauges[name]; ok {
 		return g
 	}
 	g := newGauge(name, help)
@@ -448,7 +445,7 @@ func (r *InMemoryMetricRegistry) Gauge(name, help string) Gauge {
 func (r *InMemoryMetricRegistry) GetGauge(name string) Gauge {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	if g, exists := r.gauges[name]; exists {
+	if g, ok := r.gauges[name]; ok {
 		return g
 	}
 	return nil
@@ -457,7 +454,7 @@ func (r *InMemoryMetricRegistry) GetGauge(name string) Gauge {
 func (r *InMemoryMetricRegistry) Histogram(name, help string, buckets []float64) Histogram {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	if h, exists := r.histograms[name]; exists {
+	if h, ok := r.histograms[name]; ok {
 		return h
 	}
 	h := newHistogram(name, help, buckets)
@@ -468,7 +465,7 @@ func (r *InMemoryMetricRegistry) Histogram(name, help string, buckets []float64)
 func (r *InMemoryMetricRegistry) GetHistogram(name string) Histogram {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	if h, exists := r.histograms[name]; exists {
+	if h, ok := r.histograms[name]; ok {
 		return h
 	}
 	return nil
