@@ -331,6 +331,7 @@ func bucketLeToFloat(le interface{}) float64 {
 	case float64:
 		return v
 	}
+	// Data is internally managed (from CollectedMetric), so invalid types should not occur
 	return 0
 }
 
