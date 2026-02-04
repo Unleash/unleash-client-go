@@ -195,7 +195,7 @@ func TestRestoreReinsertsCollectedMetricsIntoTheRegistry(t *testing.T) {
 
 func TestHistogramObservesValues(t *testing.T) {
 	registry := NewInMemoryMetricRegistry()
-	histogram := registry.Histogram("test_histogram", "testing histogram", []float64{0.1, 0.5, 1, 2.5, 5})
+	histogram := registry.Histogram("test_histogram", "testing histogram", []float64{0.1, 0.5, 1, 1, 2.5, 5})
 
 	histogram.Observe(0.05, MetricLabels{"env": "prod"})
 	histogram.Observe(0.75, MetricLabels{"env": "prod"})
