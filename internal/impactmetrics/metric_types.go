@@ -548,17 +548,20 @@ func (r *InMemoryMetricRegistry) Restore(metrics []CollectedMetric) {
 			}
 		case "histogram":
 			var buckets []float64
-			if len(m.Samples) > 0 {
-				if first, ok := m.Samples[0].(HistogramMetricSample); ok {
-					for _, b := range first.Buckets {
+			for _, s := range m.Samples {
+				if sample, ok := s.(HistogramMetricSample); ok {
+					for _, b := range sample.Buckets {
 						buckets = append(buckets, bucketLeToFloat(b.Le))
 					}
+					break
 				}
 			}
+
 			h, ok := r.Histogram(m.Name, m.Help, buckets).(*histogramImpl)
 			if !ok {
 				continue
 			}
+
 			for _, s := range m.Samples {
 				if sample, ok := s.(HistogramMetricSample); ok {
 					h.restore(sample)
