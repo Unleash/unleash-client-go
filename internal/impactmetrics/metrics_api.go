@@ -9,14 +9,6 @@ type MetricsAPI struct {
 }
 
 func NewMetricsAPI(metricRegistry *InMemoryMetricRegistry, context StaticContext, warningsChannel chan error) *MetricsAPI {
-	if warningsChannel == nil {
-		warningsChannel = make(chan error)
-		go func() {
-			for range warningsChannel {
-				// Drain channel
-			}
-		}()
-	}
 	return &MetricsAPI{
 		metricRegistry: metricRegistry,
 		labels: MetricLabels{
