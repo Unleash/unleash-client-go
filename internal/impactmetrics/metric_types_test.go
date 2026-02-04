@@ -328,8 +328,8 @@ func TestAllMetricOperationsSilentlyDropInvalidValues(t *testing.T) {
 		{"NaN", math.NaN()},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			registry := NewInMemoryMetricRegistry()
 			counter := registry.Counter("c", "h")
 			gauge := registry.Gauge("g", "h")
@@ -337,11 +337,11 @@ func TestAllMetricOperationsSilentlyDropInvalidValues(t *testing.T) {
 
 			counter.Inc(1, nil)
 			gauge.Set(5, nil)
-			gauge.Set(tt.value, nil)
-			gauge.Inc(tt.value, nil)
-			gauge.Dec(tt.value, nil)
+			gauge.Set(tc.value, nil)
+			gauge.Inc(tc.value, nil)
+			gauge.Dec(tc.value, nil)
 			histogram.Observe(0.5, nil)
-			histogram.Observe(tt.value, nil)
+			histogram.Observe(tc.value, nil)
 
 			result := registry.Collect()
 
