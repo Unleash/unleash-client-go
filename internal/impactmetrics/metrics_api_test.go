@@ -7,11 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Sample interface for discriminated union of metric samples
-type Sample interface {
-	isSample()
-}
-
 func newTestMetricsAPI(registry *InMemoryMetricRegistry, ctx StaticContext) *MetricsAPI {
 	return NewMetricsAPI(registry, ctx, make(chan error, 3))
 }
