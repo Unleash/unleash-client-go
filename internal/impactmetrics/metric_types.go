@@ -259,15 +259,24 @@ func newHistogram(name, help string, buckets []float64) *histogramImpl {
 }
 
 func uniqueSorted(buckets []float64) []float64 {
-	seen := map[float64]bool{}
-	var result []float64
+	var filtered []float64
 	for _, b := range buckets {
-		if b != math.Inf(1) && !seen[b] {
-			seen[b] = true
-			result = append(result, b)
+		if b != math.Inf(1) {
+			filtered = append(filtered, b)
 		}
 	}
-	sort.Float64s(result)
+	sort.Float64s(filtered)
+
+	// Deduplicate adjacent elements
+	if len(filtered) == 0 {
+		return filtered
+	}
+	result := filtered[:1]
+	for i := 1; i < len(filtered); i++ {
+		if filtered[i] != filtered[i-1] {
+			result = append(result, filtered[i])
+		}
+	}
 	return result
 }
 
