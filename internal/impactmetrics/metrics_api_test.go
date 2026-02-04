@@ -7,6 +7,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// Sample interface for discriminated union of metric samples
+type Sample interface {
+	isSample()
+}
+
 func newTestMetricsAPI(registry *InMemoryMetricRegistry, ctx StaticContext) *MetricsAPI {
 	return NewMetricsAPI(registry, ctx, make(chan error, 3))
 }
@@ -68,7 +73,7 @@ func TestShouldIncrementCounterWithValidParameters(t *testing.T) {
 		Name: "valid_counter",
 		Help: "help",
 		Type: "counter",
-		Samples: []interface{}{
+		Samples: []Sample{
 			CounterMetricSample{
 				Labels: MetricLabels{"appName": "my-app", "environment": "dev"},
 				Value:  5,
@@ -92,7 +97,7 @@ func TestShouldIncrementCounterWithDefaultValue(t *testing.T) {
 		Name: "default_counter",
 		Help: "help",
 		Type: "counter",
-		Samples: []interface{}{
+		Samples: []Sample{
 			CounterMetricSample{
 				Labels: MetricLabels{"appName": "my-app", "environment": "dev"},
 				Value:  1,
@@ -116,7 +121,7 @@ func TestShouldSetGaugeWithValidParameters(t *testing.T) {
 		Name: "valid_gauge",
 		Help: "help",
 		Type: "gauge",
-		Samples: []interface{}{
+		Samples: []Sample{
 			GaugeMetricSample{
 				Labels: MetricLabels{"appName": "my-app", "environment": "dev"},
 				Value:  10,
@@ -161,7 +166,7 @@ func TestShouldObserveHistogramWithValidParameters(t *testing.T) {
 		Name: "valid_histogram",
 		Help: "help",
 		Type: "histogram",
-		Samples: []interface{}{
+		Samples: []Sample{
 			HistogramMetricSample{
 				Labels: MetricLabels{"appName": "my-app", "environment": "dev"},
 				Count:  1,
@@ -169,7 +174,7 @@ func TestShouldObserveHistogramWithValidParameters(t *testing.T) {
 				Buckets: []BucketEntry{
 					{Le: 1.0, Count: 0},
 					{Le: 10.0, Count: 1},
-					{Le: "+Inf", Count: 1},
+					{Le: math.Inf(1), Count: 1},
 				},
 			},
 		},
