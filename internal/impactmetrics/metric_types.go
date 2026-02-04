@@ -103,9 +103,9 @@ func (c *counterImpl) Inc(value int64, labels MetricLabels) {
 	if value <= 0 {
 		return
 	}
+	key := LabelKey(labels)
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	key := LabelKey(labels)
 	c.values[key] += value
 }
 
@@ -170,9 +170,9 @@ func (g *gaugeImpl) Inc(value float64, labels MetricLabels) {
 	if isInvalidValue(value) {
 		return
 	}
+	key := LabelKey(labels)
 	g.mu.Lock()
 	defer g.mu.Unlock()
-	key := LabelKey(labels)
 	g.values[key] += value
 }
 
@@ -180,9 +180,9 @@ func (g *gaugeImpl) Dec(value float64, labels MetricLabels) {
 	if isInvalidValue(value) {
 		return
 	}
+	key := LabelKey(labels)
 	g.mu.Lock()
 	defer g.mu.Unlock()
-	key := LabelKey(labels)
 	g.values[key] -= value
 }
 
@@ -190,9 +190,9 @@ func (g *gaugeImpl) Set(value float64, labels MetricLabels) {
 	if isInvalidValue(value) {
 		return
 	}
+	key := LabelKey(labels)
 	g.mu.Lock()
 	defer g.mu.Unlock()
-	key := LabelKey(labels)
 	g.values[key] = value
 }
 
@@ -285,10 +285,10 @@ func (h *histogramImpl) Observe(value float64, labels MetricLabels) {
 	if isInvalidValue(value) {
 		return
 	}
-	h.mu.Lock()
-	defer h.mu.Unlock()
 
 	key := LabelKey(labels)
+	h.mu.Lock()
+	defer h.mu.Unlock()
 	data, ok := h.values[key]
 	if !ok {
 		data = &histogramData{
