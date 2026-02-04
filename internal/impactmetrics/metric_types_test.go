@@ -21,7 +21,7 @@ func TestCounterIncrementsByDefaultValue(t *testing.T) {
 		Help: "testing",
 		Type: "counter",
 		Samples: []interface{}{
-			NumericMetricSample{Labels: MetricLabels{}, Value: 1},
+			CounterMetricSample{Labels: MetricLabels{}, Value: 1},
 		},
 	}, *metric)
 }
@@ -31,6 +31,8 @@ func TestCounterIncrementsWithCustomValueAndLabels(t *testing.T) {
 	counter := registry.Counter("labeled_counter", "with labels")
 
 	counter.Inc(3, MetricLabels{"foo": "bar"})
+	counter.Inc(-1, MetricLabels{"foo": "bar"})
+	counter.Inc(0, MetricLabels{"foo": "bar"})
 	counter.Inc(2, MetricLabels{"foo": "bar"})
 
 	result := registry.Collect()
@@ -41,7 +43,7 @@ func TestCounterIncrementsWithCustomValueAndLabels(t *testing.T) {
 		Help: "with labels",
 		Type: "counter",
 		Samples: []interface{}{
-			NumericMetricSample{Labels: MetricLabels{"foo": "bar"}, Value: 5},
+			CounterMetricSample{Labels: MetricLabels{"foo": "bar"}, Value: 5},
 		},
 	}, *metric)
 }
@@ -62,9 +64,9 @@ func TestDifferentLabelCombinationsAreStoredSeparately(t *testing.T) {
 		Help: "label test",
 		Type: "counter",
 		Samples: []interface{}{
-			NumericMetricSample{Labels: MetricLabels{"a": "x"}, Value: 1},
-			NumericMetricSample{Labels: MetricLabels{"b": "y"}, Value: 2},
-			NumericMetricSample{Labels: MetricLabels{}, Value: 3},
+			CounterMetricSample{Labels: MetricLabels{}, Value: 3},
+			CounterMetricSample{Labels: MetricLabels{"a": "x"}, Value: 1},
+			CounterMetricSample{Labels: MetricLabels{"b": "y"}, Value: 2},
 		},
 	}, *metric)
 }
@@ -85,7 +87,7 @@ func TestGaugeSupportsIncDecAndSet(t *testing.T) {
 		Help: "gauge test",
 		Type: "gauge",
 		Samples: []interface{}{
-			NumericMetricSample{Labels: MetricLabels{"env": "prod"}, Value: 10},
+			GaugeMetricSample{Labels: MetricLabels{"env": "prod"}, Value: 10},
 		},
 	}, *metric)
 }
@@ -106,9 +108,9 @@ func TestGaugeTracksValuesSeparatelyPerLabelSet(t *testing.T) {
 		Help: "tracks multiple envs",
 		Type: "gauge",
 		Samples: []interface{}{
-			NumericMetricSample{Labels: MetricLabels{"env": "prod"}, Value: 5},
-			NumericMetricSample{Labels: MetricLabels{"env": "dev"}, Value: -2},
-			NumericMetricSample{Labels: MetricLabels{"env": "test"}, Value: 10},
+			GaugeMetricSample{Labels: MetricLabels{"env": "dev"}, Value: -2},
+			GaugeMetricSample{Labels: MetricLabels{"env": "prod"}, Value: 5},
+			GaugeMetricSample{Labels: MetricLabels{"env": "test"}, Value: 10},
 		},
 	}, *metric)
 }
@@ -126,7 +128,7 @@ func TestCollectReturnsCounterWithZeroValueWhenCounterIsEmpty(t *testing.T) {
 			Help: "noop",
 			Type: "counter",
 			Samples: []interface{}{
-				NumericMetricSample{Labels: MetricLabels{}, Value: 0},
+				CounterMetricSample{Labels: MetricLabels{}, Value: 0},
 			},
 		},
 	}, result)
@@ -147,7 +149,7 @@ func TestCollectReturnsCounterWithZeroValueAfterFlushingPreviousValues(t *testin
 			Help: "flush",
 			Type: "counter",
 			Samples: []interface{}{
-				NumericMetricSample{Labels: MetricLabels{}, Value: 0},
+				CounterMetricSample{Labels: MetricLabels{}, Value: 0},
 			},
 		},
 	}, second)
@@ -170,7 +172,7 @@ func TestRestoreReinsertsCollectedMetricsIntoTheRegistry(t *testing.T) {
 			Help: "testing restore",
 			Type: "counter",
 			Samples: []interface{}{
-				NumericMetricSample{Labels: MetricLabels{}, Value: 0},
+				CounterMetricSample{Labels: MetricLabels{}, Value: 0},
 			},
 		},
 	}, afterFlush)
@@ -184,8 +186,8 @@ func TestRestoreReinsertsCollectedMetricsIntoTheRegistry(t *testing.T) {
 			Help: "testing restore",
 			Type: "counter",
 			Samples: []interface{}{
-				NumericMetricSample{Labels: MetricLabels{"tag": "a"}, Value: 5},
-				NumericMetricSample{Labels: MetricLabels{"tag": "b"}, Value: 2},
+				CounterMetricSample{Labels: MetricLabels{"tag": "a"}, Value: 5},
+				CounterMetricSample{Labels: MetricLabels{"tag": "b"}, Value: 2},
 			},
 		},
 	}, restored)
@@ -207,7 +209,7 @@ func TestHistogramObservesValues(t *testing.T) {
 			Help: "testing histogram",
 			Type: "histogram",
 			Samples: []interface{}{
-				BucketMetricSample{
+				HistogramMetricSample{
 					Labels: MetricLabels{"env": "prod"},
 					Count:  3,
 					Sum:    3.8,
@@ -241,7 +243,17 @@ func TestHistogramTracksDifferentLabelCombinationsSeparately(t *testing.T) {
 			Help: "histogram with multiple labels",
 			Type: "histogram",
 			Samples: []interface{}{
-				BucketMetricSample{
+				HistogramMetricSample{
+					Labels: MetricLabels{},
+					Count:  1,
+					Sum:    15.0,
+					Buckets: []BucketEntry{
+						{Le: 1.0, Count: 0},
+						{Le: 10.0, Count: 0},
+						{Le: "+Inf", Count: 1},
+					},
+				},
+				HistogramMetricSample{
 					Labels: MetricLabels{"method": "GET"},
 					Count:  1,
 					Sum:    0.5,
@@ -251,23 +263,13 @@ func TestHistogramTracksDifferentLabelCombinationsSeparately(t *testing.T) {
 						{Le: "+Inf", Count: 1},
 					},
 				},
-				BucketMetricSample{
+				HistogramMetricSample{
 					Labels: MetricLabels{"method": "POST"},
 					Count:  1,
 					Sum:    5.0,
 					Buckets: []BucketEntry{
 						{Le: 1.0, Count: 0},
 						{Le: 10.0, Count: 1},
-						{Le: "+Inf", Count: 1},
-					},
-				},
-				BucketMetricSample{
-					Labels: MetricLabels{},
-					Count:  1,
-					Sum:    15.0,
-					Buckets: []BucketEntry{
-						{Le: 1.0, Count: 0},
-						{Le: 10.0, Count: 0},
 						{Le: "+Inf", Count: 1},
 					},
 				},
@@ -295,7 +297,7 @@ func TestHistogramRestorationPreservesExactData(t *testing.T) {
 			Help: "testing histogram restore",
 			Type: "histogram",
 			Samples: []interface{}{
-				BucketMetricSample{
+				HistogramMetricSample{
 					Labels: MetricLabels{},
 					Count:  0,
 					Sum:    0,
@@ -345,13 +347,13 @@ func TestAllMetricOperationsSilentlyDropInvalidValues(t *testing.T) {
 
 			assert.Equal(t, []CollectedMetric{
 				{Name: "c", Help: "h", Type: "counter", Samples: []interface{}{
-					NumericMetricSample{Labels: MetricLabels{}, Value: 1},
+					CounterMetricSample{Labels: MetricLabels{}, Value: 1},
 				}},
 				{Name: "g", Help: "h", Type: "gauge", Samples: []interface{}{
-					NumericMetricSample{Labels: MetricLabels{}, Value: 5},
+					GaugeMetricSample{Labels: MetricLabels{}, Value: 5},
 				}},
 				{Name: "h", Help: "h", Type: "histogram", Samples: []interface{}{
-					BucketMetricSample{
+					HistogramMetricSample{
 						Labels: MetricLabels{},
 						Count:  1,
 						Sum:    0.5,

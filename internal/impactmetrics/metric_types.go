@@ -13,16 +13,14 @@ func isInvalidValue(v float64) bool {
 
 type MetricLabels map[string]string
 
-type NumericMetricSample struct {
+type CounterMetricSample struct {
 	Labels MetricLabels `json:"labels"`
-	Value  float64      `json:"value"`
+	Value  int64        `json:"value"`
 }
 
-type CollectedMetric struct {
-	Name    string        `json:"name"`
-	Help    string        `json:"help"`
-	Type    string        `json:"type"`
-	Samples []interface{} `json:"samples"`
+type GaugeMetricSample struct {
+	Labels MetricLabels `json:"labels"`
+	Value  float64      `json:"value"`
 }
 
 type BucketEntry struct {
@@ -30,11 +28,18 @@ type BucketEntry struct {
 	Count int64       `json:"count"`
 }
 
-type BucketMetricSample struct {
+type HistogramMetricSample struct {
 	Labels  MetricLabels  `json:"labels"`
 	Count   int64         `json:"count"`
 	Sum     float64       `json:"sum"`
 	Buckets []BucketEntry `json:"buckets"`
+}
+
+type CollectedMetric struct {
+	Name    string        `json:"name"`
+	Help    string        `json:"help"`
+	Type    string        `json:"type"`
+	Samples []interface{} `json:"samples"`
 }
 
 var DefaultHistogramBuckets = []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10}
@@ -52,6 +57,7 @@ func LabelKey(labels MetricLabels) string {
 	for k := range labels {
 		keys = append(keys, k)
 	}
+	// Sort keys for deterministic output since Go map iteration order is random
 	sort.Strings(keys)
 	parts := make([]string, len(keys))
 	for i, k := range keys {
@@ -83,7 +89,6 @@ type counterImpl struct {
 	name   string
 	help   string
 	values map[string]int64
-	keys   []string // insertion order
 }
 
 func newCounter(name, help string) *counterImpl {
@@ -95,12 +100,12 @@ func newCounter(name, help string) *counterImpl {
 }
 
 func (c *counterImpl) Inc(value int64, labels MetricLabels) {
+	if value <= 0 {
+		return
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	key := LabelKey(labels)
-	if _, exists := c.values[key]; !exists {
-		c.keys = append(c.keys, key)
-	}
 	c.values[key] += value
 }
 
@@ -108,19 +113,25 @@ func (c *counterImpl) collect() CollectedMetric {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	keys := make([]string, 0, len(c.values))
+	for k := range c.values {
+		keys = append(keys, k)
+	}
+	// Sort keys for deterministic output since Go map iteration order is random
+	sort.Strings(keys)
+
 	samples := make([]interface{}, 0, len(c.values))
-	for _, key := range c.keys {
-		samples = append(samples, NumericMetricSample{
+	for _, key := range keys {
+		samples = append(samples, CounterMetricSample{
 			Labels: ParseLabelKey(key),
-			Value:  float64(c.values[key]),
+			Value:  c.values[key],
 		})
 	}
 
 	c.values = map[string]int64{}
-	c.keys = nil
 
 	if len(samples) == 0 {
-		samples = append(samples, NumericMetricSample{
+		samples = append(samples, CounterMetricSample{
 			Labels: MetricLabels{},
 			Value:  0,
 		})
@@ -145,7 +156,6 @@ type gaugeImpl struct {
 	name   string
 	help   string
 	values map[string]float64
-	keys   []string // insertion order
 }
 
 func newGauge(name, help string) *gaugeImpl {
@@ -163,9 +173,6 @@ func (g *gaugeImpl) Inc(value float64, labels MetricLabels) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	key := LabelKey(labels)
-	if _, exists := g.values[key]; !exists {
-		g.keys = append(g.keys, key)
-	}
 	g.values[key] += value
 }
 
@@ -176,9 +183,6 @@ func (g *gaugeImpl) Dec(value float64, labels MetricLabels) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	key := LabelKey(labels)
-	if _, exists := g.values[key]; !exists {
-		g.keys = append(g.keys, key)
-	}
 	g.values[key] -= value
 }
 
@@ -189,9 +193,6 @@ func (g *gaugeImpl) Set(value float64, labels MetricLabels) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	key := LabelKey(labels)
-	if _, exists := g.values[key]; !exists {
-		g.keys = append(g.keys, key)
-	}
 	g.values[key] = value
 }
 
@@ -199,16 +200,22 @@ func (g *gaugeImpl) collect() CollectedMetric {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
+	keys := make([]string, 0, len(g.values))
+	for k := range g.values {
+		keys = append(keys, k)
+	}
+	// Sort keys for deterministic output since Go map iteration order is random
+	sort.Strings(keys)
+
 	samples := make([]interface{}, 0, len(g.values))
-	for _, key := range g.keys {
-		samples = append(samples, NumericMetricSample{
+	for _, key := range keys {
+		samples = append(samples, GaugeMetricSample{
 			Labels: ParseLabelKey(key),
 			Value:  g.values[key],
 		})
 	}
 
 	g.values = map[string]float64{}
-	g.keys = nil
 
 	return CollectedMetric{
 		Name:    g.name,
@@ -234,7 +241,6 @@ type histogramImpl struct {
 	help    string
 	buckets []float64
 	values  map[string]*histogramData
-	keys    []string // insertion order
 }
 
 func newHistogram(name, help string, buckets []float64) *histogramImpl {
@@ -277,7 +283,6 @@ func (h *histogramImpl) Observe(value float64, labels MetricLabels) {
 			data.buckets[b] = 0
 		}
 		h.values[key] = data
-		h.keys = append(h.keys, key)
 	}
 
 	data.count++
@@ -289,7 +294,7 @@ func (h *histogramImpl) Observe(value float64, labels MetricLabels) {
 	}
 }
 
-func (h *histogramImpl) restore(sample BucketMetricSample) {
+func (h *histogramImpl) restore(sample HistogramMetricSample) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
@@ -302,9 +307,6 @@ func (h *histogramImpl) restore(sample BucketMetricSample) {
 	for _, b := range sample.Buckets {
 		le := bucketLeToFloat(b.Le)
 		data.buckets[le] = b.Count
-	}
-	if _, exists := h.values[key]; !exists {
-		h.keys = append(h.keys, key)
 	}
 	h.values[key] = data
 }
@@ -332,8 +334,15 @@ func (h *histogramImpl) collect() CollectedMetric {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
+	keys := make([]string, 0, len(h.values))
+	for k := range h.values {
+		keys = append(keys, k)
+	}
+	// Sort keys for deterministic output since Go map iteration order is random
+	sort.Strings(keys)
+
 	samples := make([]interface{}, 0, len(h.values))
-	for _, key := range h.keys {
+	for _, key := range keys {
 		data := h.values[key]
 		bucketEntries := make([]BucketEntry, len(h.buckets))
 		for i, b := range h.buckets {
@@ -342,7 +351,7 @@ func (h *histogramImpl) collect() CollectedMetric {
 				Count: data.buckets[b],
 			}
 		}
-		samples = append(samples, BucketMetricSample{
+		samples = append(samples, HistogramMetricSample{
 			Labels:  ParseLabelKey(key),
 			Count:   data.count,
 			Sum:     data.sum,
@@ -351,7 +360,6 @@ func (h *histogramImpl) collect() CollectedMetric {
 	}
 
 	h.values = map[string]*histogramData{}
-	h.keys = nil
 
 	if len(samples) == 0 {
 		bucketEntries := make([]BucketEntry, len(h.buckets))
@@ -361,7 +369,7 @@ func (h *histogramImpl) collect() CollectedMetric {
 				Count: 0,
 			}
 		}
-		samples = append(samples, BucketMetricSample{
+		samples = append(samples, HistogramMetricSample{
 			Labels:  MetricLabels{},
 			Count:   0,
 			Sum:     0,
@@ -378,13 +386,10 @@ func (h *histogramImpl) collect() CollectedMetric {
 }
 
 type InMemoryMetricRegistry struct {
-	mu            sync.RWMutex
-	counters      map[string]*counterImpl
-	counterKeys   []string // insertion order
-	gauges        map[string]*gaugeImpl
-	gaugeKeys     []string // insertion order
-	histograms    map[string]*histogramImpl
-	histogramKeys []string // insertion order
+	mu         sync.RWMutex
+	counters   map[string]*counterImpl
+	gauges     map[string]*gaugeImpl
+	histograms map[string]*histogramImpl
 }
 
 func NewInMemoryMetricRegistry() *InMemoryMetricRegistry {
@@ -403,7 +408,6 @@ func (r *InMemoryMetricRegistry) Counter(name, help string) Counter {
 	}
 	c := newCounter(name, help)
 	r.counters[name] = c
-	r.counterKeys = append(r.counterKeys, name)
 	return c
 }
 
@@ -424,7 +428,6 @@ func (r *InMemoryMetricRegistry) Gauge(name, help string) Gauge {
 	}
 	g := newGauge(name, help)
 	r.gauges[name] = g
-	r.gaugeKeys = append(r.gaugeKeys, name)
 	return g
 }
 
@@ -445,7 +448,6 @@ func (r *InMemoryMetricRegistry) Histogram(name, help string, buckets []float64)
 	}
 	h := newHistogram(name, help, buckets)
 	r.histograms[name] = h
-	r.histogramKeys = append(r.histogramKeys, name)
 	return h
 }
 
@@ -459,23 +461,46 @@ func (r *InMemoryMetricRegistry) GetHistogram(name string) Histogram {
 }
 
 func (r *InMemoryMetricRegistry) Collect() []CollectedMetric {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	counterNames := make([]string, 0, len(r.counters))
+	for name := range r.counters {
+		counterNames = append(counterNames, name)
+	}
+	// Sort names for deterministic output since Go map iteration order is random
+	sort.Strings(counterNames)
 
 	var result []CollectedMetric
-	for _, name := range r.counterKeys {
+	for _, name := range counterNames {
 		m := r.counters[name].collect()
 		if len(m.Samples) > 0 {
 			result = append(result, m)
 		}
 	}
-	for _, name := range r.gaugeKeys {
+
+	gaugeNames := make([]string, 0, len(r.gauges))
+	for name := range r.gauges {
+		gaugeNames = append(gaugeNames, name)
+	}
+	// Sort names for deterministic output since Go map iteration order is random
+	sort.Strings(gaugeNames)
+
+	for _, name := range gaugeNames {
 		m := r.gauges[name].collect()
 		if len(m.Samples) > 0 {
 			result = append(result, m)
 		}
 	}
-	for _, name := range r.histogramKeys {
+
+	histogramNames := make([]string, 0, len(r.histograms))
+	for name := range r.histograms {
+		histogramNames = append(histogramNames, name)
+	}
+	// Sort names for deterministic output since Go map iteration order is random
+	sort.Strings(histogramNames)
+
+	for _, name := range histogramNames {
 		m := r.histograms[name].collect()
 		if len(m.Samples) > 0 {
 			result = append(result, m)
@@ -492,29 +517,23 @@ func (r *InMemoryMetricRegistry) Restore(metrics []CollectedMetric) {
 	for _, m := range metrics {
 		switch m.Type {
 		case "counter":
-			c, ok := r.Counter(m.Name, m.Help).(*counterImpl)
-			if !ok {
-				continue
-			}
+			c := r.Counter(m.Name, m.Help)
 			for _, s := range m.Samples {
-				if sample, ok := s.(NumericMetricSample); ok {
-					c.Inc(int64(sample.Value), sample.Labels)
+				if ns, ok := s.(CounterMetricSample); ok {
+					c.Inc(ns.Value, ns.Labels)
 				}
 			}
 		case "gauge":
-			g, ok := r.Gauge(m.Name, m.Help).(*gaugeImpl)
-			if !ok {
-				continue
-			}
+			g := r.Gauge(m.Name, m.Help)
 			for _, s := range m.Samples {
-				if sample, ok := s.(NumericMetricSample); ok {
-					g.Set(sample.Value, sample.Labels)
+				if ns, ok := s.(GaugeMetricSample); ok {
+					g.Set(ns.Value, ns.Labels)
 				}
 			}
 		case "histogram":
 			var buckets []float64
 			if len(m.Samples) > 0 {
-				if first, ok := m.Samples[0].(BucketMetricSample); ok {
+				if first, ok := m.Samples[0].(HistogramMetricSample); ok {
 					for _, b := range first.Buckets {
 						buckets = append(buckets, bucketLeToFloat(b.Le))
 					}
@@ -525,7 +544,7 @@ func (r *InMemoryMetricRegistry) Restore(metrics []CollectedMetric) {
 				continue
 			}
 			for _, s := range m.Samples {
-				if sample, ok := s.(BucketMetricSample); ok {
+				if sample, ok := s.(HistogramMetricSample); ok {
 					h.restore(sample)
 				}
 			}
