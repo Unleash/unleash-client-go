@@ -24,8 +24,8 @@ type GaugeMetricSample struct {
 }
 
 type BucketEntry struct {
-	Le    interface{} `json:"le"`
-	Count int64       `json:"count"`
+	Le    float64 `json:"le"`
+	Count int64   `json:"count"`
 }
 
 type HistogramMetricSample struct {
@@ -317,37 +317,16 @@ func (h *histogramImpl) Restore(sample HistogramMetricSample) {
 		buckets: make(map[float64]int64, len(sample.Buckets)),
 	}
 	for _, b := range sample.Buckets {
-		le := bucketLeToFloat(b.Le)
-		data.buckets[le] = b.Count
+		data.buckets[b.Le] = b.Count
 	}
 	h.values[key] = data
-}
-
-func bucketLeToFloat(le interface{}) float64 {
-	switch v := le.(type) {
-	case string:
-		if v == "+Inf" {
-			return math.Inf(1)
-		}
-	case float64:
-		return v
-	}
-	// Data is internally managed (from CollectedMetric), so invalid types should not occur
-	return 0
-}
-
-func formatLe(b float64) interface{} {
-	if math.IsInf(b, 1) {
-		return "+Inf"
-	}
-	return b
 }
 
 func (h *histogramImpl) defaultHistogramSample() HistogramMetricSample {
 	bucketEntries := make([]BucketEntry, len(h.buckets))
 	for i, b := range h.buckets {
 		bucketEntries[i] = BucketEntry{
-			Le:    formatLe(b),
+			Le:    b,
 			Count: 0,
 		}
 	}
@@ -376,7 +355,7 @@ func (h *histogramImpl) collect() CollectedMetric {
 		bucketEntries := make([]BucketEntry, len(h.buckets))
 		for i, b := range h.buckets {
 			bucketEntries[i] = BucketEntry{
-				Le:    formatLe(b),
+				Le:    b,
 				Count: data.buckets[b],
 			}
 		}
@@ -552,7 +531,7 @@ func (r *InMemoryMetricRegistry) Restore(metrics []CollectedMetric) {
 			for _, s := range m.Samples {
 				if sample, ok := s.(HistogramMetricSample); ok {
 					for _, b := range sample.Buckets {
-						firstSampleBuckets = append(firstSampleBuckets, bucketLeToFloat(b.Le))
+						firstSampleBuckets = append(firstSampleBuckets, b.Le)
 					}
 					break
 				}

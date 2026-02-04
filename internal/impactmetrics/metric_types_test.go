@@ -219,7 +219,7 @@ func TestHistogramObservesValues(t *testing.T) {
 						{Le: 1.0, Count: 2},
 						{Le: 2.5, Count: 2},
 						{Le: 5.0, Count: 3},
-						{Le: "+Inf", Count: 3},
+						{Le: math.Inf(1), Count: 3},
 					},
 				},
 			},
@@ -250,7 +250,7 @@ func TestHistogramTracksDifferentLabelCombinationsSeparately(t *testing.T) {
 					Buckets: []BucketEntry{
 						{Le: 1.0, Count: 0},
 						{Le: 10.0, Count: 0},
-						{Le: "+Inf", Count: 1},
+						{Le: math.Inf(1), Count: 1},
 					},
 				},
 				HistogramMetricSample{
@@ -260,7 +260,7 @@ func TestHistogramTracksDifferentLabelCombinationsSeparately(t *testing.T) {
 					Buckets: []BucketEntry{
 						{Le: 1.0, Count: 1},
 						{Le: 10.0, Count: 1},
-						{Le: "+Inf", Count: 1},
+						{Le: math.Inf(1), Count: 1},
 					},
 				},
 				HistogramMetricSample{
@@ -270,7 +270,7 @@ func TestHistogramTracksDifferentLabelCombinationsSeparately(t *testing.T) {
 					Buckets: []BucketEntry{
 						{Le: 1.0, Count: 0},
 						{Le: 10.0, Count: 1},
-						{Le: "+Inf", Count: 1},
+						{Le: math.Inf(1), Count: 1},
 					},
 				},
 			},
@@ -305,7 +305,7 @@ func TestHistogramRestorationPreservesExactData(t *testing.T) {
 						{Le: 0.1, Count: 0},
 						{Le: 1.0, Count: 0},
 						{Le: 10.0, Count: 0},
-						{Le: "+Inf", Count: 0},
+						{Le: math.Inf(1), Count: 0},
 					},
 				},
 			},
@@ -359,7 +359,7 @@ func TestAllMetricOperationsSilentlyDropInvalidValues(t *testing.T) {
 						Sum:    0.5,
 						Buckets: []BucketEntry{
 							{Le: 1.0, Count: 1},
-							{Le: "+Inf", Count: 1},
+							{Le: math.Inf(1), Count: 1},
 						},
 					},
 				}},
