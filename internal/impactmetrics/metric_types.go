@@ -246,7 +246,7 @@ type histogramImpl struct {
 
 func newHistogram(name, help string, buckets []float64) *histogramImpl {
 	if len(buckets) == 0 {
-		buckets = DefaultHistogramBuckets
+		buckets = append([]float64(nil), DefaultHistogramBuckets...)
 	}
 	sortedBuckets := uniqueSorted(buckets)
 	sortedBuckets = append(sortedBuckets, math.Inf(1))
