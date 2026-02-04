@@ -342,6 +342,22 @@ func formatLe(b float64) interface{} {
 	return b
 }
 
+func (h *histogramImpl) defaultHistogramSample() HistogramMetricSample {
+	bucketEntries := make([]BucketEntry, len(h.buckets))
+	for i, b := range h.buckets {
+		bucketEntries[i] = BucketEntry{
+			Le:    formatLe(b),
+			Count: 0,
+		}
+	}
+	return HistogramMetricSample{
+		Labels:  MetricLabels{},
+		Count:   0,
+		Sum:     0,
+		Buckets: bucketEntries,
+	}
+}
+
 func (h *histogramImpl) collect() CollectedMetric {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -374,19 +390,7 @@ func (h *histogramImpl) collect() CollectedMetric {
 	h.values = map[string]*histogramData{}
 
 	if len(samples) == 0 {
-		bucketEntries := make([]BucketEntry, len(h.buckets))
-		for i, b := range h.buckets {
-			bucketEntries[i] = BucketEntry{
-				Le:    formatLe(b),
-				Count: 0,
-			}
-		}
-		samples = append(samples, HistogramMetricSample{
-			Labels:  MetricLabels{},
-			Count:   0,
-			Sum:     0,
-			Buckets: bucketEntries,
-		})
+		samples = append(samples, h.defaultHistogramSample())
 	}
 
 	return CollectedMetric{
