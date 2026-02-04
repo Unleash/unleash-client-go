@@ -35,11 +35,19 @@ type HistogramMetricSample struct {
 	Buckets []BucketEntry `json:"buckets"`
 }
 
+type Sample interface {
+	isSample()
+}
+
+func (CounterMetricSample) isSample()   {}
+func (GaugeMetricSample) isSample()     {}
+func (HistogramMetricSample) isSample() {}
+
 type CollectedMetric struct {
-	Name    string        `json:"name"`
-	Help    string        `json:"help"`
-	Type    string        `json:"type"`
-	Samples []interface{} `json:"samples"`
+	Name    string   `json:"name"`
+	Help    string   `json:"help"`
+	Type    string   `json:"type"`
+	Samples []Sample `json:"samples"`
 }
 
 var DefaultHistogramBuckets = []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10}
@@ -120,7 +128,7 @@ func (c *counterImpl) collect() CollectedMetric {
 	// Sort keys for deterministic output since Go map iteration order is random
 	sort.Strings(keys)
 
-	samples := make([]interface{}, 0, len(c.values))
+	samples := make([]Sample, 0, len(c.values))
 	for _, key := range keys {
 		samples = append(samples, CounterMetricSample{
 			Labels: ParseLabelKey(key),
@@ -207,7 +215,7 @@ func (g *gaugeImpl) collect() CollectedMetric {
 	// Sort keys for deterministic output since Go map iteration order is random
 	sort.Strings(keys)
 
-	samples := make([]interface{}, 0, len(g.values))
+	samples := make([]Sample, 0, len(g.values))
 	for _, key := range keys {
 		samples = append(samples, GaugeMetricSample{
 			Labels: ParseLabelKey(key),
@@ -349,7 +357,7 @@ func (h *histogramImpl) collect() CollectedMetric {
 	// Sort keys for deterministic output since Go map iteration order is random
 	sort.Strings(keys)
 
-	samples := make([]interface{}, 0, len(h.values))
+	samples := make([]Sample, 0, len(h.values))
 	for _, key := range keys {
 		data := h.values[key]
 		bucketEntries := make([]BucketEntry, len(h.buckets))
