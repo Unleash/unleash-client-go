@@ -57,7 +57,7 @@ func LabelKey(labels MetricLabels) string {
 	for k := range labels {
 		keys = append(keys, k)
 	}
-	// Sort keys for deterministic output since Go map iteration order is random
+	// Sort keys for deterministic output since Go map iteration order is random - this is a detail to make testing easier and isn't a requirement for the logic to be correct
 	sort.Strings(keys)
 	parts := make([]string, len(keys))
 	for i, k := range keys {
@@ -247,23 +247,28 @@ func newHistogram(name, help string, buckets []float64) *histogramImpl {
 	if len(buckets) == 0 {
 		buckets = DefaultHistogramBuckets
 	}
-	seen := map[float64]bool{}
-	var filtered []float64
-	for _, b := range buckets {
-		if b != math.Inf(1) && !seen[b] {
-			seen[b] = true
-			filtered = append(filtered, b)
-		}
-	}
-	sort.Float64s(filtered)
-	filtered = append(filtered, math.Inf(1))
+	sortedBuckets := uniqueSorted(buckets)
+	sortedBuckets = append(sortedBuckets, math.Inf(1))
 
 	return &histogramImpl{
 		name:    name,
 		help:    help,
-		buckets: filtered,
+		buckets: sortedBuckets,
 		values:  map[string]*histogramData{},
 	}
+}
+
+func uniqueSorted(buckets []float64) []float64 {
+	seen := map[float64]bool{}
+	var result []float64
+	for _, b := range buckets {
+		if b != math.Inf(1) && !seen[b] {
+			seen[b] = true
+			result = append(result, b)
+		}
+	}
+	sort.Float64s(result)
+	return result
 }
 
 func (h *histogramImpl) Observe(value float64, labels MetricLabels) {
