@@ -227,6 +227,7 @@ func (g *gaugeImpl) collect() CollectedMetric {
 
 type Histogram interface {
 	Observe(value float64, labels MetricLabels)
+	Restore(sample HistogramMetricSample)
 }
 
 type histogramData struct {
@@ -305,7 +306,7 @@ func (h *histogramImpl) Observe(value float64, labels MetricLabels) {
 	}
 }
 
-func (h *histogramImpl) restore(sample HistogramMetricSample) {
+func (h *histogramImpl) Restore(sample HistogramMetricSample) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
@@ -557,14 +558,11 @@ func (r *InMemoryMetricRegistry) Restore(metrics []CollectedMetric) {
 				}
 			}
 
-			h, ok := r.Histogram(m.Name, m.Help, buckets).(*histogramImpl)
-			if !ok {
-				continue
-			}
+			h := r.Histogram(m.Name, m.Help, buckets)
 
 			for _, s := range m.Samples {
 				if sample, ok := s.(HistogramMetricSample); ok {
-					h.restore(sample)
+					h.Restore(sample)
 				}
 			}
 		}
