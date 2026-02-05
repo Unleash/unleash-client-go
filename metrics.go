@@ -118,9 +118,7 @@ func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
 		maxSkips:        10,
 		errors:          0,
 		skips:           0,
-	}
-	if options.metricRegistry != nil {
-		m.metricRegistry = options.metricRegistry
+		metricRegistry:  options.metricRegistry,
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	m.ctx = ctx
