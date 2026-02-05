@@ -11,6 +11,7 @@ import (
 	"github.com/Unleash/unleash-go-sdk/v5/api"
 	"github.com/Unleash/unleash-go-sdk/v5/context"
 	"github.com/Unleash/unleash-go-sdk/v5/internal/constraints"
+	"github.com/Unleash/unleash-go-sdk/v5/internal/impactmetrics"
 	s "github.com/Unleash/unleash-go-sdk/v5/internal/strategies"
 	"github.com/Unleash/unleash-go-sdk/v5/strategy"
 )
@@ -47,6 +48,7 @@ type Client struct {
 	options            configOption
 	repository         *repository
 	metrics            *metrics
+	impactMetrics      *impactmetrics.MetricsAPI
 	strategies         []strategy.Strategy
 	errorListener      ErrorListener
 	metricsListener    MetricListener
@@ -231,6 +233,16 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 			registered:    uc.registered,
 		},
 	)
+
+	// Initialize impact metrics with the metrics registry
+	metricRegistry := impactmetrics.NewInMemoryMetricRegistry()
+	impactMetricsCtx := impactmetrics.StaticContext{
+		AppName:     uc.options.appName,
+		Environment: uc.options.environment,
+	}
+	uc.impactMetrics = impactmetrics.NewMetricsAPI(metricRegistry, impactMetricsCtx, errChannels.warnings)
+	// Wire the metric registry into the metrics service
+	uc.metrics.setMetricRegistry(metricRegistry)
 
 	return uc, nil
 }
@@ -575,6 +587,11 @@ func (uc *Client) Impression() <-chan ImpressionEvent {
 // the metrics service.
 func (uc *Client) Sent() <-chan MetricsData {
 	return uc.sent
+}
+
+// ImpactMetrics returns the MetricsAPI for recording impact metrics.
+func (uc *Client) ImpactMetrics() *impactmetrics.MetricsAPI {
+	return uc.impactMetrics
 }
 
 func (uc *Client) getStrategy(name string) strategy.Strategy {

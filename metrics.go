@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/Unleash/unleash-go-sdk/v5/internal/api"
+	"github.com/Unleash/unleash-go-sdk/v5/internal/impactmetrics"
 )
 
 // MetricsData represents the data sent to the unleash server.
@@ -43,6 +44,9 @@ type MetricsData struct {
 
 	// Which version of the Unleash-Client-Spec is this SDK validated against
 	SpecVersion string `json:"specVersion"`
+
+	// ImpactMetrics are optional metrics collected from feature flag usage
+	ImpactMetrics []impactmetrics.CollectedMetric `json:"impactMetrics,omitempty"`
 }
 
 // ClientData represents the data sent to the unleash during registration.
@@ -89,18 +93,21 @@ type metric struct {
 
 type metrics struct {
 	metricsChannels
-	options  metricsOptions
-	started  time.Time
-	bucketMu sync.Mutex
-	bucket   api.Bucket
-	ticker   *time.Ticker
-	close    chan struct{}
-	closed   chan struct{}
-	ctx      context.Context
-	cancel   func()
-	maxSkips float64
-	errors   float64
-	skips    float64
+	options           metricsOptions
+	started           time.Time
+	bucketMu          sync.Mutex
+	bucket            api.Bucket
+	ticker            *time.Ticker
+	close             chan struct{}
+	closed            chan struct{}
+	ctx               context.Context
+	cancel            func()
+	maxSkips          float64
+	errors            float64
+	skips             float64
+	metricRegistry    impactmetrics.ImpactMetricsDataSource
+	impactMetricsMu   sync.Mutex
+	collectedMetrics  []impactmetrics.CollectedMetric
 }
 
 func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
@@ -133,6 +140,10 @@ func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
 	}
 
 	return m
+}
+
+func (m *metrics) setMetricRegistry(registry impactmetrics.ImpactMetricsDataSource) {
+	m.metricRegistry = registry
 }
 
 func (m *metrics) Close() error {
@@ -200,7 +211,19 @@ func (m *metrics) sendMetrics() {
 	m.bucketMu.Lock()
 	bucket := m.resetBucket()
 	m.bucketMu.Unlock()
-	if bucket.IsEmpty() {
+
+	// Collect impact metrics
+	var collectedMetrics []impactmetrics.CollectedMetric
+	if m.metricRegistry != nil {
+		collectedMetrics = m.metricRegistry.Collect()
+	}
+
+	// Store collected metrics for potential restoration
+	m.impactMetricsMu.Lock()
+	m.collectedMetrics = collectedMetrics
+	m.impactMetricsMu.Unlock()
+
+	if bucket.IsEmpty() && len(collectedMetrics) == 0 {
 		return
 	}
 	bucket.Stop = time.Now()
@@ -214,6 +237,7 @@ func (m *metrics) sendMetrics() {
 		PlatformVersion:  runtime.Version(),
 		YggdrasilVersion: nil,
 		SpecVersion:      specVersion,
+		ImpactMetrics:    collectedMetrics,
 	}
 
 	u, _ := m.options.url.Parse("./client/metrics")
@@ -236,6 +260,11 @@ func (m *metrics) sendMetrics() {
 		for name, tc := range bucket.Toggles {
 			m.add(name, true, tc.Yes)
 			m.add(name, false, tc.No)
+		}
+
+		// Restore impact metrics on failure
+		if m.metricRegistry != nil && len(collectedMetrics) > 0 {
+			m.metricRegistry.Restore(collectedMetrics)
 		}
 
 		m.bucketMu.Lock()

@@ -1,6 +1,7 @@
 package impactmetrics
 
 import (
+	"encoding/json"
 	"math"
 	"sort"
 	"strings"
@@ -26,6 +27,44 @@ type GaugeMetricSample struct {
 type BucketEntry struct {
 	Le    float64 `json:"le"`
 	Count int64   `json:"count"`
+}
+
+// Custom JSON marshalling to handle infinity
+func (be BucketEntry) MarshalJSON() ([]byte, error) {
+	type Alias BucketEntry
+	var leValue interface{} = be.Le
+	if math.IsInf(be.Le, 1) {
+		leValue = "+Inf"
+	}
+	return json.Marshal(&struct {
+		Le    interface{} `json:"le"`
+		Count int64       `json:"count"`
+	}{
+		Le:    leValue,
+		Count: be.Count,
+	})
+}
+
+// Custom JSON unmarshalling to handle infinity
+func (be *BucketEntry) UnmarshalJSON(data []byte) error {
+	type Alias BucketEntry
+	aux := &struct {
+		Le    interface{} `json:"le"`
+		Count int64       `json:"count"`
+	}{}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	be.Count = aux.Count
+	switch v := aux.Le.(type) {
+	case float64:
+		be.Le = v
+	case string:
+		if v == "+Inf" {
+			be.Le = math.Inf(1)
+		}
+	}
+	return nil
 }
 
 type HistogramMetricSample struct {
