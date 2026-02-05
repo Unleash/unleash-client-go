@@ -45,7 +45,7 @@ type MetricsData struct {
 	// Which version of the Unleash-Client-Spec is this SDK validated against
 	SpecVersion string `json:"specVersion"`
 
-	// ImpactMetrics are optional metrics collected from feature flag usage
+	// ImpactMetrics are optional custom application-level metrics
 	ImpactMetrics []impactmetrics.CollectedMetric `json:"impactMetrics,omitempty"`
 }
 
@@ -93,21 +93,19 @@ type metric struct {
 
 type metrics struct {
 	metricsChannels
-	options           metricsOptions
-	started           time.Time
-	bucketMu          sync.Mutex
-	bucket            api.Bucket
-	ticker            *time.Ticker
-	close             chan struct{}
-	closed            chan struct{}
-	ctx               context.Context
-	cancel            func()
-	maxSkips          float64
-	errors            float64
-	skips             float64
-	metricRegistry    impactmetrics.ImpactMetricsDataSource
-	impactMetricsMu   sync.Mutex
-	collectedMetrics  []impactmetrics.CollectedMetric
+	options          metricsOptions
+	started          time.Time
+	bucketMu         sync.Mutex
+	bucket           api.Bucket
+	ticker           *time.Ticker
+	close            chan struct{}
+	closed           chan struct{}
+	ctx              context.Context
+	cancel           func()
+	maxSkips       float64
+	errors         float64
+	skips          float64
+	metricRegistry impactmetrics.ImpactMetricsDataSource
 }
 
 func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
@@ -216,11 +214,6 @@ func (m *metrics) sendMetrics() {
 	if m.metricRegistry != nil {
 		collectedMetrics = m.metricRegistry.Collect()
 	}
-
-	// Store collected metrics for potential restoration
-	m.impactMetricsMu.Lock()
-	m.collectedMetrics = collectedMetrics
-	m.impactMetricsMu.Unlock()
 
 	if bucket.IsEmpty() && len(collectedMetrics) == 0 {
 		return
