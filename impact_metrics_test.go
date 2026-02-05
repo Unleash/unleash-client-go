@@ -8,40 +8,71 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Unleash/unleash-go-sdk/v5/internal/impactmetrics"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestImpactMetricsSentInPayload(t *testing.T) {
-	registry := impactmetrics.NewInMemoryMetricRegistry()
-	labels := impactmetrics.MetricLabels{
-		"appName":     "test-app",
-		"environment": "test",
-	}
+	payloads := [][]byte{}
+	payloadsMu := sync.Mutex{}
 
-	// Define and record all 3 metric types
-	registry.Counter("purchases", "Number of purchases").Inc(1, labels)
-	registry.Gauge("active_users", "Active users").Set(42, labels)
-	registry.Histogram("latency", "Request latency", []float64{0.1, 0.5, 1.0}).Observe(0.3, labels)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/client/metrics" && r.Method == "POST" {
+			body := make([]byte, r.ContentLength)
+			r.Body.Read(body)
+			r.Body.Close()
 
-	// Create and marshal payload like metrics service would
-	payload := MetricsData{
-		AppName:       "test-app",
-		InstanceID:    "test-instance",
-		ImpactMetrics: registry.Collect(),
-	}
+			payloadsMu.Lock()
+			payloads = append(payloads, body)
+			payloadsMu.Unlock()
 
-	jsonBytes, err := json.Marshal(payload)
+			w.WriteHeader(http.StatusAccepted)
+		} else if r.URL.Path == "/client/register" && r.Method == "POST" {
+			w.WriteHeader(http.StatusOK)
+		} else {
+			w.WriteHeader(http.StatusOK)
+		}
+	}))
+	defer server.Close()
+
+	client, err := NewClient(
+		WithUrl(server.URL),
+		WithAppName("test-app"),
+		WithEnvironment("test"),
+		WithMetricsInterval(50*time.Millisecond),
+	)
 	require.NoError(t, err)
+	defer client.Close()
 
-	var result map[string]interface{}
-	err = json.Unmarshal(jsonBytes, &result)
+	api := client.ImpactMetrics()
+
+	// Define and record all 3 metric types using public API
+	api.DefineCounter("purchases", "Number of purchases")
+	api.IncrementCounter("purchases")
+
+	api.DefineGauge("active_users", "Active users")
+	api.UpdateGauge("active_users", 42)
+
+	api.DefineHistogram("latency", "Request latency", 0.1, 0.5, 1.0)
+	api.ObserveHistogram("latency", 0.3)
+
+	// Wait for metrics to be collected and sent
+	time.Sleep(150 * time.Millisecond)
+
+	// Verify payload was sent with impact metrics
+	payloadsMu.Lock()
+	require.Greater(t, len(payloads), 0, "should have sent metrics")
+
+	var payload map[string]interface{}
+	err = json.Unmarshal(payloads[0], &payload)
+	payloadsMu.Unlock()
+
 	require.NoError(t, err)
 
 	// Build metrics map by name
 	metrics := make(map[string]map[string]interface{})
-	for _, m := range result["impactMetrics"].([]interface{}) {
+	impactMetrics := payload["impactMetrics"].([]interface{})
+	for _, m := range impactMetrics {
 		metric := m.(map[string]interface{})
 		metrics[metric["name"].(string)] = metric
 	}
@@ -51,6 +82,7 @@ func TestImpactMetricsSentInPayload(t *testing.T) {
 		"environment": "test",
 	}
 
+	// Verify complete payload structure
 	assert.Equal(t, map[string]map[string]interface{}{
 		"purchases": {
 			"name": "purchases",

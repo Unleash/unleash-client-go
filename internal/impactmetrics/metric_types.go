@@ -45,28 +45,6 @@ func (be BucketEntry) MarshalJSON() ([]byte, error) {
 	})
 }
 
-// Custom JSON unmarshalling to handle infinity
-func (be *BucketEntry) UnmarshalJSON(data []byte) error {
-	type Alias BucketEntry
-	aux := &struct {
-		Le    interface{} `json:"le"`
-		Count int64       `json:"count"`
-	}{}
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-	be.Count = aux.Count
-	switch v := aux.Le.(type) {
-	case float64:
-		be.Le = v
-	case string:
-		if v == "+Inf" {
-			be.Le = math.Inf(1)
-		}
-	}
-	return nil
-}
-
 type HistogramMetricSample struct {
 	Labels  MetricLabels  `json:"labels"`
 	Count   int64         `json:"count"`
