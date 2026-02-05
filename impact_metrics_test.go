@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -13,23 +13,21 @@ import (
 )
 
 func TestImpactMetricsSentInPayload(t *testing.T) {
-	payloads := [][]byte{}
-	payloadsMu := sync.Mutex{}
+	payloads := make(chan []byte, 1)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/client/metrics" && r.Method == "POST" {
+		switch r.Method + " " + r.URL.Path {
+		case "POST /client/metrics":
 			body := make([]byte, r.ContentLength)
 			r.Body.Read(body)
 			r.Body.Close()
 
-			payloadsMu.Lock()
-			payloads = append(payloads, body)
-			payloadsMu.Unlock()
+			payloads <- body
 
 			w.WriteHeader(http.StatusAccepted)
-		} else if r.URL.Path == "/client/register" && r.Method == "POST" {
+		case "POST /client/register":
 			w.WriteHeader(http.StatusOK)
-		} else {
+		default:
 			w.WriteHeader(http.StatusOK)
 		}
 	}))
@@ -57,15 +55,8 @@ func TestImpactMetricsSentInPayload(t *testing.T) {
 	api.ObserveHistogram("latency", 0.3)
 
 	// Wait for metrics to be collected and sent
-	time.Sleep(150 * time.Millisecond)
-
-	// Verify payload was sent with impact metrics
-	payloadsMu.Lock()
-	require.Greater(t, len(payloads), 0, "should have sent metrics")
-
 	var payload map[string]interface{}
-	err = json.Unmarshal(payloads[0], &payload)
-	payloadsMu.Unlock()
+	err = json.Unmarshal(<-payloads, &payload)
 
 	require.NoError(t, err)
 
@@ -128,25 +119,20 @@ func TestImpactMetricsSentInPayload(t *testing.T) {
 }
 
 func TestImpactMetricsResentAfterFailure(t *testing.T) {
-	type metricsPayload struct {
-		Body []byte
-		Path string
-	}
-
-	payloads := []metricsPayload{}
-	payloadsMu := sync.Mutex{}
+	payloads := make(chan []byte, 2)
+	var requestCount atomic.Int32
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/client/metrics" && r.Method == "POST" {
-			// Capture request body
+		switch r.Method + " " + r.URL.Path {
+		case "POST /client/metrics":
 			body := make([]byte, r.ContentLength)
 			r.Body.Read(body)
 			r.Body.Close()
 
-			payloadsMu.Lock()
-			payloads = append(payloads, metricsPayload{Body: body, Path: r.URL.Path})
-			isFirstRequest := len(payloads) == 1
-			payloadsMu.Unlock()
+			payloads <- body
+
+			requestCount.Add(1)
+			isFirstRequest := requestCount.Load() == 1
 
 			// First request fails with 500, second succeeds
 			if isFirstRequest {
@@ -154,9 +140,9 @@ func TestImpactMetricsResentAfterFailure(t *testing.T) {
 			} else {
 				w.WriteHeader(http.StatusAccepted)
 			}
-		} else if r.URL.Path == "/client/register" && r.Method == "POST" {
+		case "POST /client/register":
 			w.WriteHeader(http.StatusOK)
-		} else {
+		default:
 			w.WriteHeader(http.StatusOK)
 		}
 	}))
@@ -177,20 +163,13 @@ func TestImpactMetricsResentAfterFailure(t *testing.T) {
 	api.DefineCounter("my_counter", "Test counter")
 	api.IncrementCounterBy("my_counter", 5)
 
-	// Wait for first send (should fail with 500)
-	time.Sleep(100 * time.Millisecond)
-
-	// Wait for second send (should succeed and include the restored metric)
-	time.Sleep(100 * time.Millisecond)
+	// Wait for both requests: first fails, second succeeds
+	<-payloads // First request (fails)
+	secondPayload := <-payloads // Second request (succeeds)
 
 	// Verify second request contains the metric
-	payloadsMu.Lock()
-	require.GreaterOrEqual(t, len(payloads), 2, "should have 2 metrics requests")
-
-	// Parse second request body
 	var payload map[string]interface{}
-	err = json.Unmarshal(payloads[1].Body, &payload)
-	payloadsMu.Unlock()
+	err = json.Unmarshal(secondPayload, &payload)
 
 	require.NoError(t, err)
 
