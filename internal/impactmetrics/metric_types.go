@@ -30,9 +30,11 @@ type BucketEntry struct {
 }
 
 func (be BucketEntry) MarshalJSON() ([]byte, error) {
-	leValue := interface{}(be.Le)
+	var leValue interface{}
 	if math.IsInf(be.Le, 1) {
 		leValue = "+Inf"
+	} else {
+		leValue = be.Le
 	}
 	return json.Marshal(struct {
 		Le    interface{} `json:"le"`
