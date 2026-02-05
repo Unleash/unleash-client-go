@@ -207,9 +207,9 @@ func (m *metrics) sendMetrics() {
 	bucket := m.resetBucket()
 	m.bucketMu.Unlock()
 
-	collectedMetrics := m.metricRegistry.Collect()
+	collectedMetrics := impactmetrics.CollectedMetrics(m.metricRegistry.Collect())
 
-	if bucket.IsEmpty() && len(collectedMetrics) == 0 {
+	if bucket.IsEmpty() && collectedMetrics.IsEmpty() {
 		return
 	}
 	bucket.Stop = time.Now()
@@ -248,7 +248,7 @@ func (m *metrics) sendMetrics() {
 			m.add(name, false, tc.No)
 		}
 
-		if len(collectedMetrics) > 0 {
+		if !collectedMetrics.IsEmpty() {
 			m.metricRegistry.Restore(collectedMetrics)
 		}
 
