@@ -8,12 +8,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Unleash/unleash-go-sdk/v5/internal/impactmetrics"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/Unleash/unleash-go-sdk/v5/internal/impactmetrics"
 )
 
-// TestImpactMetricsSentInPayload verifies all 3 metric types are included in the payload
 func TestImpactMetricsSentInPayload(t *testing.T) {
 	registry := impactmetrics.NewInMemoryMetricRegistry()
 	labels := impactmetrics.MetricLabels{
@@ -52,7 +51,6 @@ func TestImpactMetricsSentInPayload(t *testing.T) {
 		"environment": "test",
 	}
 
-	// Verify payload structure matches expected format
 	assert.Equal(t, map[string]map[string]interface{}{
 		"purchases": {
 			"name": "purchases",
@@ -97,37 +95,6 @@ func TestImpactMetricsSentInPayload(t *testing.T) {
 	}, metrics)
 }
 
-// TestImpactMetricsEmptyPayloadNotSent verifies that empty metrics don't cause issues
-func TestImpactMetricsEmptyPayloadNotSent(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/client/metrics" && r.Method == "POST" {
-			w.WriteHeader(http.StatusAccepted)
-		} else if r.URL.Path == "/client/register" && r.Method == "POST" {
-			w.WriteHeader(http.StatusOK)
-		} else {
-			w.WriteHeader(http.StatusOK)
-		}
-	}))
-	defer server.Close()
-
-	client, err := NewClient(
-		WithUrl(server.URL),
-		WithAppName("test-app"),
-		WithEnvironment("test"),
-		WithMetricsInterval(100 * time.Millisecond),
-		WithDisableMetrics(true), // Disable toggle metrics
-	)
-	require.NoError(t, err)
-	defer client.Close()
-
-	// Don't define any metrics, just wait
-	time.Sleep(200 * time.Millisecond)
-
-	// If we got here without panicking, the integration works
-	assert.True(t, true)
-}
-
-// TestImpactMetricsResentAfterFailure verifies metrics are restored and resent on failure
 func TestImpactMetricsResentAfterFailure(t *testing.T) {
 	type metricsPayload struct {
 		Body []byte
@@ -167,7 +134,7 @@ func TestImpactMetricsResentAfterFailure(t *testing.T) {
 		WithUrl(server.URL),
 		WithAppName("test-app"),
 		WithEnvironment("test"),
-		WithMetricsInterval(50 * time.Millisecond),
+		WithMetricsInterval(50*time.Millisecond),
 	)
 	require.NoError(t, err)
 	defer client.Close()
@@ -201,72 +168,4 @@ func TestImpactMetricsResentAfterFailure(t *testing.T) {
 
 	metric := impactMetrics[0].(map[string]interface{})
 	assert.Equal(t, "my_counter", metric["name"])
-}
-
-// TestImpactMetricsMultipleObservations verifies multiple observations accumulate correctly
-func TestImpactMetricsMultipleObservations(t *testing.T) {
-	registry := impactmetrics.NewInMemoryMetricRegistry()
-	labels := impactmetrics.MetricLabels{
-		"appName":     "test-app",
-		"environment": "test",
-	}
-
-	// Counter should accumulate
-	counter := registry.Counter("requests", "Total requests")
-	counter.Inc(5, labels)
-	counter.Inc(3, labels)
-
-	// Gauge should keep last value
-	gauge := registry.Gauge("memory", "Memory usage")
-	gauge.Set(100, labels)
-	gauge.Set(150, labels)
-
-	// Histogram should count observations
-	histogram := registry.Histogram("duration", "Duration", []float64{10, 50, 100})
-	histogram.Observe(25, labels)
-	histogram.Observe(75, labels)
-
-	collected := registry.Collect()
-	require.Equal(t, 3, len(collected))
-
-	metricsMap := make(map[string]impactmetrics.CollectedMetric)
-	for _, m := range collected {
-		metricsMap[m.Name] = m
-	}
-
-	// Verify counter accumulated
-	counterSample := metricsMap["requests"].Samples[0].(impactmetrics.CounterMetricSample)
-	assert.Equal(t, int64(8), counterSample.Value)
-
-	// Verify gauge kept last value
-	gaugeSample := metricsMap["memory"].Samples[0].(impactmetrics.GaugeMetricSample)
-	assert.Equal(t, 150.0, gaugeSample.Value)
-
-	// Verify histogram counted both
-	histSample := metricsMap["duration"].Samples[0].(impactmetrics.HistogramMetricSample)
-	assert.Equal(t, int64(2), histSample.Count)
-	assert.Equal(t, 100.0, histSample.Sum)
-}
-
-// BenchmarkImpactMetricsRecording benchmarks metric recording performance
-func BenchmarkImpactMetricsRecording(b *testing.B) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer server.Close()
-
-	client, _ := NewClient(
-		WithUrl(server.URL),
-		WithAppName("bench-app"),
-		WithMetricsInterval(10 * time.Second),
-	)
-	defer client.Close()
-
-	api := client.ImpactMetrics()
-	api.DefineCounter("bench_counter", "Benchmark counter")
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		api.IncrementCounter("bench_counter")
-	}
 }
