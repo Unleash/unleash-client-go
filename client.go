@@ -214,6 +214,14 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		strategyNames[i] = strategy.Name()
 	}
 
+	// Initialize impact metrics registry
+	metricRegistry := impactmetrics.NewInMemoryMetricRegistry()
+	impactMetricsCtx := impactmetrics.StaticContext{
+		AppName:     uc.options.appName,
+		Environment: uc.options.environment,
+	}
+	uc.impactMetrics = impactmetrics.NewMetricsAPI(metricRegistry, impactMetricsCtx, errChannels.warnings)
+
 	uc.metrics = newMetrics(
 		metricsOptions{
 			appName:         uc.options.appName,
@@ -225,6 +233,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 			httpClient:      uc.options.httpClient,
 			headers:         headers,
 			disableMetrics:  uc.options.disableMetrics,
+			metricRegistry:  metricRegistry,
 		},
 		metricsChannels{
 			errorChannels: errChannels,
@@ -233,16 +242,6 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 			registered:    uc.registered,
 		},
 	)
-
-	// Initialize impact metrics with the metrics registry
-	metricRegistry := impactmetrics.NewInMemoryMetricRegistry()
-	impactMetricsCtx := impactmetrics.StaticContext{
-		AppName:     uc.options.appName,
-		Environment: uc.options.environment,
-	}
-	uc.impactMetrics = impactmetrics.NewMetricsAPI(metricRegistry, impactMetricsCtx, errChannels.warnings)
-	// Wire the metric registry into the metrics service
-	uc.metrics.setMetricRegistry(metricRegistry)
 
 	return uc, nil
 }

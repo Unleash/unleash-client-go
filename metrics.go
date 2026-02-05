@@ -121,6 +121,9 @@ func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
 		errors:          0,
 		skips:           0,
 	}
+	if options.metricRegistry != nil {
+		m.metricRegistry = options.metricRegistry.(impactmetrics.ImpactMetricsDataSource)
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	m.ctx = ctx
 	m.cancel = cancel
@@ -140,10 +143,6 @@ func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
 	}
 
 	return m
-}
-
-func (m *metrics) setMetricRegistry(registry impactmetrics.ImpactMetricsDataSource) {
-	m.metricRegistry = registry
 }
 
 func (m *metrics) Close() error {

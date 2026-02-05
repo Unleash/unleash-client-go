@@ -282,4 +282,5 @@ type metricsOptions struct {
 	httpClient      *http.Client
 	headers         http.Header
 	started         *time.Time
+	metricRegistry  interface{}
 }
