@@ -176,7 +176,7 @@ func TestImpactMetricsResentAfterFailure(t *testing.T) {
 
 	// Define and record metric
 	api.DefineCounter("my_counter", "Test counter")
-	api.IncrementCounter("my_counter", 5)
+	api.IncrementCounterBy("my_counter", 5)
 
 	// Wait for first send (should fail with 500)
 	time.Sleep(100 * time.Millisecond)
@@ -267,6 +267,6 @@ func BenchmarkImpactMetricsRecording(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		api.IncrementCounter("bench_counter", 1)
+		api.IncrementCounter("bench_counter")
 	}
 }
