@@ -284,3 +284,12 @@ type metricsOptions struct {
 	started         *time.Time
 	metricRegistry  interface{}
 }
+
+type impactMetricsOptions struct {
+	appName     string
+	environment string
+}
+
+type impactMetricsChannels struct {
+	warnings chan error
+}

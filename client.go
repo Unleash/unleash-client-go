@@ -92,6 +92,16 @@ type metricsChannels struct {
 	registered chan ClientData
 }
 
+func newImpactMetrics(options impactMetricsOptions, channels impactMetricsChannels) (*impactmetrics.MetricsAPI, *impactmetrics.InMemoryMetricRegistry) {
+	metricRegistry := impactmetrics.NewInMemoryMetricRegistry()
+	staticCtx := impactmetrics.StaticContext{
+		AppName:     options.appName,
+		Environment: options.environment,
+	}
+	metricsAPI := impactmetrics.NewMetricsAPI(metricRegistry, staticCtx, channels.warnings)
+	return metricsAPI, metricRegistry
+}
+
 // NewClient creates a new client instance with the given options.
 func NewClient(options ...ConfigOption) (*Client, error) {
 
@@ -214,13 +224,16 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		strategyNames[i] = strategy.Name()
 	}
 
-	// Initialize impact metrics registry
-	metricRegistry := impactmetrics.NewInMemoryMetricRegistry()
-	impactMetricsCtx := impactmetrics.StaticContext{
-		AppName:     uc.options.appName,
-		Environment: uc.options.environment,
-	}
-	uc.impactMetrics = impactmetrics.NewMetricsAPI(metricRegistry, impactMetricsCtx, errChannels.warnings)
+	impactMetricsAPI, metricRegistry := newImpactMetrics(
+		impactMetricsOptions{
+			appName:     uc.options.appName,
+			environment: uc.options.environment,
+		},
+		impactMetricsChannels{
+			warnings: errChannels.warnings,
+		},
+	)
+	uc.impactMetrics = impactMetricsAPI
 
 	uc.metrics = newMetrics(
 		metricsOptions{
