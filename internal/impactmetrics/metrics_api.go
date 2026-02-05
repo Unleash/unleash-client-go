@@ -20,10 +20,7 @@ func NewMetricsAPI(metricRegistry *InMemoryMetricRegistry, context StaticContext
 }
 
 func (api *MetricsAPI) sendWarning(err error) {
-	select {
-	case api.warnings <- err:
-	default:
-	}
+	api.warnings <- err
 }
 
 func (api *MetricsAPI) DefineCounter(name, help string) {
