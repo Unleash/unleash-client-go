@@ -28,7 +28,7 @@ func (api *MetricsAPI) sendWarning(err error) {
 
 func (api *MetricsAPI) DefineCounter(name, help string) {
 	if name == "" || help == "" {
-		api.sendWarning(fmt.Errorf("counter name and help cannot be empty: name=%s, help=%s", name, help))
+		api.sendWarning(fmt.Errorf("counter name or help cannot be empty: name=%s, help=%s", name, help))
 		return
 	}
 	api.metricRegistry.Counter(name, help)
@@ -36,7 +36,7 @@ func (api *MetricsAPI) DefineCounter(name, help string) {
 
 func (api *MetricsAPI) DefineGauge(name, help string) {
 	if name == "" || help == "" {
-		api.sendWarning(fmt.Errorf("gauge name and help cannot be empty: name=%s, help=%s", name, help))
+		api.sendWarning(fmt.Errorf("gauge name or help cannot be empty: name=%s, help=%s", name, help))
 		return
 	}
 	api.metricRegistry.Gauge(name, help)
@@ -44,7 +44,7 @@ func (api *MetricsAPI) DefineGauge(name, help string) {
 
 func (api *MetricsAPI) DefineHistogram(name, help string, buckets ...float64) {
 	if name == "" || help == "" {
-		api.sendWarning(fmt.Errorf("histogram name and help cannot be empty: name=%s, help=%s", name, help))
+		api.sendWarning(fmt.Errorf("histogram name or help cannot be empty: name=%s, help=%s", name, help))
 		return
 	}
 	api.metricRegistry.Histogram(name, help, buckets)
