@@ -140,21 +140,32 @@ func TestImpactMetricsResentAfterFailure(t *testing.T) {
 
 	api := client.ImpactMetrics()
 
-	// Define and record metric
 	api.DefineCounter("my_counter", "Test counter")
 	api.IncrementCounterBy("my_counter", 5)
 
-	// Wait for both requests: first fails, second succeeds
 	<-payloads                  // First request (fails)
 	secondPayload := <-payloads // Second request (succeeds)
 
-	// Verify second request contains the metric
 	var payload map[string]interface{}
 	require.NoError(t, json.Unmarshal(secondPayload, &payload))
 
 	impactMetrics := payload["impactMetrics"].([]interface{})
-	require.Greater(t, len(impactMetrics), 0, "should have impact metrics in resent request")
+	impactMetricsJSON, err := json.Marshal(impactMetrics)
+	require.NoError(t, err)
 
-	metric := impactMetrics[0].(map[string]interface{})
-	assert.Equal(t, "my_counter", metric["name"])
+	expectedJSON := `[
+		{
+			"name": "my_counter",
+			"help": "Test counter",
+			"type": "counter",
+			"samples": [
+				{
+					"labels": {"appName": "test-app", "environment": "test"},
+					"value": 5
+				}
+			]
+		}
+	]`
+
+	assert.JSONEq(t, expectedJSON, string(impactMetricsJSON))
 }
