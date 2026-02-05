@@ -34,7 +34,7 @@ func TestImpactMetricsSentInPayload(t *testing.T) {
 		WithUrl(server.URL),
 		WithAppName("test-app"),
 		WithEnvironment("test"),
-		WithMetricsInterval(50*time.Millisecond),
+		WithMetricsInterval(5*time.Millisecond),
 	)
 	require.NoError(t, err)
 	defer client.Close()
@@ -133,7 +133,7 @@ func TestImpactMetricsResentAfterFailure(t *testing.T) {
 		WithUrl(server.URL),
 		WithAppName("test-app"),
 		WithEnvironment("test"),
-		WithMetricsInterval(50*time.Millisecond),
+		WithMetricsInterval(5*time.Millisecond),
 	)
 	require.NoError(t, err)
 	defer client.Close()
