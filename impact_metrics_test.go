@@ -2,6 +2,7 @@ package unleash
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"sync/atomic"
@@ -16,18 +17,14 @@ func TestImpactMetricsSentInPayload(t *testing.T) {
 	payloads := make(chan []byte, 1)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method + " " + r.URL.Path {
-		case "POST /client/metrics":
-			body := make([]byte, r.ContentLength)
-			r.Body.Read(body)
+		if r.Method == "POST" && r.URL.Path == "/client/metrics" {
+			body, err := io.ReadAll(r.Body)
 			r.Body.Close()
-
-			payloads <- body
-
+			if err == nil {
+				payloads <- body
+			}
 			w.WriteHeader(http.StatusAccepted)
-		case "POST /client/register":
-			w.WriteHeader(http.StatusOK)
-		default:
+		} else {
 			w.WriteHeader(http.StatusOK)
 		}
 	}))
@@ -58,7 +55,8 @@ func TestImpactMetricsSentInPayload(t *testing.T) {
 	require.NoError(t, json.Unmarshal(payloadBytes, &payload))
 
 	impactMetrics := payload["impactMetrics"].([]interface{})
-	impactMetricsJSON, _ := json.Marshal(impactMetrics)
+	impactMetricsJSON, err := json.Marshal(impactMetrics)
+	require.NoError(t, err)
 
 	expectedJSON := `[
 		{
@@ -113,11 +111,11 @@ func TestImpactMetricsResentAfterFailure(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" && r.URL.Path == "/client/metrics" {
-			body := make([]byte, r.ContentLength)
-			r.Body.Read(body)
+			body, err := io.ReadAll(r.Body)
 			r.Body.Close()
-
-			payloads <- body
+			if err == nil {
+				payloads <- body
+			}
 
 			if failNext.Load() {
 				failNext.Store(false)
@@ -125,8 +123,6 @@ func TestImpactMetricsResentAfterFailure(t *testing.T) {
 			} else {
 				w.WriteHeader(http.StatusAccepted)
 			}
-		} else if r.Method == "POST" && r.URL.Path == "/client/register" {
-			w.WriteHeader(http.StatusOK)
 		} else {
 			w.WriteHeader(http.StatusOK)
 		}
