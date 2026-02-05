@@ -93,15 +93,15 @@ type metric struct {
 
 type metrics struct {
 	metricsChannels
-	options          metricsOptions
-	started          time.Time
-	bucketMu         sync.Mutex
-	bucket           api.Bucket
-	ticker           *time.Ticker
-	close            chan struct{}
-	closed           chan struct{}
-	ctx              context.Context
-	cancel           func()
+	options        metricsOptions
+	started        time.Time
+	bucketMu       sync.Mutex
+	bucket         api.Bucket
+	ticker         *time.Ticker
+	close          chan struct{}
+	closed         chan struct{}
+	ctx            context.Context
+	cancel         func()
 	maxSkips       float64
 	errors         float64
 	skips          float64
@@ -209,11 +209,7 @@ func (m *metrics) sendMetrics() {
 	bucket := m.resetBucket()
 	m.bucketMu.Unlock()
 
-	// Collect impact metrics
-	var collectedMetrics []impactmetrics.CollectedMetric
-	if m.metricRegistry != nil {
-		collectedMetrics = m.metricRegistry.Collect()
-	}
+	collectedMetrics := m.metricRegistry.Collect()
 
 	if bucket.IsEmpty() && len(collectedMetrics) == 0 {
 		return
@@ -254,8 +250,7 @@ func (m *metrics) sendMetrics() {
 			m.add(name, false, tc.No)
 		}
 
-		// Restore impact metrics on failure
-		if m.metricRegistry != nil && len(collectedMetrics) > 0 {
+		if len(collectedMetrics) > 0 {
 			m.metricRegistry.Restore(collectedMetrics)
 		}
 
