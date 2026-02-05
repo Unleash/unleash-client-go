@@ -50,17 +50,17 @@ func (api *MetricsAPI) DefineHistogram(name, help string, buckets ...float64) {
 	api.metricRegistry.Histogram(name, help, buckets)
 }
 
-func (api *MetricsAPI) IncrementCounter(name string, value ...int64) {
+func (api *MetricsAPI) IncrementCounter(name string) {
+	api.IncrementCounterBy(name, 1)
+}
+
+func (api *MetricsAPI) IncrementCounterBy(name string, value int64) {
 	counter := api.metricRegistry.GetCounter(name)
 	if counter == nil {
 		api.sendWarning(fmt.Errorf("counter %q not defined, this counter will not be incremented", name))
 		return
 	}
-	v := int64(1)
-	if len(value) > 0 {
-		v = value[0]
-	}
-	counter.Inc(v, api.labels)
+	counter.Inc(value, api.labels)
 }
 
 func (api *MetricsAPI) UpdateGauge(name string, value float64) {

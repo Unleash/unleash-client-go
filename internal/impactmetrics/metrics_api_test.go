@@ -59,7 +59,7 @@ func TestShouldIncrementCounterWithValidParameters(t *testing.T) {
 	api := newTestMetricsAPI(registry, ctx)
 
 	api.DefineCounter("valid_counter", "help")
-	api.IncrementCounter("valid_counter", 5)
+	api.IncrementCounterBy("valid_counter", 5)
 
 	result := registry.Collect()
 	metric := findMetric(result, "valid_counter")
