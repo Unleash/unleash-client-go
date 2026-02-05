@@ -56,93 +56,79 @@ func TestImpactMetricsSentInPayload(t *testing.T) {
 
 	// Wait for metrics to be collected and sent
 	var payload map[string]interface{}
-	err = json.Unmarshal(<-payloads, &payload)
+	require.NoError(t, json.Unmarshal(<-payloads, &payload))
 
-	require.NoError(t, err)
-
-	// Build metrics map by name
-	metrics := make(map[string]map[string]interface{})
 	impactMetrics := payload["impactMetrics"].([]interface{})
-	for _, m := range impactMetrics {
-		metric := m.(map[string]interface{})
-		metrics[metric["name"].(string)] = metric
-	}
+	impactMetricsJSON, _ := json.Marshal(impactMetrics)
 
-	expectedLabels := map[string]interface{}{
-		"appName":     "test-app",
-		"environment": "test",
-	}
-
-	// Verify complete payload structure
-	assert.Equal(t, map[string]map[string]interface{}{
-		"purchases": {
+	expectedJSON := `[
+		{
 			"name": "purchases",
 			"help": "Number of purchases",
 			"type": "counter",
-			"samples": []interface{}{
-				map[string]interface{}{
-					"labels": expectedLabels,
-					"value":  float64(1),
-				},
-			},
+			"samples": [
+				{
+					"labels": {"appName": "test-app", "environment": "test"},
+					"value": 1
+				}
+			]
 		},
-		"active_users": {
+		{
 			"name": "active_users",
 			"help": "Active users",
 			"type": "gauge",
-			"samples": []interface{}{
-				map[string]interface{}{
-					"labels": expectedLabels,
-					"value":  float64(42),
-				},
-			},
+			"samples": [
+				{
+					"labels": {"appName": "test-app", "environment": "test"},
+					"value": 42
+				}
+			]
 		},
-		"latency": {
+		{
 			"name": "latency",
 			"help": "Request latency",
 			"type": "histogram",
-			"samples": []interface{}{
-				map[string]interface{}{
-					"labels": expectedLabels,
-					"count":  float64(1),
-					"sum":    float64(0.3),
-					"buckets": []interface{}{
-						map[string]interface{}{"le": 0.1, "count": float64(0)},
-						map[string]interface{}{"le": 0.5, "count": float64(1)},
-						map[string]interface{}{"le": 1.0, "count": float64(1)},
-						map[string]interface{}{"le": "+Inf", "count": float64(1)},
-					},
-				},
-			},
-		},
-	}, metrics)
+			"samples": [
+				{
+					"labels": {"appName": "test-app", "environment": "test"},
+					"count": 1,
+					"sum": 0.3,
+					"buckets": [
+						{"le": 0.1, "count": 0},
+						{"le": 0.5, "count": 1},
+						{"le": 1.0, "count": 1},
+						{"le": "+Inf", "count": 1}
+					]
+				}
+			]
+		}
+	]`
+
+	assert.JSONEq(t, expectedJSON, string(impactMetricsJSON))
 }
 
 func TestImpactMetricsResentAfterFailure(t *testing.T) {
 	payloads := make(chan []byte, 2)
-	var requestCount atomic.Int32
+	var failNext atomic.Bool
+	failNext.Store(true)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method + " " + r.URL.Path {
-		case "POST /client/metrics":
+		if r.Method == "POST" && r.URL.Path == "/client/metrics" {
 			body := make([]byte, r.ContentLength)
 			r.Body.Read(body)
 			r.Body.Close()
 
 			payloads <- body
 
-			requestCount.Add(1)
-			isFirstRequest := requestCount.Load() == 1
-
-			// First request fails with 500, second succeeds
-			if isFirstRequest {
+			if failNext.Load() {
+				failNext.Store(false)
 				w.WriteHeader(http.StatusInternalServerError)
 			} else {
 				w.WriteHeader(http.StatusAccepted)
 			}
-		case "POST /client/register":
+		} else if r.Method == "POST" && r.URL.Path == "/client/register" {
 			w.WriteHeader(http.StatusOK)
-		default:
+		} else {
 			w.WriteHeader(http.StatusOK)
 		}
 	}))
@@ -164,16 +150,13 @@ func TestImpactMetricsResentAfterFailure(t *testing.T) {
 	api.IncrementCounterBy("my_counter", 5)
 
 	// Wait for both requests: first fails, second succeeds
-	<-payloads // First request (fails)
+	<-payloads                  // First request (fails)
 	secondPayload := <-payloads // Second request (succeeds)
 
 	// Verify second request contains the metric
 	var payload map[string]interface{}
-	err = json.Unmarshal(secondPayload, &payload)
+	require.NoError(t, json.Unmarshal(secondPayload, &payload))
 
-	require.NoError(t, err)
-
-	// Verify metric is present in resent request
 	impactMetrics := payload["impactMetrics"].([]interface{})
 	require.Greater(t, len(impactMetrics), 0, "should have impact metrics in resent request")
 
