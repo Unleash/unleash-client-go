@@ -44,7 +44,6 @@ func TestImpactMetricsSentInPayload(t *testing.T) {
 
 	api := client.ImpactMetrics()
 
-	// Define and record all 3 metric types using public API
 	api.DefineCounter("purchases", "Number of purchases")
 	api.IncrementCounter("purchases")
 
@@ -54,9 +53,9 @@ func TestImpactMetricsSentInPayload(t *testing.T) {
 	api.DefineHistogram("latency", "Request latency", 0.1, 0.5, 1.0)
 	api.ObserveHistogram("latency", 0.3)
 
-	// Wait for metrics to be collected and sent
+	payloadBytes := <-payloads
 	var payload map[string]interface{}
-	require.NoError(t, json.Unmarshal(<-payloads, &payload))
+	require.NoError(t, json.Unmarshal(payloadBytes, &payload))
 
 	impactMetrics := payload["impactMetrics"].([]interface{})
 	impactMetricsJSON, _ := json.Marshal(impactMetrics)
