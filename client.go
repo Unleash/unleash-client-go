@@ -601,7 +601,6 @@ func (uc *Client) Sent() <-chan MetricsData {
 	return uc.sent
 }
 
-// ImpactMetrics returns the MetricsAPI for recording impact metrics.
 func (uc *Client) ImpactMetrics() *impactmetrics.MetricsAPI {
 	return uc.impactMetrics
 }

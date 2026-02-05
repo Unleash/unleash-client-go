@@ -122,7 +122,7 @@ func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
 		skips:           0,
 	}
 	if options.metricRegistry != nil {
-		m.metricRegistry = options.metricRegistry.(impactmetrics.ImpactMetricsDataSource)
+		m.metricRegistry = options.metricRegistry
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	m.ctx = ctx
