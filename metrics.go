@@ -233,8 +233,9 @@ func (m *metrics) buildBucketAndReset(lastCloseTime time.Time) (api.Bucket, bool
 		}
 
 		toggleCounters := api.ToggleCount{
-			Yes: int32(yes),
-			No:  int32(no),
+			Yes:      int32(yes),
+			No:       int32(no),
+			Variants: map[string]int32{},
 		}
 
 		// we can have a little locking, as a treat. Variants are likely a luke warm path at best
