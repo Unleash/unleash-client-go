@@ -635,3 +635,27 @@ func TestReinsertingBucketsAlsoRestoresVariants(t *testing.T) {
 
 	assert.EqualValues(t, 1, registered_metric.(*toggleCounters).variants["some-variant"])
 }
+
+func TestMetrics_NotCountingVariantsStillIncludesEmptyVariantBucket(t *testing.T) {
+	metrics_handler := &metrics{
+		metricsChannels: metricsChannels{
+			count: make(chan metric, 1),
+		},
+	}
+
+	metrics_handler.count("some-feature", true)
+	retrieved_bucket, ok := metrics_handler.buildBucketAndReset(time.Now())
+	if !ok {
+		t.Fatal("Missing bucket for 'some-feature'")
+	}
+
+	toggle := retrieved_bucket.Toggles["some-feature"]
+	assert.NotNil(t, toggle.Variants)
+	assert.Equal(t, 0, len(toggle.Variants))
+
+	raw, err := json.Marshal(retrieved_bucket)
+	if err != nil {
+		t.Fatalf("failed to marshal bucket: %v", err)
+	}
+	assert.Contains(t, string(raw), "\"variants\":{}")
+}
