@@ -10,6 +10,7 @@ import (
 
 	"github.com/Unleash/unleash-go-sdk/v6/api"
 	"github.com/Unleash/unleash-go-sdk/v6/context"
+	"github.com/Unleash/unleash-go-sdk/v6/internal/impactmetrics"
 	s "github.com/Unleash/unleash-go-sdk/v6/internal/strategies"
 	"github.com/Unleash/unleash-go-sdk/v6/strategy"
 )
@@ -46,6 +47,7 @@ type Client struct {
 	options            configOption
 	repository         *repository
 	metrics            *metrics
+	impactMetrics      *impactmetrics.MetricsAPI
 	strategies         []strategy.Strategy
 	errorListener      ErrorListener
 	metricsListener    MetricListener
@@ -211,6 +213,24 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		strategyNames[i] = strategy.Name()
 	}
 
+	// Initialize impact metrics BEFORE creating metrics system
+	metricRegistry := impactmetrics.NewInMemoryMetricRegistry()
+	impactMetricsOptions := impactMetricsOptions{
+		appName:     uc.options.appName,
+		environment: uc.options.environment,
+	}
+	impactMetricsChannels := impactMetricsChannels{
+		warnings: uc.warnings,
+	}
+	uc.impactMetrics = impactmetrics.NewMetricsAPI(
+		metricRegistry,
+		impactmetrics.StaticContext{
+			AppName:     impactMetricsOptions.appName,
+			Environment: impactMetricsOptions.environment,
+		},
+		impactMetricsChannels.warnings,
+	)
+
 	uc.metrics = newMetrics(
 		metricsOptions{
 			appName:         uc.options.appName,
@@ -222,6 +242,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 			httpClient:      uc.options.httpClient,
 			headers:         headers,
 			disableMetrics:  uc.options.disableMetrics,
+			metricRegistry:  metricRegistry,
 		},
 		metricsChannels{
 			errorChannels: errChannels,
@@ -430,6 +451,11 @@ func (uc *Client) Errors() <-chan error {
 // Warnings returns the warnings channel for the client.
 func (uc *Client) Warnings() <-chan error {
 	return uc.warnings
+}
+
+// ImpactMetrics returns the MetricsAPI for recording application-level metrics.
+func (uc *Client) ImpactMetrics() *impactmetrics.MetricsAPI {
+	return uc.impactMetrics
 }
 
 // Ready returns the ready channel for the client. A value will be available on

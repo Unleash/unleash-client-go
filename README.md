@@ -298,6 +298,46 @@ func main() {
 }
 ```
 
+## Impact Metrics
+
+Impact metrics are lightweight, application-level time-series metrics that can be recorded and sent to the Unleash server alongside feature flag usage metrics. They allow you to track custom business metrics and correlate them with your feature flags and experiments.
+
+### Usage
+
+```go
+client, _ := unleash.Initialize(
+    unleash.WithUrl("https://eu.app.unleash-hosted.com/demo/api/"),
+    unleash.WithAppName("my-app"),
+    unleash.WithEnvironment("production"),
+)
+defer client.Close()
+
+api := client.ImpactMetrics()
+
+// Define and record a counter (monotonic, only increases)
+api.DefineCounter("purchases", "Number of purchases")
+api.IncrementCounter("purchases")
+api.IncrementCounterBy("purchases", 5)
+
+// Define and record a gauge (point-in-time, can go up or down)
+api.DefineGauge("active_users", "Active users in system")
+api.UpdateGauge("active_users", 42)
+
+// Define and record a histogram (distribution of values)
+api.DefineHistogram("request_latency", "Request latency in ms", 0.1, 0.5, 1.0, 5.0)
+api.ObserveHistogram("request_latency", 0.35)
+```
+
+Metrics are batched and sent to the Unleash server using the same interval as standard SDK metrics (default 60 seconds). Each metric is automatically tagged with your application name and environment for easy filtering and analysis.
+
+### Supported Metric Types
+
+- **Counter**: Monotonic integer counter - use for things like total purchases, processed events, errors
+- **Gauge**: Point-in-time floating-point value - use for things like active connections, memory usage, request queue size
+- **Histogram**: Distribution of values with customizable buckets - use for latencies, response sizes, percentiles
+
+All metrics are optional and collecting them has minimal performance impact.
+
 ## Development
 
 To override dependency on unleash-go-sdk github repository to a local development folder (for instance when building a local test-app for the SDK),
