@@ -1,6 +1,7 @@
 package impactmetrics
 
 import (
+	"encoding/json"
 	"math"
 	"sort"
 	"strings"
@@ -24,8 +25,24 @@ type GaugeMetricSample struct {
 }
 
 type BucketEntry struct {
-	Le    float64 `json:"le"`
-	Count int64   `json:"count"`
+	Le    float64
+	Count int64
+}
+
+func (be BucketEntry) MarshalJSON() ([]byte, error) {
+	var leValue interface{}
+	if math.IsInf(be.Le, 1) {
+		leValue = "+Inf"
+	} else {
+		leValue = be.Le
+	}
+	return json.Marshal(struct {
+		Le    interface{} `json:"le"`
+		Count int64       `json:"count"`
+	}{
+		Le:    leValue,
+		Count: be.Count,
+	})
 }
 
 type HistogramMetricSample struct {
@@ -48,6 +65,12 @@ type CollectedMetric struct {
 	Help    string   `json:"help"`
 	Type    string   `json:"type"`
 	Samples []Sample `json:"samples"`
+}
+
+type CollectedMetrics []CollectedMetric
+
+func (cm CollectedMetrics) IsEmpty() bool {
+	return len(cm) == 0
 }
 
 var DefaultHistogramBuckets = []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10}

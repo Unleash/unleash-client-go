@@ -11,6 +11,7 @@ import (
 	"github.com/Unleash/unleash-go-sdk/v5/api"
 	"github.com/Unleash/unleash-go-sdk/v5/context"
 	"github.com/Unleash/unleash-go-sdk/v5/internal/constraints"
+	"github.com/Unleash/unleash-go-sdk/v5/internal/impactmetrics"
 	s "github.com/Unleash/unleash-go-sdk/v5/internal/strategies"
 	"github.com/Unleash/unleash-go-sdk/v5/strategy"
 )
@@ -47,6 +48,7 @@ type Client struct {
 	options            configOption
 	repository         *repository
 	metrics            *metrics
+	impactMetrics      *impactmetrics.MetricsAPI
 	strategies         []strategy.Strategy
 	errorListener      ErrorListener
 	metricsListener    MetricListener
@@ -88,6 +90,16 @@ type metricsChannels struct {
 	count      chan metric
 	sent       chan MetricsData
 	registered chan ClientData
+}
+
+func newImpactMetrics(options impactMetricsOptions, channels impactMetricsChannels) (*impactmetrics.MetricsAPI, *impactmetrics.InMemoryMetricRegistry) {
+	metricRegistry := impactmetrics.NewInMemoryMetricRegistry()
+	staticCtx := impactmetrics.StaticContext{
+		AppName:     options.appName,
+		Environment: options.environment,
+	}
+	metricsAPI := impactmetrics.NewMetricsAPI(metricRegistry, staticCtx, channels.warnings)
+	return metricsAPI, metricRegistry
 }
 
 // NewClient creates a new client instance with the given options.
@@ -212,6 +224,17 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		strategyNames[i] = strategy.Name()
 	}
 
+	impactMetricsAPI, metricRegistry := newImpactMetrics(
+		impactMetricsOptions{
+			appName:     uc.options.appName,
+			environment: uc.options.environment,
+		},
+		impactMetricsChannels{
+			warnings: errChannels.warnings,
+		},
+	)
+	uc.impactMetrics = impactMetricsAPI
+
 	uc.metrics = newMetrics(
 		metricsOptions{
 			appName:         uc.options.appName,
@@ -223,6 +246,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 			httpClient:      uc.options.httpClient,
 			headers:         headers,
 			disableMetrics:  uc.options.disableMetrics,
+			metricRegistry:  metricRegistry,
 		},
 		metricsChannels{
 			errorChannels: errChannels,
@@ -575,6 +599,10 @@ func (uc *Client) Impression() <-chan ImpressionEvent {
 // the metrics service.
 func (uc *Client) Sent() <-chan MetricsData {
 	return uc.sent
+}
+
+func (uc *Client) ImpactMetrics() *impactmetrics.MetricsAPI {
+	return uc.impactMetrics
 }
 
 func (uc *Client) getStrategy(name string) strategy.Strategy {
