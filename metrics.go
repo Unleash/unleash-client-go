@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/Unleash/unleash-go-sdk/v6/internal/api"
+	"github.com/Unleash/unleash-go-sdk/v6/internal/impactmetrics"
 )
 
 // MetricsData represents the data sent to the unleash server.
@@ -44,6 +45,9 @@ type MetricsData struct {
 
 	// Which version of the Unleash-Client-Spec is this SDK validated against
 	SpecVersion string `json:"specVersion"`
+
+	// ImpactMetrics are optional custom application-level metrics
+	ImpactMetrics []impactmetrics.CollectedMetric `json:"impactMetrics,omitempty"`
 }
 
 // ClientData represents the data sent to the unleash during registration.
@@ -98,18 +102,19 @@ type toggleCounters struct {
 
 type metrics struct {
 	metricsChannels
-	options       metricsOptions
-	started       time.Time
-	lastCloseTime time.Time
-	counters      sync.Map // map[string]*toggleCounters
-	ticker        *time.Ticker
-	close         chan struct{}
-	closed        chan struct{}
-	ctx           context.Context
-	cancel        func()
-	maxSkips      float64
-	errors        float64
-	skips         float64
+	options         metricsOptions
+	started         time.Time
+	lastCloseTime   time.Time
+	counters        sync.Map // map[string]*toggleCounters
+	ticker          *time.Ticker
+	close           chan struct{}
+	closed          chan struct{}
+	ctx             context.Context
+	cancel          func()
+	maxSkips        float64
+	errors          float64
+	skips           float64
+	metricRegistry  impactmetrics.ImpactMetricsDataSource
 }
 
 func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
@@ -123,6 +128,7 @@ func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
 		errors:          0,
 		skips:           0,
 		lastCloseTime:   time.Now(),
+		metricRegistry:  options.metricRegistry,
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	m.ctx = ctx
@@ -266,7 +272,9 @@ func (m *metrics) buildBucketAndReset(lastCloseTime time.Time) (api.Bucket, bool
 
 func (m *metrics) sendMetrics() {
 	bucket, ok := m.buildBucketAndReset(m.lastCloseTime)
-	if !ok {
+	collectedMetrics := impactmetrics.CollectedMetrics(m.metricRegistry.Collect())
+
+	if !ok && collectedMetrics.IsEmpty() {
 		return
 	}
 	m.lastCloseTime = time.Now()
@@ -281,6 +289,7 @@ func (m *metrics) sendMetrics() {
 		PlatformVersion:  runtime.Version(),
 		YggdrasilVersion: nil,
 		SpecVersion:      specVersion,
+		ImpactMetrics:    collectedMetrics,
 	}
 
 	u, _ := m.options.url.Parse("./client/metrics")
@@ -301,6 +310,10 @@ func (m *metrics) sendMetrics() {
 		// The post failed, re-add the metrics we attempted to send so
 		// they are included in the next post.
 		m.reinsertBucket(bucket)
+
+		if !collectedMetrics.IsEmpty() {
+			m.metricRegistry.Restore(collectedMetrics)
+		}
 
 		// Set the start time of the current bucket to the one we
 		// attempted to send.

@@ -298,6 +298,56 @@ func main() {
 }
 ```
 
+## Impact metrics
+
+Impact metrics are lightweight, application-level time-series metrics stored and visualized directly inside Unleash. They allow you to connect specific application data, such as request counts, error rates, or latency, to your feature flags and release plans.
+
+These metrics help validate feature impact and automate release processes. For instance, you can monitor usage patterns or performance to determine if a feature meets its goals.
+
+The SDK automatically attaches context labels to metrics: `appName` and `environment`.
+
+### Counters
+
+Use counters for cumulative values that only increase (total requests, errors):
+
+```go
+client.ImpactMetrics().DefineCounter(
+    "request_count",
+    "Total number of HTTP requests processed",
+)
+
+client.ImpactMetrics().IncrementCounter("request_count")
+```
+
+### Gauges
+
+Use gauges for point-in-time values that can go up or down:
+
+```go
+client.ImpactMetrics().DefineGauge(
+    "total_users",
+    "Total number of registered users",
+)
+
+client.ImpactMetrics().UpdateGauge("total_users", userCount)
+```
+
+### Histograms
+
+Histograms measure value distribution (request duration, response size):
+
+```go
+client.ImpactMetrics().DefineHistogram(
+    "request_time_ms",
+    "Time taken to process a request in milliseconds",
+    50, 100, 200, 500, 1000,
+)
+
+client.ImpactMetrics().ObserveHistogram("request_time_ms", 125)
+```
+
+Impact metrics are batched and sent using the same interval as standard SDK metrics.
+
 ## Development
 
 To override dependency on unleash-go-sdk github repository to a local development folder (for instance when building a local test-app for the SDK),

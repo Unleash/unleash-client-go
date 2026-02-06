@@ -7,6 +7,7 @@ import (
 
 	"github.com/Unleash/unleash-go-sdk/v6/api"
 	"github.com/Unleash/unleash-go-sdk/v6/context"
+	"github.com/Unleash/unleash-go-sdk/v6/internal/impactmetrics"
 	"github.com/Unleash/unleash-go-sdk/v6/strategy"
 )
 
@@ -249,4 +250,14 @@ type metricsOptions struct {
 	disableMetrics  bool
 	httpClient      *http.Client
 	headers         http.Header
+	metricRegistry  impactmetrics.ImpactMetricsDataSource
+}
+
+type impactMetricsOptions struct {
+	appName     string
+	environment string
+}
+
+type impactMetricsChannels struct {
+	warnings chan error
 }
