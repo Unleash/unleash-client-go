@@ -2,6 +2,7 @@ name: Build PRs
 
 on:
   pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
@@ -26,11 +27,17 @@ jobs:
         run: go get -t -v ./...
       - name: Go vet
         run: go vet ./...
+      - name: Install gotestfmt
+        run: |
+          go install github.com/gotesttools/gotestfmt/v2/cmd/gotestfmt@v2.5.0
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
       - name: Run spec tests
-        run: go test -v ./... -tags='norace'
+        run: go test -json ./... -tags='norace' | gotestfmt
       - name: Run all tests with race detection
         timeout-minutes: 1
-        run: go test -race -covermode atomic -coverprofile=profile.cov -v ./... -tags='!norace'
+        run: |
+          set -euo pipefail
+          go test -json -race -covermode=atomic -coverprofile=profile.cov ./... -tags='!norace' | gotestfmt
       - name: Send coverage
         uses: shogo82148/actions-goveralls@v1
         with:
