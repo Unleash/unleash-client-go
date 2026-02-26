@@ -63,6 +63,10 @@ const (
 	// OperatorSemverGt indicates that the context value
 	// must be greater than the specified SemVer version.
 	OperatorSemverGt Operator = "SEMVER_GT"
+
+	// OperatorRegex indicates that the context value
+	// must match the specified regular expression.
+	OperatorRegex Operator = "REGEX"
 )
 
 // Constraint represents a constraint on a particular context value.

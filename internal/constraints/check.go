@@ -62,6 +62,8 @@ func checkConstraint(ctx *context.Context, constraint api.Constraint) (bool, err
 		return operatorSemverLt(ctx, constraint)
 	case api.OperatorSemverGt:
 		return operatorSemverGt(ctx, constraint)
+	case api.OperatorRegex:
+		return operatorRegex(ctx, constraint), nil
 	default:
 		return false, fmt.Errorf("unknown constraint operator: %s", constraint.Operator)
 	}
