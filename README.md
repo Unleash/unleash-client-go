@@ -13,7 +13,7 @@ You can use this client with [Unleash Enterprise](https://www.getunleash.io/pric
 
 ## Go Version
 
-The client is currently tested against Go 1.21.x, 1.22.x, 1.23.x and 1.24.x. These versions will be updated
+The client is currently tested against Go 1.21.x, 1.22.x, 1.23.x, 1.24.x, 1.25.x and 1.26.x. These versions will be updated
 as new versions of Go are released.
 
 The client may work on older versions of Go as well, but is not actively tested.
