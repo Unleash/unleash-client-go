@@ -27,6 +27,15 @@ jobs:
         run: go get -t -v ./...
       - name: Go vet
         run: go vet ./...
+      - name: Check gofmt
+        run: |
+          set -euo pipefail
+          files="$(gofmt -l .)"
+          if [ -n "$files" ]; then
+            echo "These files are not gofmt'd:"
+            echo "$files"
+            exit 1
+          fi
       - name: Install gotestfmt
         run: |
           go install github.com/gotesttools/gotestfmt/v2/cmd/gotestfmt@v2.5.0

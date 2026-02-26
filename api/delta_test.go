@@ -497,7 +497,7 @@ func TestUnmarshalDeltaEvents(t *testing.T) {
 
 func TestEmptyDelta(t *testing.T) {
 	jsonStr := `{"events": []}`
-	
+
 	var delta ClientFeaturesDelta
 	err := json.Unmarshal([]byte(jsonStr), &delta)
 	if err != nil {
@@ -519,12 +519,12 @@ func TestDeltaWithUnknownEventType(t *testing.T) {
 
 	var delta ClientFeaturesDelta
 	err := json.Unmarshal([]byte(jsonStr), &delta)
-	
+
 	// Should handle unknown event types gracefully
 	if err != nil {
 		t.Logf("Unmarshal with unknown event type: %v", err)
 	}
-	
+
 	// Should still process known events
 	knownEvents := 0
 	for _, event := range delta.Events {
@@ -532,7 +532,7 @@ func TestDeltaWithUnknownEventType(t *testing.T) {
 			knownEvents++
 		}
 	}
-	
+
 	if knownEvents != 1 {
 		t.Errorf("Expected 1 known event, got %d", knownEvents)
 	}
@@ -544,24 +544,24 @@ func TestDeltaEventComparison(t *testing.T) {
 		EventId: 1,
 		Feature: Feature{Name: "test"},
 	}
-	
+
 	event2 := &FeatureUpdatedEvent{
 		Type:    "feature-updated",
 		EventId: 1,
 		Feature: Feature{Name: "test"},
 	}
-	
+
 	event3 := &FeatureUpdatedEvent{
 		Type:    "feature-updated",
 		EventId: 2,
 		Feature: Feature{Name: "test"},
 	}
-	
+
 	// Same event ID and content
 	if !reflect.DeepEqual(event1, event2) {
 		t.Error("Expected events with same ID and content to be equal")
 	}
-	
+
 	// Different event ID
 	if reflect.DeepEqual(event1, event3) {
 		t.Error("Expected events with different IDs to be different")
