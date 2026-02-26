@@ -102,19 +102,19 @@ type toggleCounters struct {
 
 type metrics struct {
 	metricsChannels
-	options         metricsOptions
-	started         time.Time
-	lastCloseTime   time.Time
-	counters        sync.Map // map[string]*toggleCounters
-	ticker          *time.Ticker
-	close           chan struct{}
-	closed          chan struct{}
-	ctx             context.Context
-	cancel          func()
-	maxSkips        float64
-	errors          float64
-	skips           float64
-	metricRegistry  impactmetrics.ImpactMetricsDataSource
+	options        metricsOptions
+	started        time.Time
+	lastCloseTime  time.Time
+	counters       sync.Map // map[string]*toggleCounters
+	ticker         *time.Ticker
+	close          chan struct{}
+	closed         chan struct{}
+	ctx            context.Context
+	cancel         func()
+	maxSkips       float64
+	errors         float64
+	skips          float64
+	metricRegistry impactmetrics.ImpactMetricsDataSource
 }
 
 func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
