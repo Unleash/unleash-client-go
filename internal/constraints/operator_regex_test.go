@@ -45,3 +45,22 @@ func TestOperatorRegex(t *testing.T) {
 		}
 	}
 }
+
+// quick and dirty to get a sense of the perf hit here
+func BenchmarkCheck_OperatorRegex(b *testing.B) {
+	ctx := &context.Context{Properties: map[string]string{"email": "example@getunleash.ai"}}
+	constraints := []api.Constraint{{ContextName: "email", Operator: "REGEX", Value: ".*@getunleash\\.ai$"}}
+
+	// warm up, not actually sure if go bench will do this for us but this is relatively cheap and I trust nothing at this point
+	_, _ = Check(ctx, constraints)
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		ok, err := Check(ctx, constraints)
+		if err != nil || !ok {
+			b.Fatalf("unexpected result ok=%v err=%v", ok, err)
+		}
+	}
+}
