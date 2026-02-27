@@ -18,7 +18,7 @@ import (
 const (
 	deprecatedSuffix = "/features"
 	clientName       = "unleash-go-sdk"
-	clientVersion    = "6.1.0"
+	clientVersion    = "6.2.0"
 	specVersion      = "4.3.1"
 )
 
