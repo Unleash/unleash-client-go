@@ -44,10 +44,10 @@ var disabledVariantFeatureEnabled = &api.Variant{
 // Client is a structure representing an API client of an Unleash server.
 type Client struct {
 	errorChannels
-	options            configOption
-	repository         *repository
-	metrics            *metrics
-	impactMetrics      *impactmetrics.MetricsAPI
+	options    configOption
+	repository *repository
+	metrics    *metrics
+	*impactmetrics.MetricsAPI
 	strategies         []strategy.Strategy
 	errorListener      ErrorListener
 	metricsListener    MetricListener
@@ -232,7 +232,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 			warnings: errChannels.warnings,
 		},
 	)
-	uc.impactMetrics = impactMetricsAPI
+	uc.MetricsAPI = impactMetricsAPI
 
 	uc.metrics = newMetrics(
 		metricsOptions{
@@ -436,37 +436,7 @@ func (uc *Client) getVariant(feature string, snapshot *FeatureMemoryState, opts 
 
 // Deprecated: Use impact metrics methods directly on the client instead.
 func (uc *Client) ImpactMetrics() *impactmetrics.MetricsAPI {
-	return uc.impactMetrics
-}
-
-// DefineCounter registers a counter metric for impact metrics reporting.
-func (uc *Client) DefineCounter(name, help string) {
-	uc.impactMetrics.DefineCounter(name, help)
-}
-
-// IncrementCounter increments a previously defined counter metric by 1.
-func (uc *Client) IncrementCounter(name string) {
-	uc.impactMetrics.IncrementCounter(name)
-}
-
-// DefineGauge registers a gauge metric for impact metrics reporting.
-func (uc *Client) DefineGauge(name, help string) {
-	uc.impactMetrics.DefineGauge(name, help)
-}
-
-// UpdateGauge updates the value for a previously defined gauge metric.
-func (uc *Client) UpdateGauge(name string, value float64) {
-	uc.impactMetrics.UpdateGauge(name, value)
-}
-
-// DefineHistogram registers a histogram metric for impact metrics reporting.
-func (uc *Client) DefineHistogram(name, help string, buckets ...float64) {
-	uc.impactMetrics.DefineHistogram(name, help, buckets...)
-}
-
-// ObserveHistogram records a value in a previously defined histogram metric.
-func (uc *Client) ObserveHistogram(name string, value float64) {
-	uc.impactMetrics.ObserveHistogram(name, value)
+	return uc.MetricsAPI
 }
 
 // Close stops the client from syncing data from the server.
