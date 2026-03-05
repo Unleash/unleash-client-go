@@ -96,6 +96,14 @@ func IncrementCounter(name string) {
 	defaultClient.IncrementCounter(name)
 }
 
+// IncrementCounterBy increments a previously defined counter metric by a specified value.
+func IncrementCounterBy(name string, value int64) {
+	if defaultClient == nil {
+		return
+	}
+	defaultClient.IncrementCounterBy(name, value)
+}
+
 // DefineGauge registers a gauge metric for impact metrics reporting.
 func DefineGauge(name, help string) {
 	if defaultClient == nil {
