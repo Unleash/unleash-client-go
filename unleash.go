@@ -79,3 +79,59 @@ func Close() error {
 func WaitForReady() {
 	defaultClient.WaitForReady()
 }
+
+// DefineCounter registers a counter metric for impact metrics reporting.
+func DefineCounter(name, help string) {
+	if defaultClient == nil {
+		return
+	}
+	defaultClient.DefineCounter(name, help)
+}
+
+// IncrementCounter increments a previously defined counter metric.
+func IncrementCounter(name string) {
+	if defaultClient == nil {
+		return
+	}
+	defaultClient.IncrementCounter(name)
+}
+
+// IncrementCounterBy increments a previously defined counter metric by a specified value.
+func IncrementCounterBy(name string, value int64) {
+	if defaultClient == nil {
+		return
+	}
+	defaultClient.IncrementCounterBy(name, value)
+}
+
+// DefineGauge registers a gauge metric for impact metrics reporting.
+func DefineGauge(name, help string) {
+	if defaultClient == nil {
+		return
+	}
+	defaultClient.DefineGauge(name, help)
+}
+
+// UpdateGauge updates the value for a previously defined gauge metric.
+func UpdateGauge(name string, value float64) {
+	if defaultClient == nil {
+		return
+	}
+	defaultClient.UpdateGauge(name, value)
+}
+
+// DefineHistogram registers a histogram metric for impact metrics reporting.
+func DefineHistogram(name, help string, buckets ...float64) {
+	if defaultClient == nil {
+		return
+	}
+	defaultClient.DefineHistogram(name, help, buckets...)
+}
+
+// ObserveHistogram records a value in a previously defined histogram metric.
+func ObserveHistogram(name string, value float64) {
+	if defaultClient == nil {
+		return
+	}
+	defaultClient.ObserveHistogram(name, value)
+}

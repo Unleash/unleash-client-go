@@ -44,10 +44,10 @@ var disabledVariantFeatureEnabled = &api.Variant{
 // Client is a structure representing an API client of an Unleash server.
 type Client struct {
 	errorChannels
-	options            configOption
-	repository         *repository
-	metrics            *metrics
-	impactMetrics      *impactmetrics.MetricsAPI
+	options    configOption
+	repository *repository
+	metrics    *metrics
+	*impactmetrics.MetricsAPI
 	strategies         []strategy.Strategy
 	errorListener      ErrorListener
 	metricsListener    MetricListener
@@ -232,7 +232,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 			warnings: errChannels.warnings,
 		},
 	)
-	uc.impactMetrics = impactMetricsAPI
+	uc.MetricsAPI = impactMetricsAPI
 
 	uc.metrics = newMetrics(
 		metricsOptions{
@@ -434,8 +434,9 @@ func (uc *Client) getVariant(feature string, snapshot *FeatureMemoryState, opts 
 	}.GetVariant(ctx, nil)
 }
 
+// Deprecated: Use impact metrics methods directly on the client instead.
 func (uc *Client) ImpactMetrics() *impactmetrics.MetricsAPI {
-	return uc.impactMetrics
+	return uc.MetricsAPI
 }
 
 // Close stops the client from syncing data from the server.
