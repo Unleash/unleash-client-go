@@ -3,415 +3,93 @@
 
 # unleash-go-sdk
 
-Unleash Client for Go. Read more about the [Unleash project](https://github.com/Unleash/unleash)
+The official Unleash SDK for Go. This SDK lets you evaluate feature flags in your Go services and applications.
 
-**Version 6 of the client changed the module name from `github.com/Unleash/unleash-client-go/v5` to `github.com/Unleash/unleash-go-sdk/v6`. Other than the module name change, it should be a drop-in replacement for the previous version.** If you're using the v5 branch, consider migrating to v6 as soon as possible.
+[Unleash](https://github.com/Unleash/unleash) is an open-source feature management platform. You can use this SDK with [Unleash Enterprise](https://www.getunleash.io/pricing) or [Unleash Open Source](https://github.com/Unleash/unleash).
 
-Unleash is a private, secure, and scalable [feature management platform](https://www.getunleash.io/) built to reduce the risk of releasing new features and accelerate software development. This Backend Go SDK is designed to help you integrate with Unleash and evaluate feature flags inside your application.
+For complete documentation, see the [Go SDK reference](https://docs.getunleash.io/sdks/go).
 
-You can use this client with [Unleash Enterprise](https://www.getunleash.io/pricing?utm_source=readme&utm_medium=go) or [Unleash Open Source](https://github.com/Unleash/unleash).
+## Requirements
 
-## Go Version
+- Go 1.21 or later (tested against Go 1.21.x through 1.26.x)
 
-The client is currently tested against Go 1.21.x, 1.22.x, 1.23.x, 1.24.x, 1.25.x and 1.26.x. These versions will be updated
-as new versions of Go are released.
+## Installation
 
-The client may work on older versions of Go as well, but is not actively tested.
-
-## Getting started
-
-### 1. Install unleash-go-sdk
-
-To install the latest version of the client use:
+Install the SDK module with `go get`:
 
 ```bash
-go get github.com/Unleash/unleash-go-sdk/v6
+go get github.com/Unleash/unleash-go-sdk/v6@latest
 ```
 
-### 2. Initialize unleash
+## Quick start
 
-The easiest way to get started with Unleash is to initialize it early in your application code:
+The following example initializes the SDK and checks a feature flag:
 
-**Asynchronous initialization example:**
 ```go
+package main
+
 import (
-	"github.com/Unleash/unleash-go-sdk/v6"
+	"net/http"
+
+	unleash "github.com/Unleash/unleash-go-sdk/v6"
 )
-
-func init() {
-	unleash.Initialize(
-		unleash.WithListener(&unleash.DebugListener{}),
-		unleash.WithAppName("my-application"),
-		unleash.WithUrl("https://eu.app.unleash-hosted.com/demo/api/"),
-		unleash.WithCustomHeaders(http.Header{"Authorization": {"<API token>"}}),
-	)
-}
-```
-
-**Synchronous initialization example:**
-
-```go
-import (
-	"github.com/Unleash/unleash-go-sdk/v6"
-)
-
-func init() {
-	unleash.Initialize(
-		unleash.WithListener(&unleash.DebugListener{}),
-		unleash.WithAppName("my-application"),
-		unleash.WithUrl("https://eu.app.unleash-hosted.com/demo/api/"),
-		unleash.WithCustomHeaders(http.Header{"Authorization": {"<API token>"}}),
-	)
-
-	// Note this will block until the default client is ready
-	unleash.WaitForReady()
-}
-```
-
-#### Preloading feature toggles
-
-If you'd like to prebake your application with feature toggles (maybe you're working without persistent storage, so Unleash's backup isn't available), you can replace the defaultStorage implementation with a BootstrapStorage. This allows you to pass in a reader to where data in the format of `/api/client/features` can be found.
-
-#### Bootstrapping from file
-
-Bootstrapping from file on disk is then done using something similar to:
-
-```go
-import (
-	"github.com/Unleash/unleash-go-sdk/v6"
-)
-
-func init() {
-	myBootstrap := os.Open("bootstrapfile.json") // or wherever your file is located at runtime
-	// BootstrapStorage handles the case where Reader is nil
-	unleash.Initialize(
-		unleash.WithListener(&unleash.DebugListener{}),
-		unleash.WithAppName("my-application"),
-		unleash.WithUrl("https://eu.app.unleash-hosted.com/demo/api/"),
-		unleash.WithStorage(&BootstrapStorage{Reader: myBootstrap})
-	)
-}
-```
-
-#### Bootstrapping from S3
-
-Bootstrapping from S3 is then done by downloading the file using the AWS library and then passing in a Reader to the just downloaded file:
-
-```go
-import (
-	"github.com/Unleash/unleash-go-sdk/v6"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
-)
-
-func init() {
-	// Load the shared AWS config
-	cfg, err := config.LoadDefaultConfig(context.TODO())
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Create an S3 client
-	client := s3.NewFromConfig(cfg)
-
-	obj, err := client.GetObject(context.TODO(), &s3.GetObjectInput{
-		Bucket: aws.String("YOURBUCKET"),
-		Key:    aws.String("YOURKEY"),
-	})
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	reader := obj.Body
-	defer reader.Close()
-
-	// BootstrapStorage handles the case where Reader is nil
-	unleash.Initialize(
-		unleash.WithListener(&unleash.DebugListener{}),
-		unleash.WithAppName("YOURAPPNAME"),
-		unleash.WithUrl("YOURINSTANCE_URL"),
-		unleash.WithStorage(&BootstrapStorage{Reader: reader})
-	)
-}
-```
-
-#### Bootstrapping from Google
-
-Since the Google Cloud Storage API returns a Reader, implementing a Bootstrap from GCS is done using something similar to
-
-```go
-import (
-	"github.com/Unleash/unleash-go-sdk/v6"
-	"cloud.google.com/go/storage"
-)
-
-func init() {
-	ctx := context.Background() // Configure Google Cloud context
-	client, err := storage.NewClient(ctx) // Configure your client
-	if err != nil {
-		// TODO: Handle error.
-	}
-	defer client.Close()
-
-	// Fetch the bucket, then object and then create a reader
-	reader := client.Bucket(bucketName).Object("my-bootstrap.json").NewReader(ctx)
-
-	// BootstrapStorage handles the case where Reader is nil
-	unleash.Initialize(
-		unleash.WithListener(&unleash.DebugListener{}),
-		unleash.WithAppName("my-application"),
-		unleash.WithUrl("https://eu.app.unleash-hosted.com/demo/api/"),
-		unleash.WithStorage(&unleash.BootstrapStorage{Reader: reader})
-	)
-}
-```
-
-### 3. Use unleash
-
-After you have initialized the unleash-client you can easily check if a feature
-toggle is enabled or not.
-
-```go
-unleash.IsEnabled("app.ToggleX")
-```
-
-### 4. Stop unleash
-
-To shut down the client (turn off the polling) you can simply call the
-destroy-method. This is typically not required.
-
-unleash.Close()
-
-### Built in activation strategies
-
-The Go client comes with implementations for the built-in activation strategies
-provided by unleash.
-
-- DefaultStrategy
-- UserIdStrategy
-- FlexibleRolloutStrategy
-- GradualRolloutUserIdStrategy
-- GradualRolloutSessionIdStrategy
-- GradualRolloutRandomStrategy
-- RemoteAddressStrategy
-- ApplicationHostnameStrategy
-
-[Read more about activation strategies in the docs](https://docs.getunleash.io/reference/activation-strategies).
-
-### Unleash context
-
-In order to use some of the common activation strategies you must provide an
-[unleash-context](https://docs.getunleash.io/reference/unleash-context).
-This client SDK allows you to send in the unleash context as part of the `isEnabled` call:
-
-```go
-ctx := context.Context{
-	UserId:        "123",
-	SessionId:     "some-session-id",
-	RemoteAddress: "127.0.0.1",
-}
-
-unleash.IsEnabled(
-	"someToggle",
-	unleash.FeatureOptions{
-		Ctx: ctx,
-	},
-)
-```
-
-### Caveat
-
-This client uses go routines to report several events and doesn't drain the channel by default. So you need to either register a listener using `WithListener` or drain the channel "manually" (demonstrated in [this example](https://github.com/Unleash/unleash-go-sdk/blob/v6/example_with_instance_test.go)).
-
-### Feature Resolver
-
-`FeatureResolver` is a `FeatureOption` used in `IsEnabled`. This was originally added to work around a cache issue, this should no longer be necessary as of v6 and may be removed in a later release.
-
-The `FeatureResolver` can be used to provide a feature instance in a different way than the client would normally retrieve it.
-
-An example of its usage is below:
-
-```go
-ctx := context.Context{
-	UserId:        "123",
-	SessionId:     "some-session-id",
-	RemoteAddress: "127.0.0.1",
-}
-
-// the FeatureResolver function that will be passed into WithResolver
-resolver := func(featureName string) *api.Feature {
-    if featureName == "someToggle" {
-        // Feature being created in place for sake of example, but it is preferable an existing feature instance is used
-        return &api.Feature{
-            Name:        "someToggle",
-            Description: "Example of someToggle",
-            Enabled:     true,
-            Strategies: []api.Strategy{
-                {
-                    Id:   1,
-                    Name: "default",
-                },
-            },
-            CreatedAt:  time.Time{},
-            Strategy:   "default-strategy",
-        }
-    } else {
-        // it shouldn't reach this block because the name will match above "someToggle" for this example
-        return nil
-    }
-}
-
-// This would return true because the matched strategy is default and the feature is Enabled
-unleash.IsEnabled(
-	"someToggle",
-	unleash.FeatureOptions{
-		Ctx: ctx,
-		Resolver: resolver,
-	},
-)
-```
-
-### Impression data
-
-When impression data is enabled on a flag, the SDK will emit impression events during evaluation. You can hook into these with a custom listener to collect insights or integrate with analytics. You can [read more about impression data in Unleash's documentation](https://docs.getunleash.io/reference/impression-data).
-
-```go
-type MyListener struct {
-	unleash.DebugListener
-}
-
-func (l *MyListener) OnImpression(e unleash.ImpressionEvent) {
-	fmt.Printf("Custom Impression: %s = %v (%s)\n", e.FeatureName, e.Enabled, e.EventType)
-	if e.Context != nil {
-		fmt.Printf("Context: userId=%s sessionId=%s\n", e.Context.UserId, e.Context.SessionId)
-	}
-}
 
 func main() {
-	unleash.Initialize(
-		unleash.WithListener(&MyListener{}),
-		unleash.WithAppName("my-app"),
-		unleash.WithUrl("https://eu.app.unleash-hosted.com/demo/api/"),
+	err := unleash.Initialize(
+		unleash.WithAppName("my-go-service"),
+		unleash.WithUrl("https://<your-unleash-instance>/api/"),
+		unleash.WithCustomHeaders(http.Header{"Authorization": {"<your-backend-token>"}}),
 	)
+
+	if err != nil {
+		panic(err)
+	}
+
+	defer unleash.Close()
+
+	if unleash.IsEnabled("my-feature", unleash.FeatureOptions{}) {
+		// new behavior
+	}
 }
 ```
 
-## Impact metrics
+## Contributing
 
-Impact metrics are lightweight, application-level time-series metrics stored and visualized directly inside Unleash. They allow you to connect specific application data, such as request counts, error rates, or latency, to your feature flags and release plans.
+### Local development
 
-These metrics help validate feature impact and automate release processes. For instance, you can monitor usage patterns or performance to determine if a feature meets its goals.
+Clone the repository and the [client specification](https://github.com/Unleash/client-specification) test data. The client specification defines a shared contract that all Unleash SDKs test against.
 
-The SDK automatically attaches context labels to metrics: `appName` and `environment`.
-
-### Counters
-
-Use counters for cumulative values that only increase (total requests, errors):
-
-```go
-client.ImpactMetrics().DefineCounter(
-    "request_count",
-    "Total number of HTTP requests processed",
-)
-
-client.ImpactMetrics().IncrementCounter("request_count")
+```bash
+git clone https://github.com/Unleash/unleash-go-sdk.git
+cd unleash-go-sdk
+mkdir -p testdata
+git clone https://github.com/Unleash/client-specification.git testdata/client-specification
 ```
 
-### Gauges
-
-Use gauges for point-in-time values that can go up or down:
-
-```go
-client.ImpactMetrics().DefineGauge(
-    "total_users",
-    "Total number of registered users",
-)
-
-client.ImpactMetrics().UpdateGauge("total_users", userCount)
-```
-
-### Histograms
-
-Histograms measure value distribution (request duration, response size):
-
-```go
-client.ImpactMetrics().DefineHistogram(
-    "request_time_ms",
-    "Time taken to process a request in milliseconds",
-    50, 100, 200, 500, 1000,
-)
-
-client.ImpactMetrics().ObserveHistogram("request_time_ms", 125)
-```
-
-Impact metrics are batched and sent using the same interval as standard SDK metrics.
-
-## Development
-
-To override dependency on unleash-go-sdk github repository to a local development folder (for instance when building a local test-app for the SDK),
-you can add the following to your apps `go.mod`:
-
-```mod
-    replace github.com/Unleash/unleash-go-sdk/v6 => ../unleash-go-sdk/
-```
-
-
-
-## Steps to release
-
-- Update the clientVersion in `client.go`
-- Tag the repository with the new tag
-- Create the release manually in Github
-
-## Adding client specifications
-
-In order to make sure the unleash clients uphold their contract, we have defined a set of
-client specifications that define this contract. These are used to make sure that each unleash client
-at any time adhere to the contract, and define a set of functionality that is core to unleash. You can view
-the [client specifications here](https://github.com/Unleash/client-specification).
-
-In order to make the tests run please do the following steps.
+To test a local application against your development copy of the SDK, add a `replace` directive to the application's `go.mod`:
 
 ```
-// in repository root
-// testdata is gitignored
-mkdir testdata
-cd testdata
-git clone https://github.com/Unleash/client-specification.git
+replace github.com/Unleash/unleash-go-sdk/v6 => ../unleash-go-sdk/
 ```
 
-Requirements:
+### Running tests
 
-- make
-- golint (go get -u golang.org/x/lint/golint)
+Use `make` to run the test suite:
 
-Run tests:
-
-    make
-
-Run lint check:
-
-    make lint
-
-Run code-style checks:(currently failing)
-
-    make strict-check
-
-Run race-tests:
-
-    make test-race
-
-## Benchmarking
-
-You can benchmark feature toggle evaluation by running:
-
+```bash
+make          # vet + tests
+make test-race # tests with the race detector
 ```
+
+### Benchmarking
+
+Run the feature flag evaluation benchmark:
+
+```bash
 go test -run=^$ -bench=BenchmarkFeatureToggleEvaluation -benchtime=10s
 ```
 
-Here's an example of how the output could look like:
+Example output on a MacBook Pro (M1 Pro, 2021) with 16 GB RAM:
 
 ```
 goos: darwin
@@ -423,12 +101,24 @@ PASS
 ok github.com/Unleash/unleash-go-sdk/v6 13.388s
 ```
 
-In this example the benchmark was run on a MacBook Pro (M1 Pro, 2021) with 16GB RAM.
+**854.3 ns/op** translates to roughly **101 billion** evaluations per day on a single CPU core.
 
-We can see a result of **854.3 ns/op**, which means around **101.131 billion** feature toggle evaluations per day.
+### Code style and formatting
 
-**Note**: The benchmark is run with a single CPU core, no parallelism.
+Use the following `make` targets to format and lint your code:
 
-## Design philsophy
+```bash
+make fmt          # format code
+make fmt-check    # check formatting without writing
+make strict-check # vet + golint
+```
 
-This feature flag SDK is designed according to our design philosophy. You can [read more about that here](https://docs.getunleash.io/topics/feature-flags/feature-flag-best-practices).
+### Releasing
+
+1. Update `clientVersion` in `client.go`.
+2. Tag the repository with the new version.
+3. Create the release in GitHub.
+
+## License
+
+Apache-2.0
