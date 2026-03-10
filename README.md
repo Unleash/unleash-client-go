@@ -47,8 +47,20 @@ func main() {
 
 	defer unleash.Close()
 
-	if unleash.IsEnabled("my-feature", unleash.FeatureOptions{}) {
+	// Block until the SDK has fetched flag data from Unleash.
+	// In production, consider using bootstrapping or event listeners instead.
+	unleash.WaitForReady()
+
+	enabled := unleash.IsEnabled("my-feature", unleash.FeatureOptions{})
+	if enabled {
 		// new behavior
+	}
+
+	variant := unleash.GetVariant("checkout-experiment", unleash.VariantOptions{})
+	if variant.Name == "blue" {
+		// blue variant behavior
+	} else if variant.Name == "green" {
+		// green variant behavior
 	}
 }
 ```
