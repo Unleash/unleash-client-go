@@ -11,7 +11,7 @@ For complete documentation, see the [Go SDK reference](https://docs.getunleash.i
 
 ## Requirements
 
-- Go 1.21 or later (tested against Go 1.21.x through 1.26.x)
+- Go 1.23 or later (tested up to 1.26)
 
 ## Installation
 
@@ -128,8 +128,7 @@ make strict-check # vet + golint
 ### Releasing
 
 1. Update `clientVersion` in `client.go`.
-2. Tag the repository with the new version.
-3. Create the release in GitHub.
+2. Create a release in GitHub with a semantic version tag.
 
 ## License
 
