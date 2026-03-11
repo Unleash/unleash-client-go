@@ -5,6 +5,7 @@ go 1.23
 require (
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/h2non/gock v1.2.0
+	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/launchdarkly/eventsource v1.10.0
 	github.com/nbio/st v0.0.0-20140626010706-e9e8d9816f32
 	github.com/stretchr/testify v1.10.0
@@ -14,7 +15,6 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/h2non/parth v0.0.0-20190131123155-b4df798d6542 // indirect
-	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
