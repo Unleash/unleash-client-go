@@ -19,7 +19,7 @@ const (
 	deprecatedSuffix = "/features"
 	clientName       = "unleash-go-sdk"
 	clientVersion    = "6.3.0"
-	specVersion      = "4.3.1"
+	specVersion      = "6.1.0"
 )
 
 var defaultStrategies = []strategy.Strategy{
