@@ -60,13 +60,25 @@ const (
 	// must be less than the specified SemVer version.
 	OperatorSemverLt Operator = "SEMVER_LT"
 
+	// OperatorSemverLte indicates that the context value
+	// must be less than or equal to the specified SemVer version.
+	OperatorSemverLte Operator = "SEMVER_LTE"
+
 	// OperatorSemverGt indicates that the context value
 	// must be greater than the specified SemVer version.
 	OperatorSemverGt Operator = "SEMVER_GT"
 
+	// OperatorSemverGte indicates that the context value
+	// must be greater than or equal to the specified SemVer version.
+	OperatorSemverGte Operator = "SEMVER_GTE"
+
 	// OperatorRegex indicates that the context value
 	// must match the specified regular expression.
 	OperatorRegex Operator = "REGEX"
+
+	// OperatorInCidr indicates that the context value
+	// must be contained within one of the specified CIDR ranges.
+	OperatorInCidr Operator = "IN_CIDR"
 )
 
 // Constraint represents a constraint on a particular context value.

@@ -18,9 +18,21 @@ func operatorSemverLt(ctx *context.Context, constraint api.Constraint) (bool, er
 	})
 }
 
+func operatorSemverLte(ctx *context.Context, constraint api.Constraint) (bool, error) {
+	return operatorSemver(ctx, constraint, func(context *semver.Version, constraint *semver.Version) bool {
+		return context.LessThan(constraint) || context.Equal(constraint)
+	})
+}
+
 func operatorSemverGt(ctx *context.Context, constraint api.Constraint) (bool, error) {
 	return operatorSemver(ctx, constraint, func(context *semver.Version, constraint *semver.Version) bool {
 		return context.GreaterThan(constraint)
+	})
+}
+
+func operatorSemverGte(ctx *context.Context, constraint api.Constraint) (bool, error) {
+	return operatorSemver(ctx, constraint, func(context *semver.Version, constraint *semver.Version) bool {
+		return context.GreaterThan(constraint) || context.Equal(constraint)
 	})
 }
 
