@@ -32,7 +32,7 @@ func operatorSemverGt(ctx *context.Context, constraint api.Constraint) (bool, er
 
 func operatorSemverGte(ctx *context.Context, constraint api.Constraint) (bool, error) {
 	return operatorSemver(ctx, constraint, func(context *semver.Version, constraint *semver.Version) bool {
-		return context.GreaterThan(constraint) || context.Equal(constraint)
+		return !context.LessThan(constraint)
 	})
 }
 
