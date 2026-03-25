@@ -33,7 +33,9 @@ func TestStreamingModeConfiguration(t *testing.T) {
 	assert.NotNil(t, client)
 
 	assert.True(t, client.options.IsStreamingMode())
-	assert.True(t, client.repository.IsStreaming())
+	if _, ok := client.repository.(*repository); !ok {
+		t.Fatalf("expected streamingRepository, got %T", client.repository)
+	}
 
 	client.WaitForReady()
 	client.Close()

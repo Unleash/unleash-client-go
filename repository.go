@@ -21,6 +21,13 @@ var (
 	errNoChange = errors.New("no change")
 )
 
+type togglerFetcher interface {
+	sync()
+	list() []api.Feature
+	snapshot() *FeatureMemoryState
+	Close() error
+}
+
 type repository struct {
 	repositoryChannels
 	sync.RWMutex
@@ -246,11 +253,6 @@ func (r *repository) fetch() error {
 	r.successfulFetch()
 	r.Unlock()
 	return nil
-}
-
-// IsStreaming returns whether the repository is currently in streaming mode
-func (r *repository) IsStreaming() bool {
-	return r.isStreaming
 }
 
 func (r *repository) statusIsOK(resp *http.Response) error {

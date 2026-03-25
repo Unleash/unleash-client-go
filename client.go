@@ -45,7 +45,7 @@ var disabledVariantFeatureEnabled = &api.Variant{
 type Client struct {
 	errorChannels
 	options    configOption
-	repository *repository
+	repository togglerFetcher
 	metrics    *metrics
 	*impactmetrics.MetricsAPI
 	strategies         []strategy.Strategy

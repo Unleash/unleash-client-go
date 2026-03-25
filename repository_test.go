@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -16,6 +17,18 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
+
+type noopRepoStorage struct{}
+
+func (s *noopRepoStorage) Persist(features *api.FeatureResponse) error {
+	return nil
+}
+
+func (s *noopRepoStorage) Load() (*api.FeatureResponse, error) {
+	return &api.FeatureResponse{}, nil
+}
+
+func (s *noopRepoStorage) Init(backupPath, appName string) {}
 
 // TestRepository_GetFeaturesFail tests that OnReady isn't fired unless
 // /client/features has returned successfully.
@@ -216,17 +229,32 @@ func TestRepository_backs_off_on_http_statuses(t *testing.T) {
 		gock.New(mockerServer).
 			Get("/client/features").
 			Reply(tc.statusCode)
-		client, err := NewClient(
-			WithUrl(mockerServer),
-			WithAppName(mockAppName),
-			WithDisableMetrics(true),
-			WithInstanceId(mockInstanceId),
-			WithRefreshInterval(time.Millisecond*15),
-		)
+		serverURL, err := url.Parse(mockerServer)
 		a.Nil(err)
+		errChannels := errorChannels{
+			errors:   make(chan error, 10),
+			warnings: make(chan error, 10),
+		}
+		repoChannels := repositoryChannels{
+			errorChannels: errChannels,
+			ready:         make(chan bool, 1),
+			update:        make(chan bool, 1),
+		}
+		repo := newRepository(
+			repositoryOptions{
+				url:             *serverURL,
+				appName:         mockAppName,
+				instanceId:      mockInstanceId,
+				refreshInterval: time.Millisecond * 15,
+				storage:         &noopRepoStorage{},
+				httpClient:      http.DefaultClient,
+				headers:         make(http.Header),
+			},
+			repoChannels,
+		)
 		time.Sleep(20 * time.Millisecond)
-		err = client.Close()
-		a.Equal(tc.errorCount, client.repository.errors)
+		err = repo.Close()
+		a.Equal(tc.errorCount, repo.errors)
 		a.Nil(err)
 	}
 }
@@ -241,16 +269,35 @@ func TestRepository_back_offs_are_gradually_reduced_on_success(t *testing.T) {
 		Get("/client/features").
 		Reply(200).
 		BodyString(`{ "version": 2, "features": []}`)
-	client, err := NewClient(
-		WithUrl(mockerServer),
-		WithAppName(mockAppName),
-		WithDisableMetrics(true),
-		WithInstanceId(mockInstanceId),
-		WithRefreshInterval(time.Millisecond*10),
-	)
+	serverURL, err := url.Parse(mockerServer)
 	a.Nil(err)
-	client.WaitForReady()
-	err = client.Close()
-	a.Equal(float64(3), client.repository.errors) // 4 failures, and then one success, should reduce error count to 3
+	errChannels := errorChannels{
+		errors:   make(chan error, 10),
+		warnings: make(chan error, 10),
+	}
+	repoChannels := repositoryChannels{
+		errorChannels: errChannels,
+		ready:         make(chan bool, 1),
+		update:        make(chan bool, 1),
+	}
+	repo := newRepository(
+		repositoryOptions{
+			url:             *serverURL,
+			appName:         mockAppName,
+			instanceId:      mockInstanceId,
+			refreshInterval: time.Millisecond * 10,
+			storage:         &noopRepoStorage{},
+			httpClient:      http.DefaultClient,
+			headers:         make(http.Header),
+		},
+		repoChannels,
+	)
+	select {
+	case <-repoChannels.ready:
+	case <-time.NewTimer(time.Second).C:
+		t.Fatal("repository isn't ready but should be")
+	}
+	err = repo.Close()
+	a.Equal(float64(3), repo.errors) // 4 failures, and then one success, should reduce error count to 3
 	a.Nil(err)
 }
