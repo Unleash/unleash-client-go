@@ -4,14 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/Unleash/unleash-go-sdk/v6/api"
 	"github.com/launchdarkly/eventsource"
 )
 
-// streamingClient handles the SSE connection for streaming feature updates
 type streamingClient struct {
 	url                string
 	appName            string
@@ -19,18 +17,30 @@ type streamingClient struct {
 	httpClient         *http.Client
 	headers            http.Header
 	stream             *eventsource.Stream
+	storage            Storage
 	deltaProcessor     *deltaProcessor
 	ctx                context.Context
 	cancel             context.CancelFunc
-	running            bool
-	runningMutex       sync.RWMutex
 	repositoryChannels repositoryChannels
 }
 
-func newStreamingClient(options repositoryOptions, repoChannels repositoryChannels, deltaProc *deltaProcessor) *streamingClient {
+func newStreamingFetcher(options repositoryOptions, repoChannels repositoryChannels) *streamingClient {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	return &streamingClient{
+	var apiResponse *api.FeatureResponse
+
+	if loadedState, err := options.storage.Load(); err == nil && loadedState != nil {
+		apiResponse = loadedState
+	} else {
+		apiResponse = &api.FeatureResponse{
+			Features: []api.Feature{},
+			Segments: []api.Segment{},
+		}
+	}
+
+	deltaProc := newDeltaProcessor(apiResponse)
+
+	streamingFetcher := &streamingClient{
 		url:                fmt.Sprintf("%sclient/streaming", options.url.String()),
 		appName:            options.appName,
 		instanceId:         options.instanceId,
@@ -40,17 +50,14 @@ func newStreamingClient(options repositoryOptions, repoChannels repositoryChanne
 		ctx:                ctx,
 		cancel:             cancel,
 		repositoryChannels: repoChannels,
-		running:            false,
 	}
+
+	streamingFetcher.sync()
+
+	return streamingFetcher
 }
 
-func (sc *streamingClient) start(_ Storage) error {
-	sc.runningMutex.Lock()
-	defer sc.runningMutex.Unlock()
-
-	if sc.running {
-		return nil
-	}
+func (sc *streamingClient) sync() error {
 
 	req, err := http.NewRequestWithContext(sc.ctx, "GET", sc.url, nil)
 	if err != nil {
@@ -85,13 +92,6 @@ func (sc *streamingClient) start(_ Storage) error {
 	sc.stream = stream
 
 	go func() {
-		defer func() {
-			if r := recover(); r != nil {
-				err := fmt.Errorf("SSE subscription panic recovered: %v", r)
-				sc.repositoryChannels.errorChannels.err(err)
-			}
-		}()
-
 		for {
 			select {
 			case event := <-stream.Events:
@@ -105,68 +105,43 @@ func (sc *streamingClient) start(_ Storage) error {
 		}
 	}()
 
-	sc.running = true
 	return nil
 }
 
-func (sc *streamingClient) handleEvent(event eventsource.Event) {
-	eventType := event.Event()
-
+func (sf *streamingClient) handleEvent(event eventsource.Event) {
 	if event == nil {
 		return
 	}
 
+	eventType := event.Event()
+
 	switch eventType {
-	case "unleash-connected":
-		if err := sc.handleConnectedEvent(event); err != nil {
-			sc.repositoryChannels.errorChannels.err(fmt.Errorf("error handling connected event: %w", err))
+	case "unleash-connected", "unleash-updated":
+		if err := sf.handleDomainEvent(event); err != nil {
+			// need to handle failover here but in a future PR
+			// this absolutely cannot just log. Something has gone
+			// very badly wrong and continuing leads to a corrupted state
 		}
-	case "unleash-updated":
-		if err := sc.handleUpdatedEvent(event); err != nil {
-			sc.repositoryChannels.errorChannels.err(fmt.Errorf("error handling updated event: %w", err))
-		}
-	default:
-		sc.repositoryChannels.errorChannels.warn(fmt.Errorf("unknown SSE event type: %s", eventType))
 	}
 }
 
-func (sc *streamingClient) handleConnectedEvent(event eventsource.Event) error {
+func (sf *streamingClient) handleDomainEvent(event eventsource.Event) error {
 	eventData := []byte(event.Data())
 	delta, err := api.ParseDelta(eventData)
 	if err != nil {
-		return fmt.Errorf("failed to parse connected event: %w", err)
+		return fmt.Errorf("failed to parse event: %w", err)
 	}
 
-	return sc.deltaProcessor.process(delta)
+	return sf.deltaProcessor.process(delta)
 }
 
-func (sc *streamingClient) handleUpdatedEvent(event eventsource.Event) error {
-	eventData := []byte(event.Data())
-	delta, err := api.ParseDelta(eventData)
-	if err != nil {
-		return fmt.Errorf("failed to parse updated event: %w", err)
-	}
-
-	return sc.deltaProcessor.process(delta)
+func (sf *streamingClient) snapshot() *FeatureMemoryState {
+	return sf.deltaProcessor.snapshot()
 }
 
-func (sc *streamingClient) stop() {
-	sc.runningMutex.Lock()
-	defer sc.runningMutex.Unlock()
-
-	if !sc.running {
-		return
+func (sf *streamingClient) Close() {
+	sf.cancel()
+	if sf.stream != nil {
+		sf.stream.Close()
 	}
-
-	sc.cancel()
-	if sc.stream != nil {
-		sc.stream.Close()
-	}
-	sc.running = false
-}
-
-func (sc *streamingClient) isRunning() bool {
-	sc.runningMutex.RLock()
-	defer sc.runningMutex.RUnlock()
-	return sc.running
 }

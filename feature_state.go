@@ -15,6 +15,20 @@ type FeatureMemoryState struct {
 	Segments map[int][]api.Constraint
 }
 
+func (s *FeatureMemoryState) list() []api.Feature {
+	features := make([]api.Feature, 0, len(s.Features))
+
+	// we're doing an explicit copy here, this function should not be on a hot path
+	// and we want to avoid exposing internal pointers or changing too much of the public API
+	for _, feature := range s.Features {
+		if feature == nil {
+			continue
+		}
+		features = append(features, *feature)
+	}
+	return features
+}
+
 // evaluateFeature applies strategies + constraints for a single feature.
 // It does NOT handle fallbacks or missing features; that's the caller's job.
 func (s *FeatureMemoryState) evaluateFeature(

@@ -22,10 +22,9 @@ var (
 )
 
 type togglerFetcher interface {
-	sync()
-	list() []api.Feature
+	start()
 	snapshot() *FeatureMemoryState
-	Close() error
+	stop()
 }
 
 type repository struct {
@@ -68,12 +67,7 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 		repo.options.httpClient = http.DefaultClient
 	}
 
-	if options.storage == nil {
-		repo.options.storage = &DefaultStorage{}
-	}
-
-	repo.options.storage.Init(options.backupPath, options.appName)
-	repo.deltaProcessor = newDeltaProcessor(repo, channels)
+	// repo.deltaProcessor = newDeltaProcessor(repo)
 
 	if loadedState, err := repo.options.storage.Load(); err == nil && loadedState != nil {
 		repo.updateState(loadedState)
@@ -84,15 +78,15 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 		})
 	}
 
-	// Delta processor needs to be collapsed into this module, it's far too jealous of this domain at the moment
-	if repo.isStreaming {
-		repo.streamingClient = newStreamingClient(
-			options,
-			channels,
-			repo.deltaProcessor)
-	}
+	// // Delta processor needs to be collapsed into this module, it's far too jealous of this domain at the moment
+	// if repo.isStreaming {
+	// 	repo.streamingClient = newStreamingClient(
+	// 		options,
+	// 		channels,
+	// 		repo.deltaProcessor)
+	// }
 
-	go repo.sync()
+	go repo.start()
 
 	return repo
 }
@@ -139,20 +133,20 @@ func (r *repository) fetchAndReportError() {
 	}
 }
 
-func (r *repository) sync() {
+func (r *repository) start() {
 	// Single read lock to determine initial mode
 	r.RLock()
 	isStreaming := r.isStreaming
-	streamingClient := r.streamingClient
+	// streamingClient := r.streamingClient
 	r.RUnlock()
 
-	// Start streaming mode if enabled
-	// The eventsource library handles all reconnections automatically with backoff and jitter
-	if isStreaming && streamingClient != nil {
-		if err := streamingClient.start(r.options.storage); err != nil {
-			r.err(fmt.Errorf("failed to start streaming client: %w", err))
-		}
-	}
+	// // Start streaming mode if enabled
+	// // The eventsource library handles all reconnections automatically with backoff and jitter
+	// if isStreaming && streamingClient != nil {
+	// 	if err := streamingClient.sync(r.options.storage); err != nil {
+	// 		r.err(fmt.Errorf("failed to start streaming client: %w", err))
+	// 	}
+	// }
 
 	// Use polling if not streaming
 	if !isStreaming {
@@ -163,7 +157,7 @@ func (r *repository) sync() {
 		select {
 		case <-r.close:
 			if r.streamingClient != nil {
-				r.streamingClient.stop()
+				r.streamingClient.Close()
 			}
 			close(r.closed)
 			return
@@ -270,23 +264,6 @@ func (r *repository) statusIsOK(resp *http.Response) error {
 	return fmt.Errorf("%s %s returned status code %d", resp.Request.Method, resp.Request.URL, s)
 }
 
-func (r *repository) list() []api.Feature {
-
-	snapshot := r.snapshot()
-	raw := snapshot.Features
-	features := make([]api.Feature, 0, len(raw))
-
-	// we're doing an explicit copy here, this function should not be on a hot path
-	// and we want to avoid exposing internal pointers or changing too much of the public API
-	for _, feature := range raw {
-		if feature == nil {
-			continue
-		}
-		features = append(features, *feature)
-	}
-	return features
-}
-
 func (r *repository) snapshot() *FeatureMemoryState {
 	v := r.featureState.Load()
 	if v == nil {
@@ -300,10 +277,9 @@ func (r *repository) snapshot() *FeatureMemoryState {
 	return v.(*FeatureMemoryState)
 }
 
-func (r *repository) Close() error {
+func (r *repository) stop() {
 	close(r.close)
 	r.cancel()
 	<-r.closed
 	r.refreshTicker.Stop()
-	return nil
 }

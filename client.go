@@ -196,6 +196,13 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 	headers.Set("unleash-sdk", fmt.Sprintf("%s:%s", clientName, clientVersion))
 	headers.Set("unleash-connection-id", connectionId)
 
+	storage := uc.options.storage
+	if uc.options.storage == nil {
+		storage = &DefaultStorage{}
+	}
+
+	storage.Init(uc.options.backupPath, uc.options.appName)
+
 	uc.repository = newRepository(
 		repositoryOptions{
 			backupPath:      uc.options.backupPath,
@@ -204,7 +211,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 			projectName:     uc.options.projectName,
 			instanceId:      uc.options.instanceId,
 			refreshInterval: uc.options.refreshInterval,
-			storage:         uc.options.storage,
+			storage:         storage,
 			httpClient:      uc.options.httpClient,
 			headers:         headers,
 			isStreaming:     uc.options.IsStreamingMode(),
@@ -441,7 +448,7 @@ func (uc *Client) ImpactMetrics() *impactmetrics.MetricsAPI {
 
 // Close stops the client from syncing data from the server.
 func (uc *Client) Close() error {
-	uc.repository.Close()
+	uc.repository.stop()
 	uc.metrics.Close()
 	if uc.options.listener != nil {
 		// Wait for sync to exit.
@@ -510,7 +517,8 @@ func (uc *Client) WaitForReady() {
 
 // ListFeatures returns all available features toggles.
 func (uc *Client) ListFeatures() []api.Feature {
-	return uc.repository.list()
+	snapshot := uc.repository.snapshot()
+	return snapshot.list()
 }
 
 func handleFallback(fallbackFunc FallbackFunc, fallback *bool, featureName string, ctx *context.Context) api.StrategyResult {
