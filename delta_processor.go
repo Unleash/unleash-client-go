@@ -101,14 +101,6 @@ func (dp *deltaProcessor) process(delta *api.ClientFeaturesDelta) error {
 
 func (dp *deltaProcessor) snapshot() *FeatureMemoryState {
 	v := dp.featureState.Load()
-	if v == nil {
-		empty := &FeatureMemoryState{
-			Features: make(map[string]*api.Feature),
-			Segments: make(map[int][]api.Constraint),
-		}
-		dp.featureState.Store(empty)
-		return empty
-	}
 	return v.(*FeatureMemoryState)
 }
 
