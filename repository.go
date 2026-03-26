@@ -156,9 +156,9 @@ func (r *repository) start() {
 	for {
 		select {
 		case <-r.close:
-			if r.streamingClient != nil {
-				r.streamingClient.Close()
-			}
+			// if r.streamingClient != nil {
+			// 	r.streamingClient.Close()
+			// }
 			close(r.closed)
 			return
 		case <-r.refreshTicker.C:

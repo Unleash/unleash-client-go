@@ -108,7 +108,7 @@ func (sc *streamingClient) sync() error {
 	return nil
 }
 
-func (sf *streamingClient) handleEvent(event eventsource.Event) {
+func (sc *streamingClient) handleEvent(event eventsource.Event) {
 	if event == nil {
 		return
 	}
@@ -117,7 +117,7 @@ func (sf *streamingClient) handleEvent(event eventsource.Event) {
 
 	switch eventType {
 	case "unleash-connected", "unleash-updated":
-		if err := sf.handleDomainEvent(event); err != nil {
+		if err := sc.handleDomainEvent(event); err != nil {
 			// need to handle failover here but in a future PR
 			// this absolutely cannot just log. Something has gone
 			// very badly wrong and continuing leads to a corrupted state
@@ -125,23 +125,23 @@ func (sf *streamingClient) handleEvent(event eventsource.Event) {
 	}
 }
 
-func (sf *streamingClient) handleDomainEvent(event eventsource.Event) error {
+func (sc *streamingClient) handleDomainEvent(event eventsource.Event) error {
 	eventData := []byte(event.Data())
 	delta, err := api.ParseDelta(eventData)
 	if err != nil {
 		return fmt.Errorf("failed to parse event: %w", err)
 	}
 
-	return sf.deltaProcessor.process(delta)
+	return sc.deltaProcessor.process(delta)
 }
 
-func (sf *streamingClient) snapshot() *FeatureMemoryState {
-	return sf.deltaProcessor.snapshot()
+func (sc *streamingClient) snapshot() *FeatureMemoryState {
+	return sc.deltaProcessor.snapshot()
 }
 
-func (sf *streamingClient) Close() {
-	sf.cancel()
-	if sf.stream != nil {
-		sf.stream.Close()
+func (sc *streamingClient) stop() {
+	sc.cancel()
+	if sc.stream != nil {
+		sc.stream.Close()
 	}
 }
