@@ -24,7 +24,7 @@ type streamingClient struct {
 	repositoryChannels repositoryChannels
 }
 
-func newStreamingFetcher(options repositoryOptions, repoChannels repositoryChannels) *streamingClient {
+func newStreamingClient(options repositoryOptions, repoChannels repositoryChannels) *streamingClient {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	var apiResponse *api.FeatureResponse
