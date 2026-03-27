@@ -1,73 +1,30 @@
 package unleash
 
-// import (
-// 	"context"
-// 	"encoding/json"
-// 	"net/http"
-// 	"net/url"
-// 	"testing"
-// 	"time"
+import (
+	"github.com/Unleash/unleash-go-sdk/v6/api"
+)
 
-// 	"github.com/Unleash/unleash-go-sdk/v6/api"
-// 	"github.com/stretchr/testify/assert"
-// )
+type mockEvent struct {
+	id    string
+	event string
+	data  string
+}
 
-// type mockEvent struct {
-// 	id    string
-// 	event string
-// 	data  string
-// }
+func (m *mockEvent) Id() string    { return m.id }
+func (m *mockEvent) Event() string { return m.event }
+func (m *mockEvent) Data() string  { return m.data }
 
-// func (m *mockEvent) Id() string    { return m.id }
-// func (m *mockEvent) Event() string { return m.event }
-// func (m *mockEvent) Data() string  { return m.data }
+type NoOpStorage struct{}
 
-// type NoOpStorage struct{}
+func (s *NoOpStorage) Persist(features *api.FeatureResponse) error {
+	return nil
+}
 
-// func (s *NoOpStorage) Persist(features *api.FeatureResponse) error {
-// 	return nil
-// }
+func (s *NoOpStorage) Load() (*api.FeatureResponse, error) {
+	return &api.FeatureResponse{}, nil
+}
 
-// func (s *NoOpStorage) Load() (*api.FeatureResponse, error) {
-// 	return &api.FeatureResponse{}, nil
-// }
-
-// func (s *NoOpStorage) Init(backupPath, appName string) {}
-
-// func TestStreamingClient_Creation(t *testing.T) {
-// 	serverURL, _ := url.Parse("http://localhost:8080/")
-
-// 	errChannels := errorChannels{
-// 		errors:   make(chan error, 10),
-// 		warnings: make(chan error, 10),
-// 	}
-// 	repoChannels := repositoryChannels{
-// 		errorChannels: errChannels,
-// 		ready:         make(chan bool, 1),
-// 		update:        make(chan bool, 1),
-// 	}
-
-// 	options := repositoryOptions{
-// 		url:        *serverURL,
-// 		appName:    "test-app",
-// 		instanceId: "test-instance",
-// 		httpClient: &http.Client{Timeout: 5 * time.Second},
-// 		headers:    make(http.Header),
-// 	}
-
-// 	repo := &repository{}
-
-// 	// Create a delta processor for the test
-// 	deltaProc := newDeltaProcessor(repo, repoChannels)
-
-// 	client := newStreamingClient(options, repoChannels, deltaProc)
-
-// 	assert.NotNil(t, client)
-// 	assert.Equal(t, "http://localhost:8080/client/streaming", client.url)
-// 	assert.Equal(t, "test-app", client.appName)
-// 	assert.Equal(t, "test-instance", client.instanceId)
-// 	assert.False(t, client.isRunning())
-// }
+func (s *NoOpStorage) Init(backupPath, appName string) {}
 
 // func TestStreamingClient_HandleEvents(t *testing.T) {
 // 	errChannels := errorChannels{
@@ -89,14 +46,7 @@ package unleash
 // 		storage:    &NoOpStorage{},
 // 	}
 
-// 	repo := &repository{
-// 		options: options,
-// 	}
-
-// 	// Create a delta processor for the test
-// 	deltaProc := newDeltaProcessor(repo, repoChannels)
-
-// 	client := newStreamingClient(options, repoChannels, deltaProc)
+// 	client := newStreamingClient(options, repoChannels)
 // 	client.ctx, client.cancel = context.WithCancel(context.Background())
 
 // 	connectedData := map[string]interface{}{
@@ -116,13 +66,13 @@ package unleash
 // 	}
 // 	connectedJSON, _ := json.Marshal(connectedData)
 
-// 	err := client.handleConnectedEvent(&mockEvent{
+// 	err := client.handleDomainEvent(&mockEvent{
 // 		event: "unleash-connected",
 // 		data:  string(connectedJSON),
 // 	})
 // 	assert.NoError(t, err)
 
-// 	snapshot := repo.snapshot()
+// 	snapshot := client.snapshot()
 
 // 	feature, found := snapshot.Features["test-feature"]
 // 	assert.True(t, found)
@@ -142,13 +92,13 @@ package unleash
 // 	}
 // 	updatedJSON, _ := json.Marshal(updatedData)
 
-// 	err = client.handleUpdatedEvent(&mockEvent{
+// 	err = client.handleDomainEvent(&mockEvent{
 // 		event: "unleash-updated",
 // 		data:  string(updatedJSON),
 // 	})
 // 	assert.NoError(t, err)
 
-// 	snapshot = repo.snapshot()
+// 	snapshot = client.snapshot()
 
 // 	feature, found = snapshot.Features["test-feature"]
 // 	assert.True(t, found)

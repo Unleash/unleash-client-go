@@ -39,9 +39,9 @@ func newDeltaProcessor(baseState *api.FeatureResponse) *deltaProcessor {
 // to hold a lock over the entire process to prevent internal races setting the final state out of order.
 // However, once we have built the new state we can atomically swap it. This gives us mutex locked writes but
 // lock free reads via snapshot()
-func (dp *deltaProcessor) process(delta *api.ClientFeaturesDelta) error {
+func (dp *deltaProcessor) process(delta *api.ClientFeaturesDelta) (*api.FeatureResponse, error) {
 	if delta == nil {
-		return fmt.Errorf("delta is nil")
+		return nil, fmt.Errorf("delta is nil")
 	}
 
 	dp.mu.Lock()
@@ -91,37 +91,17 @@ func (dp *deltaProcessor) process(delta *api.ClientFeaturesDelta) error {
 		}
 	}
 
-	dp.featureState.Store(&FeatureMemoryState{
+	newState := &FeatureMemoryState{
 		Features: featMap,
 		Segments: segMap,
-	})
+	}
 
-	return nil
+	dp.featureState.Store(newState)
+
+	return newState.asApiResponse(), nil
 }
 
 func (dp *deltaProcessor) snapshot() *FeatureMemoryState {
 	v := dp.featureState.Load()
 	return v.(*FeatureMemoryState)
-}
-
-func (dp *deltaProcessor) asApiResponse() *api.FeatureResponse {
-	snap := dp.snapshot()
-
-	features := make([]api.Feature, 0, len(snap.Features))
-	for _, f := range snap.Features {
-		features = append(features, *f)
-	}
-
-	segments := make([]api.Segment, 0, len(snap.Segments))
-	for id, constraints := range snap.Segments {
-		segments = append(segments, api.Segment{
-			Id:          id,
-			Constraints: constraints,
-		})
-	}
-
-	return &api.FeatureResponse{
-		Features: features,
-		Segments: segments,
-	}
 }

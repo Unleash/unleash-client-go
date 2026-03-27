@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/Unleash/unleash-go-sdk/v6/api"
@@ -11,17 +12,18 @@ import (
 )
 
 type streamingClient struct {
-	url                string
-	appName            string
-	instanceId         string
-	httpClient         *http.Client
-	headers            http.Header
-	stream             *eventsource.Stream
-	storage            Storage
-	deltaProcessor     *deltaProcessor
-	ctx                context.Context
-	cancel             context.CancelFunc
-	repositoryChannels repositoryChannels
+	repositoryChannels
+	url            string
+	appName        string
+	instanceId     string
+	httpClient     *http.Client
+	headers        http.Header
+	stream         *eventsource.Stream
+	storage        Storage
+	deltaProcessor *deltaProcessor
+	ctx            context.Context
+	cancel         context.CancelFunc
+	readyLock      sync.Once
 }
 
 func newStreamingClient(options repositoryOptions, repoChannels repositoryChannels) *streamingClient {
@@ -52,12 +54,12 @@ func newStreamingClient(options repositoryOptions, repoChannels repositoryChanne
 		repositoryChannels: repoChannels,
 	}
 
-	streamingFetcher.sync()
+	streamingFetcher.start()
 
 	return streamingFetcher
 }
 
-func (sc *streamingClient) sync() error {
+func (sc *streamingClient) start() error {
 
 	req, err := http.NewRequestWithContext(sc.ctx, "GET", sc.url, nil)
 	if err != nil {
@@ -108,6 +110,12 @@ func (sc *streamingClient) sync() error {
 	return nil
 }
 
+func (sc *streamingClient) markReady() {
+	sc.readyLock.Do(func() {
+		sc.ready <- true
+	})
+}
+
 func (sc *streamingClient) handleEvent(event eventsource.Event) {
 	if event == nil {
 		return
@@ -132,7 +140,21 @@ func (sc *streamingClient) handleDomainEvent(event eventsource.Event) error {
 		return fmt.Errorf("failed to parse event: %w", err)
 	}
 
-	return sc.deltaProcessor.process(delta)
+	backupState, error := sc.deltaProcessor.process(delta)
+
+	if error != nil {
+		return fmt.Errorf("failed to process delta: %w", error)
+	}
+
+	sc.markReady()
+
+	// Failure to save a backup is definitely not an error but end users should have
+	// a way of detecting that this isn't working correctly so we throw it on the warnings channel
+	if err := sc.storage.Persist(backupState); err != nil {
+		sc.warnings <- fmt.Errorf("failed to persist state: %v", err)
+	}
+
+	return nil
 }
 
 func (sc *streamingClient) snapshot() *FeatureMemoryState {

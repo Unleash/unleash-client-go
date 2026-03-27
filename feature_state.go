@@ -29,6 +29,26 @@ func (s *FeatureMemoryState) list() []api.Feature {
 	return features
 }
 
+func (s *FeatureMemoryState) asApiResponse() *api.FeatureResponse {
+	features := make([]api.Feature, 0, len(s.Features))
+	for _, f := range s.Features {
+		features = append(features, *f)
+	}
+
+	segments := make([]api.Segment, 0, len(s.Segments))
+	for id, constraints := range s.Segments {
+		segments = append(segments, api.Segment{
+			Id:          id,
+			Constraints: constraints,
+		})
+	}
+
+	return &api.FeatureResponse{
+		Features: features,
+		Segments: segments,
+	}
+}
+
 // evaluateFeature applies strategies + constraints for a single feature.
 // It does NOT handle fallbacks or missing features; that's the caller's job.
 func (s *FeatureMemoryState) evaluateFeature(

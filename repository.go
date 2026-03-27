@@ -22,7 +22,7 @@ var (
 )
 
 type togglerFetcher interface {
-	start()
+	start() error
 	snapshot() *FeatureMemoryState
 	stop()
 }
@@ -30,21 +30,18 @@ type togglerFetcher interface {
 type repository struct {
 	repositoryChannels
 	sync.RWMutex
-	options         repositoryOptions
-	etag            string
-	close           chan struct{}
-	closed          chan struct{}
-	ctx             context.Context
-	cancel          func()
-	isReady         bool
-	refreshTicker   *time.Ticker
-	errors          float64
-	maxSkips        float64
-	skips           float64
-	streamingClient *streamingClient
-	isStreaming     bool
-	deltaProcessor  *deltaProcessor
-	featureState    atomic.Value // this should always hold an instance of *FeatureMemoryState
+	options       repositoryOptions
+	etag          string
+	close         chan struct{}
+	closed        chan struct{}
+	ctx           context.Context
+	cancel        func()
+	isReady       bool
+	refreshTicker *time.Ticker
+	errors        float64
+	maxSkips      float64
+	skips         float64
+	featureState  atomic.Value // this should always hold an instance of *FeatureMemoryState
 }
 
 func newRepository(options repositoryOptions, channels repositoryChannels) *repository {
@@ -57,7 +54,6 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 		errors:             0,
 		maxSkips:           10,
 		skips:              0,
-		isStreaming:        options.isStreaming,
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	repo.ctx = ctx
@@ -67,8 +63,6 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 		repo.options.httpClient = http.DefaultClient
 	}
 
-	// repo.deltaProcessor = newDeltaProcessor(repo)
-
 	if loadedState, err := repo.options.storage.Load(); err == nil && loadedState != nil {
 		repo.updateState(loadedState)
 	} else {
@@ -77,14 +71,6 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 			Segments: make(map[int][]api.Constraint),
 		})
 	}
-
-	// // Delta processor needs to be collapsed into this module, it's far too jealous of this domain at the moment
-	// if repo.isStreaming {
-	// 	repo.streamingClient = newStreamingClient(
-	// 		options,
-	// 		channels,
-	// 		repo.deltaProcessor)
-	// }
 
 	go repo.start()
 
@@ -133,46 +119,18 @@ func (r *repository) fetchAndReportError() {
 	}
 }
 
-func (r *repository) start() {
-	// Single read lock to determine initial mode
-	r.RLock()
-	isStreaming := r.isStreaming
-	// streamingClient := r.streamingClient
-	r.RUnlock()
-
-	// // Start streaming mode if enabled
-	// // The eventsource library handles all reconnections automatically with backoff and jitter
-	// if isStreaming && streamingClient != nil {
-	// 	if err := streamingClient.sync(r.options.storage); err != nil {
-	// 		r.err(fmt.Errorf("failed to start streaming client: %w", err))
-	// 	}
-	// }
-
-	// Use polling if not streaming
-	if !isStreaming {
-		r.fetchAndReportError()
-	}
-
+func (r *repository) start() error {
 	for {
 		select {
 		case <-r.close:
-			// if r.streamingClient != nil {
-			// 	r.streamingClient.Close()
-			// }
 			close(r.closed)
-			return
+			return nil
 		case <-r.refreshTicker.C:
-			// Only poll if not in streaming mode
-			r.RLock()
-			shouldPoll := !r.isStreaming
-			r.RUnlock()
 
-			if shouldPoll {
-				if r.skips == 0 {
-					r.fetchAndReportError()
-				} else {
-					r.decrementSkips()
-				}
+			if r.skips == 0 {
+				r.fetchAndReportError()
+			} else {
+				r.decrementSkips()
 			}
 		}
 	}

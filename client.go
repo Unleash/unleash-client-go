@@ -203,25 +203,34 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 
 	storage.Init(uc.options.backupPath, uc.options.appName)
 
-	uc.repository = newRepository(
-		repositoryOptions{
-			backupPath:      uc.options.backupPath,
-			url:             *parsedUrl,
-			appName:         uc.options.appName,
-			projectName:     uc.options.projectName,
-			instanceId:      uc.options.instanceId,
-			refreshInterval: uc.options.refreshInterval,
-			storage:         storage,
-			httpClient:      uc.options.httpClient,
-			headers:         headers,
-			isStreaming:     uc.options.IsStreamingMode(),
-		},
-		repositoryChannels{
-			errorChannels: errChannels,
-			ready:         uc.ready,
-			update:        uc.update,
-		},
-	)
+	repositoryOptions := repositoryOptions{
+		backupPath:      uc.options.backupPath,
+		url:             *parsedUrl,
+		appName:         uc.options.appName,
+		projectName:     uc.options.projectName,
+		instanceId:      uc.options.instanceId,
+		refreshInterval: uc.options.refreshInterval,
+		storage:         storage,
+		httpClient:      uc.options.httpClient,
+		headers:         headers,
+	}
+	repositoryChannels := repositoryChannels{
+		errorChannels: errChannels,
+		ready:         uc.ready,
+		update:        uc.update,
+	}
+
+	if uc.options.IsStreamingMode() {
+		uc.repository = newStreamingClient(
+			repositoryOptions,
+			repositoryChannels,
+		)
+	} else {
+		uc.repository = newRepository(
+			repositoryOptions,
+			repositoryChannels,
+		)
+	}
 
 	uc.strategies = append(defaultStrategies, uc.options.strategies...)
 
