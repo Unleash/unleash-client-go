@@ -120,6 +120,8 @@ func (r *repository) fetchAndReportError() {
 }
 
 func (r *repository) start() error {
+	// Initial fetch to populate state and signal readiness.
+	r.fetchAndReportError()
 	for {
 		select {
 		case <-r.close:
