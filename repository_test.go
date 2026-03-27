@@ -254,8 +254,10 @@ func TestRepository_backs_off_on_http_statuses(t *testing.T) {
 		)
 		time.Sleep(20 * time.Millisecond)
 		a.Equal(tc.errorCount, repo.errors)
+		repo.stop()
 	}
 }
+
 func TestRepository_back_offs_are_gradually_reduced_on_success(t *testing.T) {
 	a := assert.New(t)
 	defer gock.Off()
@@ -296,4 +298,5 @@ func TestRepository_back_offs_are_gradually_reduced_on_success(t *testing.T) {
 		t.Fatal("repository isn't ready but should be")
 	}
 	a.Equal(float64(3), repo.errors) // 4 failures, and then one success, should reduce error count to 3
+	repo.stop()
 }
