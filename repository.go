@@ -134,6 +134,7 @@ func (r *repository) fetchAndReportError() {
 }
 
 func (r *repository) start() {
+<<<<<<< Updated upstream
 	// Single read lock to determine initial mode
 	r.RLock()
 	isStreaming := r.isStreaming
@@ -153,6 +154,10 @@ func (r *repository) start() {
 		r.fetchAndReportError()
 	}
 
+=======
+	// Initial fetch to populate state and signal readiness.
+	r.fetchAndReportError()
+>>>>>>> Stashed changes
 	for {
 		select {
 		case <-r.close:
@@ -160,7 +165,10 @@ func (r *repository) start() {
 			// 	r.streamingClient.Close()
 			// }
 			close(r.closed)
+<<<<<<< Updated upstream
 			return
+=======
+>>>>>>> Stashed changes
 		case <-r.refreshTicker.C:
 			// Only poll if not in streaming mode
 			r.RLock()
