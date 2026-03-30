@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/Unleash/unleash-go-sdk/v6/api"
@@ -37,7 +37,7 @@ type streamingClient struct {
 	deltaProcessor *deltaProcessor
 	ctx            context.Context
 	cancel         context.CancelFunc
-	readyOnce      sync.Once
+	hydrated       atomic.Bool
 	internalErrors chan streamError
 }
 
@@ -151,10 +151,12 @@ func (sc *streamingClient) superviseStream() {
 	}
 }
 
-func (sc *streamingClient) markReady() {
-	sc.readyOnce.Do(func() {
+func (sc *streamingClient) notifyUpdate() {
+	if sc.hydrated.CompareAndSwap(false, true) {
 		sc.ready <- true
-	})
+	} else {
+		sc.update <- true
+	}
 }
 
 func (sc *streamingClient) handleDomainEvent(event eventsource.Event) error {
@@ -170,7 +172,7 @@ func (sc *streamingClient) handleDomainEvent(event eventsource.Event) error {
 		return fmt.Errorf("failed to process delta: %w", err)
 	}
 
-	sc.markReady()
+	sc.notifyUpdate()
 
 	// Failure to save a backup is definitely not an error but end users should have
 	// a way of detecting that this isn't working correctly so we throw it on the warnings channel
