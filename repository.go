@@ -126,6 +126,7 @@ func (r *repository) start() {
 		select {
 		case <-r.close:
 			close(r.closed)
+			return
 		case <-r.refreshTicker.C:
 
 			if r.skips == 0 {
