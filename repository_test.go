@@ -253,8 +253,8 @@ func TestRepository_backs_off_on_http_statuses(t *testing.T) {
 			repoChannels,
 		)
 		time.Sleep(20 * time.Millisecond)
-		a.Equal(tc.errorCount, repo.errors)
 		repo.stop()
+		a.Equal(tc.errorCount, repo.errors)
 	}
 }
 
@@ -297,6 +297,6 @@ func TestRepository_back_offs_are_gradually_reduced_on_success(t *testing.T) {
 	case <-time.NewTimer(time.Second).C:
 		t.Fatal("repository isn't ready but should be")
 	}
-	a.Equal(float64(3), repo.errors) // 4 failures, and then one success, should reduce error count to 3
 	repo.stop()
+	a.Equal(float64(3), repo.errors) // 4 failures, and then one success, should reduce error count to 3
 }
