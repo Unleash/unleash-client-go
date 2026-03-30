@@ -19,7 +19,6 @@ func (s *FeatureMemoryState) list() []api.Feature {
 	features := make([]api.Feature, 0, len(s.Features))
 
 	// we're doing an explicit copy here, this function should not be on a hot path
-	// and we want to avoid exposing internal pointers or changing too much of the public API
 	for _, feature := range s.Features {
 		if feature == nil {
 			continue
