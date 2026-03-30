@@ -22,7 +22,7 @@ var (
 )
 
 type togglerFetcher interface {
-	start() error
+	start()
 	snapshot() *FeatureMemoryState
 	stop()
 }
@@ -119,14 +119,13 @@ func (r *repository) fetchAndReportError() {
 	}
 }
 
-func (r *repository) start() error {
+func (r *repository) start() {
 	// Initial fetch to populate state and signal readiness.
 	r.fetchAndReportError()
 	for {
 		select {
 		case <-r.close:
 			close(r.closed)
-			return nil
 		case <-r.refreshTicker.C:
 
 			if r.skips == 0 {
