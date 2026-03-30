@@ -18,17 +18,17 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type noopRepoStorage struct{}
+type NoOpStorage struct{}
 
-func (s *noopRepoStorage) Persist(features *api.FeatureResponse) error {
+func (s *NoOpStorage) Persist(features *api.FeatureResponse) error {
 	return nil
 }
 
-func (s *noopRepoStorage) Load() (*api.FeatureResponse, error) {
+func (s *NoOpStorage) Load() (*api.FeatureResponse, error) {
 	return &api.FeatureResponse{}, nil
 }
 
-func (s *noopRepoStorage) Init(backupPath, appName string) {}
+func (s *NoOpStorage) Init(backupPath, appName string) {}
 
 // TestRepository_GetFeaturesFail tests that OnReady isn't fired unless
 // /client/features has returned successfully.
@@ -246,7 +246,7 @@ func TestRepository_backs_off_on_http_statuses(t *testing.T) {
 				appName:         mockAppName,
 				instanceId:      mockInstanceId,
 				refreshInterval: time.Millisecond * 15,
-				storage:         &noopRepoStorage{},
+				storage:         &NoOpStorage{},
 				httpClient:      http.DefaultClient,
 				headers:         make(http.Header),
 			},
@@ -286,7 +286,7 @@ func TestRepository_back_offs_are_gradually_reduced_on_success(t *testing.T) {
 			appName:         mockAppName,
 			instanceId:      mockInstanceId,
 			refreshInterval: time.Millisecond * 10,
-			storage:         &noopRepoStorage{},
+			storage:         &NoOpStorage{},
 			httpClient:      http.DefaultClient,
 			headers:         make(http.Header),
 		},

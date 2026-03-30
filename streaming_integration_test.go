@@ -7,21 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Unleash/unleash-go-sdk/v6/api"
 	"github.com/stretchr/testify/assert"
 )
-
-type NoOpStorage struct{}
-
-func (s *NoOpStorage) Persist(features *api.FeatureResponse) error {
-	return nil
-}
-
-func (s *NoOpStorage) Load() (*api.FeatureResponse, error) {
-	return &api.FeatureResponse{}, nil
-}
-
-func (s *NoOpStorage) Init(backupPath, appName string) {}
 
 // testRepositoryListener is a test implementation of RepositoryListener that
 // notifies via channels when events occur
