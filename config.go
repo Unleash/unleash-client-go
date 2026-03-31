@@ -110,7 +110,7 @@ func WithStrategies(strategies ...strategy.Strategy) ConfigOption {
 	}
 }
 
-// WithStorage specifies which storage implementation the repository should use for storing feature
+// WithStorage specifies which storage implementation the fetcher implementation should use for storing feature
 // toggles.
 func WithStorage(storage Storage) ConfigOption {
 	return func(o *configOption) {
@@ -154,7 +154,7 @@ func (o *configOption) IsStreamingMode() bool {
 	return o.experimentalMode != nil && o.experimentalMode["type"] == "streaming"
 }
 
-// FeatureResolver represents a function to be called to resolve the feature instead of using the repository
+// FeatureResolver represents a function to be called to resolve the feature instead of using the pollingFetcher.
 type FeatureResolver func(feature string) *api.Feature
 
 // FallbackFunc represents a function to be called if the feature is not found.
@@ -163,7 +163,7 @@ type FallbackFunc func(feature string, ctx *context.Context) bool
 // FeatureOptions controls how IsEnabled evaluates a feature toggle.
 //
 // Resolver:
-//   - If Resolver is non-nil, it is used to resolve the feature by name instead of the repository.
+//   - If Resolver is non-nil, it is used to resolve the feature by name instead of the pollingFetcher.
 //     This bypasses the normal resolution path and should no longer be necessary in v6.
 //     It exists for backwards compatibility and may be removed in a future release.
 //
@@ -189,14 +189,14 @@ type FeatureOptions struct {
 	// precedence over Fallback.
 	FallbackFunc FallbackFunc
 
-	// Resolver bypasses repository lookup for resolving the feature by name.
+	// Resolver bypasses pollingFetcher lookup for resolving the feature by name.
 	Resolver FeatureResolver
 }
 
 // VariantOptions controls how GetVariant evaluates a feature's variant.
 //
 // Resolver:
-//   - If Resolver is non-nil, it is used to resolve the feature by name instead of the repository.
+//   - If Resolver is non-nil, it is used to resolve the feature by name instead of the pollingFetcher.
 //     This bypasses the normal resolution path and should no longer be necessary in v6.
 //     It exists for backwards compatibility and may be removed in a future release.
 //
@@ -227,7 +227,7 @@ type variantOption struct {
 	resolver            FeatureResolver
 }
 
-type repositoryOptions struct {
+type fetcherOptions struct {
 	appName         string
 	instanceId      string
 	projectName     string
