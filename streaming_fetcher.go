@@ -25,8 +25,8 @@ type streamError struct {
 	err  error
 }
 
-type streamingClient struct {
-	repositoryChannels
+type streamingFetcher struct {
+	fetcherChannels
 	url            string
 	appName        string
 	instanceId     string
@@ -41,7 +41,7 @@ type streamingClient struct {
 	internalErrors chan streamError
 }
 
-func newStreamingClient(options repositoryOptions, repoChannels repositoryChannels) *streamingClient {
+func newStreamingFetcher(options fetcherOptions, fetcherChannels fetcherChannels) *streamingFetcher {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	var apiResponse *api.FeatureResponse
@@ -57,24 +57,24 @@ func newStreamingClient(options repositoryOptions, repoChannels repositoryChanne
 
 	deltaProc := newDeltaProcessor(apiResponse)
 
-	streamingFetcher := &streamingClient{
-		url:                fmt.Sprintf("%sclient/streaming", options.url.String()),
-		appName:            options.appName,
-		instanceId:         options.instanceId,
-		httpClient:         options.httpClient,
-		headers:            options.headers,
-		deltaProcessor:     deltaProc,
-		ctx:                ctx,
-		cancel:             cancel,
-		repositoryChannels: repoChannels,
-		internalErrors:     make(chan streamError, 8),
-		storage:            options.storage,
+	streamingFetcher := &streamingFetcher{
+		url:             fmt.Sprintf("%sclient/streaming", options.url.String()),
+		appName:         options.appName,
+		instanceId:      options.instanceId,
+		httpClient:      options.httpClient,
+		headers:         options.headers,
+		deltaProcessor:  deltaProc,
+		ctx:             ctx,
+		cancel:          cancel,
+		fetcherChannels: fetcherChannels,
+		internalErrors:  make(chan streamError, 8),
+		storage:         options.storage,
 	}
 
 	return streamingFetcher
 }
 
-func (sc *streamingClient) start() {
+func (sc *streamingFetcher) start() {
 	req, err := http.NewRequestWithContext(sc.ctx, "GET", sc.url, nil)
 	if err != nil {
 		sc.internalErrors <- streamError{kind: fatal, err: fmt.Errorf("failed to create request: %w", err)}
@@ -96,7 +96,7 @@ func (sc *streamingClient) start() {
 	go sc.superviseStream()
 }
 
-func (sc *streamingClient) runStream(req *http.Request) {
+func (sc *streamingFetcher) runStream(req *http.Request) {
 	stream, err := eventsource.SubscribeWithRequestAndOptions(req,
 		eventsource.StreamOptionCanRetryFirstConnection(-time.Second*3),
 		eventsource.StreamOptionUseBackoff(5*time.Minute),
@@ -133,7 +133,7 @@ func (sc *streamingClient) runStream(req *http.Request) {
 	}
 }
 
-func (sc *streamingClient) superviseStream() {
+func (sc *streamingFetcher) superviseStream() {
 	// this intentionally just black holes errors. This is incomplete
 	// in this PR and will be fleshed out in the next steps
 	for {
@@ -149,7 +149,7 @@ func (sc *streamingClient) superviseStream() {
 	}
 }
 
-func (sc *streamingClient) notifyUpdate() {
+func (sc *streamingFetcher) notifyUpdate() {
 	if sc.hydrated.CompareAndSwap(false, true) {
 		sc.ready <- true
 	} else {
@@ -157,7 +157,7 @@ func (sc *streamingClient) notifyUpdate() {
 	}
 }
 
-func (sc *streamingClient) handleDomainEvent(event eventsource.Event) error {
+func (sc *streamingFetcher) handleDomainEvent(event eventsource.Event) error {
 	eventData := []byte(event.Data())
 	delta, err := api.ParseDelta(eventData)
 	if err != nil {
@@ -186,10 +186,10 @@ func (sc *streamingClient) handleDomainEvent(event eventsource.Event) error {
 	return nil
 }
 
-func (sc *streamingClient) snapshot() *FeatureMemoryState {
+func (sc *streamingFetcher) snapshot() *FeatureMemoryState {
 	return sc.deltaProcessor.snapshot()
 }
 
-func (sc *streamingClient) stop() {
+func (sc *streamingFetcher) stop() {
 	sc.cancel()
 }

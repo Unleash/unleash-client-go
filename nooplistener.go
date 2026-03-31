@@ -11,11 +11,11 @@ func (l NoopListener) OnError(err error) {
 func (l NoopListener) OnWarning(warning error) {
 }
 
-// The repository is ready.
+// Initial set of features has been retrieved from Unleash.
 func (l NoopListener) OnReady() {
 }
 
-// The repository was refreshed.
+// Features were updated.
 func (l NoopListener) OnUpdate() {
 }
 

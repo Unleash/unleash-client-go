@@ -44,14 +44,14 @@ var disabledVariantFeatureEnabled = &api.Variant{
 // Client is a structure representing an API client of an Unleash server.
 type Client struct {
 	errorChannels
-	options    configOption
-	repository togglerFetcher
-	metrics    *metrics
+	options configOption
+	fetcher togglerFetcher
+	metrics *metrics
 	*impactmetrics.MetricsAPI
 	strategies         []strategy.Strategy
 	errorListener      ErrorListener
 	metricsListener    MetricListener
-	repositoryListener RepositoryListener
+	fetcherListener    RepositoryListener
 	impressionListener ImpressionListener
 	ready              chan bool
 	onReady            chan struct{}
@@ -78,7 +78,7 @@ func (ec errorChannels) err(err error) {
 	ec.errors <- err
 }
 
-type repositoryChannels struct {
+type fetcherChannels struct {
 	errorChannels
 	ready  chan bool
 	update chan bool
@@ -147,7 +147,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		uc.errorListener = eListener
 	}
 	if rListener, ok := uc.options.listener.(RepositoryListener); ok {
-		uc.repositoryListener = rListener
+		uc.fetcherListener = rListener
 	}
 	if mListener, ok := uc.options.listener.(MetricListener); ok {
 		uc.metricsListener = mListener
@@ -203,7 +203,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 
 	storage.Init(uc.options.backupPath, uc.options.appName)
 
-	repositoryOptions := repositoryOptions{
+	fetcherOptions := fetcherOptions{
 		backupPath:      uc.options.backupPath,
 		url:             *parsedUrl,
 		appName:         uc.options.appName,
@@ -214,25 +214,25 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		httpClient:      uc.options.httpClient,
 		headers:         headers,
 	}
-	repositoryChannels := repositoryChannels{
+	fetcherChannels := fetcherChannels{
 		errorChannels: errChannels,
 		ready:         uc.ready,
 		update:        uc.update,
 	}
 
 	if uc.options.IsStreamingMode() {
-		uc.repository = newStreamingClient(
-			repositoryOptions,
-			repositoryChannels,
+		uc.fetcher = newStreamingFetcher(
+			fetcherOptions,
+			fetcherChannels,
 		)
 	} else {
-		uc.repository = newRepository(
-			repositoryOptions,
-			repositoryChannels,
+		uc.fetcher = newPollingFetcher(
+			fetcherOptions,
+			fetcherChannels,
 		)
 	}
 
-	uc.repository.start()
+	uc.fetcher.start()
 
 	uc.strategies = append(defaultStrategies, uc.options.strategies...)
 
@@ -289,12 +289,12 @@ func (uc *Client) sync() {
 			}
 		case <-uc.ready:
 			close(uc.onReady)
-			if uc.repositoryListener != nil {
-				uc.repositoryListener.OnReady()
+			if uc.fetcherListener != nil {
+				uc.fetcherListener.OnReady()
 			}
 		case <-uc.update:
-			if uc.repositoryListener != nil {
-				uc.repositoryListener.OnUpdate()
+			if uc.fetcherListener != nil {
+				uc.fetcherListener.OnUpdate()
 			}
 		case m := <-uc.count:
 			if uc.metricsListener != nil {
@@ -324,7 +324,7 @@ func (uc *Client) sync() {
 //
 // It is safe to call this method from multiple goroutines concurrently.
 func (uc *Client) IsEnabled(feature string, options FeatureOptions) (enabled bool) {
-	snapshot := uc.repository.snapshot()
+	snapshot := uc.fetcher.snapshot()
 	result, f := uc.isEnabled(feature, snapshot, options)
 	enabled = result.Enabled
 
@@ -376,7 +376,7 @@ func (uc *Client) isEnabled(
 //
 // It is safe to call this method from multiple goroutines concurrently.
 func (uc *Client) GetVariant(feature string, options VariantOptions) (variant *api.Variant) {
-	snapshot := uc.repository.snapshot()
+	snapshot := uc.fetcher.snapshot()
 	variant = uc.getVariant(feature, snapshot, options)
 
 	defer func() {
@@ -459,7 +459,7 @@ func (uc *Client) ImpactMetrics() *impactmetrics.MetricsAPI {
 
 // Close stops the client from syncing data from the server.
 func (uc *Client) Close() error {
-	uc.repository.stop()
+	uc.fetcher.stop()
 	uc.metrics.Close()
 	if uc.options.listener != nil {
 		// Wait for sync to exit.
@@ -528,7 +528,7 @@ func (uc *Client) WaitForReady() {
 
 // ListFeatures returns all available features toggles.
 func (uc *Client) ListFeatures() []api.Feature {
-	snapshot := uc.repository.snapshot()
+	snapshot := uc.fetcher.snapshot()
 	return snapshot.list()
 }
 

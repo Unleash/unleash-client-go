@@ -30,9 +30,9 @@ func (s *NoOpStorage) Load() (*api.FeatureResponse, error) {
 
 func (s *NoOpStorage) Init(backupPath, appName string) {}
 
-// TestRepository_GetFeaturesFail tests that OnReady isn't fired unless
+// TestPollingFetcher_GetFeaturesFail tests that OnReady isn't fired unless
 // /client/features has returned successfully.
-func TestRepository_GetFeaturesFail(t *testing.T) {
+func TestPollingFetcher_GetFeaturesFail(t *testing.T) {
 	assert := assert.New(t)
 	featuresCalls := make(chan int, 10)
 	var sendStatus200 int32
@@ -97,7 +97,7 @@ func TestRepository_GetFeaturesFail(t *testing.T) {
 	client.Close()
 }
 
-func TestRepository_OnUpdateCalledWhenFeaturesChangeOnly(t *testing.T) {
+func TestPollingFetcher_OnUpdateCalledWhenFeaturesChangeOnly(t *testing.T) {
 	assert := assert.New(t)
 	featuresCalls := make(chan int, 10)
 	var sendStatus304 int32
@@ -164,7 +164,7 @@ func TestRepository_OnUpdateCalledWhenFeaturesChangeOnly(t *testing.T) {
 	client.Close()
 }
 
-func TestRepository_ParseAPIResponse(t *testing.T) {
+func TestPollingFetcher_ParseAPIResponse(t *testing.T) {
 	assert := assert.New(t)
 	data := []byte(`{
 			"version": 2,
@@ -210,7 +210,7 @@ func TestRepository_ParseAPIResponse(t *testing.T) {
 	assert.Equal(0, len(response.Segments))
 }
 
-func TestRepository_backs_off_on_http_statuses(t *testing.T) {
+func TestPollingFetcher_backs_off_on_http_statuses(t *testing.T) {
 	a := assert.New(t)
 	testCases := []struct {
 		statusCode int
@@ -235,13 +235,13 @@ func TestRepository_backs_off_on_http_statuses(t *testing.T) {
 			errors:   make(chan error, 10),
 			warnings: make(chan error, 10),
 		}
-		repoChannels := repositoryChannels{
+		fetcherChannels := fetcherChannels{
 			errorChannels: errChannels,
 			ready:         make(chan bool, 1),
 			update:        make(chan bool, 1),
 		}
-		repo := newRepository(
-			repositoryOptions{
+		fetcher := newPollingFetcher(
+			fetcherOptions{
 				url:             *serverURL,
 				appName:         mockAppName,
 				instanceId:      mockInstanceId,
@@ -250,16 +250,16 @@ func TestRepository_backs_off_on_http_statuses(t *testing.T) {
 				httpClient:      http.DefaultClient,
 				headers:         make(http.Header),
 			},
-			repoChannels,
+			fetcherChannels,
 		)
-		repo.start()
+		fetcher.start()
 		time.Sleep(20 * time.Millisecond)
-		repo.stop()
-		a.Equal(tc.errorCount, repo.errors)
+		fetcher.stop()
+		a.Equal(tc.errorCount, fetcher.errors)
 	}
 }
 
-func TestRepository_back_offs_are_gradually_reduced_on_success(t *testing.T) {
+func TestPollingFetcher_back_offs_are_gradually_reduced_on_success(t *testing.T) {
 	a := assert.New(t)
 	defer gock.Off()
 	gock.New(mockerServer).
@@ -276,13 +276,13 @@ func TestRepository_back_offs_are_gradually_reduced_on_success(t *testing.T) {
 		errors:   make(chan error, 10),
 		warnings: make(chan error, 10),
 	}
-	repoChannels := repositoryChannels{
+	fetcherChannels := fetcherChannels{
 		errorChannels: errChannels,
 		ready:         make(chan bool, 1),
 		update:        make(chan bool, 1),
 	}
-	repo := newRepository(
-		repositoryOptions{
+	fetcher := newPollingFetcher(
+		fetcherOptions{
 			url:             *serverURL,
 			appName:         mockAppName,
 			instanceId:      mockInstanceId,
@@ -291,14 +291,14 @@ func TestRepository_back_offs_are_gradually_reduced_on_success(t *testing.T) {
 			httpClient:      http.DefaultClient,
 			headers:         make(http.Header),
 		},
-		repoChannels,
+		fetcherChannels,
 	)
-	repo.start()
+	fetcher.start()
 	select {
-	case <-repoChannels.ready:
+	case <-fetcherChannels.ready:
 	case <-time.NewTimer(time.Second).C:
-		t.Fatal("repository isn't ready but should be")
+		t.Fatal("fetcher isn't ready but should be")
 	}
-	repo.stop()
-	a.Equal(float64(3), repo.errors) // 4 failures, and then one success, should reduce error count to 3
+	fetcher.stop()
+	a.Equal(float64(3), fetcher.errors) // 4 failures, and then one success, should reduce error count to 3
 }

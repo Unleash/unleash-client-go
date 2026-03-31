@@ -19,12 +19,12 @@ func (l DebugListener) OnWarning(warning error) {
 	fmt.Printf("WARNING: %s\n", warning.Error())
 }
 
-// OnReady prints to the console when the repository is ready.
+// OnReady prints to the console when features have been resolved from Unleash.
 func (l DebugListener) OnReady() {
 	fmt.Printf("READY\n")
 }
 
-// OnUpdate prints to the console when the repository is updated.
+// OnUpdate prints to the console when features are updated.
 func (l DebugListener) OnUpdate() {
 	fmt.Printf("UPDATE\n")
 }

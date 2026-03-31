@@ -27,10 +27,10 @@ type togglerFetcher interface {
 	stop()
 }
 
-type repository struct {
-	repositoryChannels
+type pollingFetcher struct {
+	fetcherChannels
 	sync.RWMutex
-	options       repositoryOptions
+	options       fetcherOptions
 	etag          string
 	close         chan struct{}
 	closed        chan struct{}
@@ -44,38 +44,38 @@ type repository struct {
 	featureState  atomic.Value // this should always hold an instance of *FeatureMemoryState
 }
 
-func newRepository(options repositoryOptions, channels repositoryChannels) *repository {
-	repo := &repository{
-		options:            options,
-		repositoryChannels: channels,
-		close:              make(chan struct{}),
-		closed:             make(chan struct{}),
-		refreshTicker:      time.NewTicker(options.refreshInterval),
-		errors:             0,
-		maxSkips:           10,
-		skips:              0,
+func newPollingFetcher(options fetcherOptions, channels fetcherChannels) *pollingFetcher {
+	f := &pollingFetcher{
+		options:         options,
+		fetcherChannels: channels,
+		close:           make(chan struct{}),
+		closed:          make(chan struct{}),
+		refreshTicker:   time.NewTicker(options.refreshInterval),
+		errors:          0,
+		maxSkips:        10,
+		skips:           0,
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	repo.ctx = ctx
-	repo.cancel = cancel
+	f.ctx = ctx
+	f.cancel = cancel
 
 	if options.httpClient == nil {
-		repo.options.httpClient = http.DefaultClient
+		f.options.httpClient = http.DefaultClient
 	}
 
-	if loadedState, err := repo.options.storage.Load(); err == nil && loadedState != nil {
-		repo.updateState(loadedState)
+	if loadedState, err := f.options.storage.Load(); err == nil && loadedState != nil {
+		f.updateState(loadedState)
 	} else {
-		repo.featureState.Store(&FeatureMemoryState{
+		f.featureState.Store(&FeatureMemoryState{
 			Features: make(map[string]*api.Feature),
 			Segments: make(map[int][]api.Constraint),
 		})
 	}
 
-	return repo
+	return f
 }
 
-func (r *repository) updateState(features *api.FeatureResponse) {
+func (r *pollingFetcher) updateState(features *api.FeatureResponse) {
 	state := &FeatureMemoryState{
 		Features: features.FeatureMap(),
 		Segments: features.SegmentsMap(),
@@ -84,12 +84,12 @@ func (r *repository) updateState(features *api.FeatureResponse) {
 	r.featureState.Store(state)
 }
 
-func (r *repository) saveState(features *api.FeatureResponse) error {
+func (r *pollingFetcher) saveState(features *api.FeatureResponse) error {
 	r.updateState(features)
 	return r.options.storage.Persist(features)
 }
 
-func (r *repository) fetchAndReportError() {
+func (r *pollingFetcher) fetchAndReportError() {
 	changed, err := r.fetch()
 
 	if err != nil {
@@ -104,7 +104,7 @@ func (r *repository) fetchAndReportError() {
 	}
 }
 
-func (r *repository) runPollingLoop() {
+func (r *pollingFetcher) runPollingLoop() {
 	// Initial fetch to populate state and signal readiness.
 	r.fetchAndReportError()
 	for {
@@ -123,29 +123,29 @@ func (r *repository) runPollingLoop() {
 	}
 }
 
-func (r *repository) start() {
+func (r *pollingFetcher) start() {
 	go r.runPollingLoop()
 }
 
-func (r *repository) backoff() {
+func (r *pollingFetcher) backoff() {
 	r.errors = math.Min(r.maxSkips, r.errors+1)
 	r.skips = r.errors
 }
 
-func (r *repository) successfulFetch() {
+func (r *pollingFetcher) successfulFetch() {
 	r.errors = math.Max(0, r.errors-1)
 	r.skips = r.errors
 }
 
-func (r *repository) decrementSkips() {
+func (r *pollingFetcher) decrementSkips() {
 	r.skips = math.Max(0, r.skips-1)
 }
-func (r *repository) configurationError() {
+func (r *pollingFetcher) configurationError() {
 	r.errors = r.maxSkips
 	r.skips = r.errors
 }
 
-func (r *repository) fetch() (bool, error) {
+func (r *pollingFetcher) fetch() (bool, error) {
 	u, _ := r.options.url.Parse(getFetchURLPath(r.options.projectName))
 
 	req, err := http.NewRequest("GET", u.String(), nil)
@@ -198,7 +198,7 @@ func (r *repository) fetch() (bool, error) {
 	return true, nil
 }
 
-func (r *repository) statusIsOK(resp *http.Response) error {
+func (r *pollingFetcher) statusIsOK(resp *http.Response) error {
 	s := resp.StatusCode
 	if http.StatusOK <= s && s < http.StatusMultipleChoices {
 		return nil
@@ -213,7 +213,7 @@ func (r *repository) statusIsOK(resp *http.Response) error {
 	return fmt.Errorf("%s %s returned status code %d", resp.Request.Method, resp.Request.URL, s)
 }
 
-func (r *repository) snapshot() *FeatureMemoryState {
+func (r *pollingFetcher) snapshot() *FeatureMemoryState {
 	v := r.featureState.Load()
 	if v == nil {
 		empty := &FeatureMemoryState{
@@ -226,7 +226,7 @@ func (r *repository) snapshot() *FeatureMemoryState {
 	return v.(*FeatureMemoryState)
 }
 
-func (r *repository) stop() {
+func (r *pollingFetcher) stop() {
 	close(r.close)
 	r.cancel()
 	<-r.closed
