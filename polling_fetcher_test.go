@@ -100,21 +100,22 @@ func TestPollingFetcher_GetFeaturesFail(t *testing.T) {
 func TestPollingFetcher_OnUpdateCalledWhenFeaturesChangeOnly(t *testing.T) {
 	assert := assert.New(t)
 	featuresCalls := make(chan int, 10)
-	var sendStatus304 int32
 	prevStatus := 0
+	allow304 := make(chan struct{})
+	var served200 int32
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		switch req.Method + " " + req.URL.Path {
 		case "POST /client/register":
 		case "GET /client/features":
-			status304 := atomic.LoadInt32(&sendStatus304) == 1
 			status := 0
-			if status304 {
-				status = 304
-				rw.WriteHeader(304)
-			} else {
+			if atomic.CompareAndSwapInt32(&served200, 0, 1) {
 				status = 200
 				rw.WriteHeader(200)
 				writeJSON(rw, api.FeatureResponse{})
+			} else {
+				<-allow304
+				status = 304
+				rw.WriteHeader(304)
 			}
 			if status != prevStatus {
 				featuresCalls <- status
@@ -151,7 +152,7 @@ func TestPollingFetcher_OnUpdateCalledWhenFeaturesChangeOnly(t *testing.T) {
 		t.Fatal("client did not call OnUpdate")
 	}
 
-	atomic.StoreInt32(&sendStatus304, 1)
+	close(allow304)
 	assert.Equal(304, <-featuresCalls)
 
 	select {
