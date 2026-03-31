@@ -101,19 +101,26 @@ func TestPollingFetcher_OnUpdateCalledWhenFeaturesChangeOnly(t *testing.T) {
 	assert := assert.New(t)
 	featuresCalls := make(chan int, 10)
 	prevStatus := 0
-	allow304 := make(chan struct{})
-	var served200 int32
+	allowSecond := make(chan struct{})
+	allowThird := make(chan struct{})
+	var getCount int32
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		switch req.Method + " " + req.URL.Path {
 		case "POST /client/register":
 		case "GET /client/features":
 			status := 0
-			if atomic.CompareAndSwapInt32(&served200, 0, 1) {
+			switch atomic.AddInt32(&getCount, 1) {
+			case 1:
 				status = 200
 				rw.WriteHeader(200)
 				writeJSON(rw, api.FeatureResponse{})
-			} else {
-				<-allow304
+			case 2:
+				<-allowSecond
+				status = 200
+				rw.WriteHeader(200)
+				writeJSON(rw, api.FeatureResponse{})
+			default:
+				<-allowThird
 				status = 304
 				rw.WriteHeader(304)
 			}
@@ -143,16 +150,18 @@ func TestPollingFetcher_OnUpdateCalledWhenFeaturesChangeOnly(t *testing.T) {
 		WithDisableMetrics(true),
 	)
 	assert.Nil(err, "client should not return an error")
+	defer client.Close()
 
 	assert.Equal(200, <-featuresCalls)
 
+	close(allowSecond)
 	select {
 	case <-update:
 	case <-time.NewTimer(time.Second).C:
 		t.Fatal("client did not call OnUpdate")
 	}
 
-	close(allow304)
+	close(allowThird)
 	assert.Equal(304, <-featuresCalls)
 
 	select {
@@ -162,7 +171,6 @@ func TestPollingFetcher_OnUpdateCalledWhenFeaturesChangeOnly(t *testing.T) {
 	}
 
 	close(update)
-	client.Close()
 }
 
 func TestPollingFetcher_ParseAPIResponse(t *testing.T) {
