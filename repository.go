@@ -72,8 +72,6 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 		})
 	}
 
-	go repo.start()
-
 	return repo
 }
 
@@ -92,20 +90,7 @@ func (r *repository) saveState(features *api.FeatureResponse) error {
 }
 
 func (r *repository) fetchAndReportError() {
-	var (
-		isUnchanged bool
-		err         error
-	)
-
-	err = r.fetch()
-
-	// Extract unchanged error from error
-	if err != nil {
-		isUnchanged = errors.Is(err, errNoChange)
-		if isUnchanged {
-			err = nil
-		}
-	}
+	changed, err := r.fetch()
 
 	if err != nil {
 		if urlErr, ok := err.(*url.Error); !(ok && urlErr.Err == context.Canceled) {
@@ -114,12 +99,12 @@ func (r *repository) fetchAndReportError() {
 	} else if !r.isReady {
 		r.isReady = true
 		r.ready <- true
-	} else if !isUnchanged {
+	} else if changed {
 		r.update <- true
 	}
 }
 
-func (r *repository) start() {
+func (r *repository) runPollingLoop() {
 	// Initial fetch to populate state and signal readiness.
 	r.fetchAndReportError()
 	for {
@@ -136,6 +121,10 @@ func (r *repository) start() {
 			}
 		}
 	}
+}
+
+func (r *repository) start() {
+	go r.runPollingLoop()
 }
 
 func (r *repository) backoff() {
@@ -156,12 +145,12 @@ func (r *repository) configurationError() {
 	r.skips = r.errors
 }
 
-func (r *repository) fetch() error {
+func (r *repository) fetch() (bool, error) {
 	u, _ := r.options.url.Parse(getFetchURLPath(r.options.projectName))
 
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
-		return err
+		return false, err
 	}
 	req = req.WithContext(r.ctx)
 
@@ -183,22 +172,22 @@ func (r *repository) fetch() error {
 
 	resp, err := r.options.httpClient.Do(req)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotModified {
-		return errNoChange
+		return false, nil
 	}
 	if err := r.statusIsOK(resp); err != nil {
-		return err
+		return false, err
 	}
 
 	var featureResp api.FeatureResponse
 	dec := json.NewDecoder(resp.Body)
 	if err := dec.Decode(&featureResp); err != nil {
-		return err
+		return false, err
 	}
 
 	r.Lock()
@@ -206,7 +195,7 @@ func (r *repository) fetch() error {
 	r.saveState(&featureResp)
 	r.successfulFetch()
 	r.Unlock()
-	return nil
+	return true, nil
 }
 
 func (r *repository) statusIsOK(resp *http.Response) error {

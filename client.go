@@ -232,6 +232,8 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		)
 	}
 
+	uc.repository.start()
+
 	uc.strategies = append(defaultStrategies, uc.options.strategies...)
 
 	strategyNames := make([]string, len(uc.strategies))

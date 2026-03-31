@@ -71,8 +71,6 @@ func newStreamingClient(options repositoryOptions, repoChannels repositoryChanne
 		storage:            options.storage,
 	}
 
-	streamingFetcher.start()
-
 	return streamingFetcher
 }
 

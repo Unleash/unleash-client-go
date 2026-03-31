@@ -252,6 +252,7 @@ func TestRepository_backs_off_on_http_statuses(t *testing.T) {
 			},
 			repoChannels,
 		)
+		repo.start()
 		time.Sleep(20 * time.Millisecond)
 		repo.stop()
 		a.Equal(tc.errorCount, repo.errors)
@@ -292,6 +293,7 @@ func TestRepository_back_offs_are_gradually_reduced_on_success(t *testing.T) {
 		},
 		repoChannels,
 	)
+	repo.start()
 	select {
 	case <-repoChannels.ready:
 	case <-time.NewTimer(time.Second).C:
