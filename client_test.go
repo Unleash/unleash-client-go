@@ -1467,8 +1467,6 @@ func TestConnectionAndIntervalHeadersAndBody(t *testing.T) {
 	assert := assert.New(t)
 	defer gock.OffAll()
 
-	gock.Observe(gock.DumpRequest)
-
 	gock.New(mockerServer).
 		Post("/client/register").
 		MatchHeader("UNLEASH-CONNECTION-ID", `[0-9a-f\-]{36}`).

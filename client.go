@@ -45,7 +45,7 @@ var disabledVariantFeatureEnabled = &api.Variant{
 type Client struct {
 	errorChannels
 	options    configOption
-	repository *repository
+	repository togglerFetcher
 	metrics    *metrics
 	*impactmetrics.MetricsAPI
 	strategies         []strategy.Strategy
@@ -196,25 +196,41 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 	headers.Set("unleash-sdk", fmt.Sprintf("%s:%s", clientName, clientVersion))
 	headers.Set("unleash-connection-id", connectionId)
 
-	uc.repository = newRepository(
-		repositoryOptions{
-			backupPath:      uc.options.backupPath,
-			url:             *parsedUrl,
-			appName:         uc.options.appName,
-			projectName:     uc.options.projectName,
-			instanceId:      uc.options.instanceId,
-			refreshInterval: uc.options.refreshInterval,
-			storage:         uc.options.storage,
-			httpClient:      uc.options.httpClient,
-			headers:         headers,
-			isStreaming:     uc.options.IsStreamingMode(),
-		},
-		repositoryChannels{
-			errorChannels: errChannels,
-			ready:         uc.ready,
-			update:        uc.update,
-		},
-	)
+	storage := uc.options.storage
+	if uc.options.storage == nil {
+		storage = &DefaultStorage{}
+	}
+
+	storage.Init(uc.options.backupPath, uc.options.appName)
+
+	repositoryOptions := repositoryOptions{
+		backupPath:      uc.options.backupPath,
+		url:             *parsedUrl,
+		appName:         uc.options.appName,
+		projectName:     uc.options.projectName,
+		instanceId:      uc.options.instanceId,
+		refreshInterval: uc.options.refreshInterval,
+		storage:         storage,
+		httpClient:      uc.options.httpClient,
+		headers:         headers,
+	}
+	repositoryChannels := repositoryChannels{
+		errorChannels: errChannels,
+		ready:         uc.ready,
+		update:        uc.update,
+	}
+
+	if uc.options.IsStreamingMode() {
+		uc.repository = newStreamingClient(
+			repositoryOptions,
+			repositoryChannels,
+		)
+	} else {
+		uc.repository = newRepository(
+			repositoryOptions,
+			repositoryChannels,
+		)
+	}
 
 	uc.strategies = append(defaultStrategies, uc.options.strategies...)
 
@@ -441,7 +457,7 @@ func (uc *Client) ImpactMetrics() *impactmetrics.MetricsAPI {
 
 // Close stops the client from syncing data from the server.
 func (uc *Client) Close() error {
-	uc.repository.Close()
+	uc.repository.stop()
 	uc.metrics.Close()
 	if uc.options.listener != nil {
 		// Wait for sync to exit.
@@ -510,7 +526,8 @@ func (uc *Client) WaitForReady() {
 
 // ListFeatures returns all available features toggles.
 func (uc *Client) ListFeatures() []api.Feature {
-	return uc.repository.list()
+	snapshot := uc.repository.snapshot()
+	return snapshot.list()
 }
 
 func handleFallback(fallbackFunc FallbackFunc, fallback *bool, featureName string, ctx *context.Context) api.StrategyResult {

@@ -3,40 +3,55 @@ package unleash
 import (
 	"fmt"
 	"sync"
+	"sync/atomic"
 
 	"github.com/Unleash/unleash-go-sdk/v6/api"
 )
 
 type deltaProcessor struct {
-	repository         *repository // ideally this shouldn't be necessary, but for now we're going going to use it to resolve a snapshot of the feature state
-	mu                 sync.RWMutex
-	repositoryChannels repositoryChannels
-	isReady            bool
+	featureState atomic.Value
+	mu           sync.Mutex
 }
 
-func newDeltaProcessor(repo *repository, channels repositoryChannels) *deltaProcessor {
-	return &deltaProcessor{
-		repository:         repo,
-		repositoryChannels: channels,
-		isReady:            false,
+func newDeltaProcessor(baseState *api.FeatureResponse) *deltaProcessor {
+
+	if baseState == nil {
+		baseState = &api.FeatureResponse{
+			Features: make([]api.Feature, 0),
+			Segments: make([]api.Segment, 0),
+		}
 	}
+
+	featureState := &FeatureMemoryState{
+		Features: baseState.FeatureMap(),
+		Segments: baseState.SegmentsMap(),
+	}
+
+	deltaProcessor := &deltaProcessor{
+		featureState: atomic.Value{},
+	}
+
+	deltaProcessor.featureState.Store(featureState)
+	return deltaProcessor
 }
 
-// process processes a delta update from streaming or API events
-// this needs some love, currently it's too intertwined with the repository
-func (dp *deltaProcessor) process(delta *api.ClientFeaturesDelta) error {
+// It's hard to make this both concurrency safe and atomic for both readers and writes. To build our new state we need
+// to hold a lock over the entire process to prevent internal races setting the final state out of order.
+// However, once we have built the new state we can atomically swap it. This gives us mutex locked writes but
+// lock free reads via snapshot()
+func (dp *deltaProcessor) process(delta *api.ClientFeaturesDelta) (*api.FeatureResponse, error) {
 	if delta == nil {
-		return fmt.Errorf("delta is nil")
+		return nil, fmt.Errorf("delta is nil")
 	}
 
 	dp.mu.Lock()
 	defer dp.mu.Unlock()
 
-	snap := dp.repository.snapshot()
+	snap := dp.snapshot()
 
-	featMap := make(map[string]api.Feature, len(snap.Features))
+	featMap := make(map[string]*api.Feature, len(snap.Features))
 	for name, f := range snap.Features {
-		featMap[name] = *f
+		featMap[name] = f
 	}
 
 	segMap := make(map[int][]api.Constraint, len(snap.Segments))
@@ -44,12 +59,11 @@ func (dp *deltaProcessor) process(delta *api.ClientFeaturesDelta) error {
 		segMap[id] = constraints
 	}
 
-	// Apply deltas
 	for _, event := range delta.Events {
 		switch e := event.(type) {
 
 		case *api.FeatureUpdatedEvent:
-			featMap[e.Feature.Name] = e.Feature
+			featMap[e.Feature.Name] = &e.Feature
 
 		case *api.FeatureRemovedEvent:
 			delete(featMap, e.FeatureName)
@@ -61,9 +75,9 @@ func (dp *deltaProcessor) process(delta *api.ClientFeaturesDelta) error {
 			delete(segMap, e.SegmentId)
 
 		case *api.HydrationEvent:
-			featMap = make(map[string]api.Feature, len(e.Features))
+			featMap = make(map[string]*api.Feature, len(e.Features))
 			for _, f := range e.Features {
-				featMap[f.Name] = f
+				featMap[f.Name] = &f
 			}
 
 			segMap = make(map[int][]api.Constraint, len(e.Segments))
@@ -77,40 +91,17 @@ func (dp *deltaProcessor) process(delta *api.ClientFeaturesDelta) error {
 		}
 	}
 
-	newFeatureList := make([]api.Feature, 0, len(featMap))
-	for _, feature := range featMap {
-		newFeatureList = append(newFeatureList, feature)
+	newState := &FeatureMemoryState{
+		Features: featMap,
+		Segments: segMap,
 	}
 
-	newSegmentList := make([]api.Segment, 0, len(segMap))
-	for id, c := range segMap {
-		newSegmentList = append(newSegmentList, api.Segment{
-			Id:          id,
-			Constraints: c,
-		})
-	}
+	dp.featureState.Store(newState)
 
-	state := &api.FeatureResponse{
-		Features: newFeatureList,
-		Segments: newSegmentList,
-	}
+	return newState.asApiResponse(), nil
+}
 
-	// explicitly ignore error here, saveState fails if we cannot write to the persistent storage
-	// this no longer means that features are in an invalid state so we can enter a ready state
-	_ = dp.repository.saveState(state)
-
-	if !dp.isReady {
-		dp.isReady = true
-		select {
-		case dp.repositoryChannels.ready <- true:
-		default:
-		}
-	} else {
-		select {
-		case dp.repositoryChannels.update <- true:
-		default:
-		}
-	}
-
-	return nil
+func (dp *deltaProcessor) snapshot() *FeatureMemoryState {
+	v := dp.featureState.Load()
+	return v.(*FeatureMemoryState)
 }

@@ -529,8 +529,6 @@ func TestMetrics_metricsData_includes_new_metadata(t *testing.T) {
 	assert := assert.New(t)
 	defer gock.OffAll()
 
-	gock.Observe(gock.DumpRequest)
-
 	gock.New(mockerServer).Post("/client/register").Reply(200)
 	gock.New(mockerServer).
 		Post("/client/metrics").

@@ -237,7 +237,6 @@ type repositoryOptions struct {
 	storage         Storage
 	httpClient      *http.Client
 	headers         http.Header
-	isStreaming     bool
 }
 
 type metricsOptions struct {

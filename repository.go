@@ -21,24 +21,27 @@ var (
 	errNoChange = errors.New("no change")
 )
 
+type togglerFetcher interface {
+	start()
+	snapshot() *FeatureMemoryState
+	stop()
+}
+
 type repository struct {
 	repositoryChannels
 	sync.RWMutex
-	options         repositoryOptions
-	etag            string
-	close           chan struct{}
-	closed          chan struct{}
-	ctx             context.Context
-	cancel          func()
-	isReady         bool
-	refreshTicker   *time.Ticker
-	errors          float64
-	maxSkips        float64
-	skips           float64
-	streamingClient *streamingClient
-	isStreaming     bool
-	deltaProcessor  *deltaProcessor
-	featureState    atomic.Value // this should always hold an instance of *FeatureMemoryState
+	options       repositoryOptions
+	etag          string
+	close         chan struct{}
+	closed        chan struct{}
+	ctx           context.Context
+	cancel        func()
+	isReady       bool
+	refreshTicker *time.Ticker
+	errors        float64
+	maxSkips      float64
+	skips         float64
+	featureState  atomic.Value // this should always hold an instance of *FeatureMemoryState
 }
 
 func newRepository(options repositoryOptions, channels repositoryChannels) *repository {
@@ -51,7 +54,6 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 		errors:             0,
 		maxSkips:           10,
 		skips:              0,
-		isStreaming:        options.isStreaming,
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	repo.ctx = ctx
@@ -60,13 +62,6 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 	if options.httpClient == nil {
 		repo.options.httpClient = http.DefaultClient
 	}
-
-	if options.storage == nil {
-		repo.options.storage = &DefaultStorage{}
-	}
-
-	repo.options.storage.Init(options.backupPath, options.appName)
-	repo.deltaProcessor = newDeltaProcessor(repo, channels)
 
 	if loadedState, err := repo.options.storage.Load(); err == nil && loadedState != nil {
 		repo.updateState(loadedState)
@@ -77,15 +72,7 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 		})
 	}
 
-	// Delta processor needs to be collapsed into this module, it's far too jealous of this domain at the moment
-	if repo.isStreaming {
-		repo.streamingClient = newStreamingClient(
-			options,
-			channels,
-			repo.deltaProcessor)
-	}
-
-	go repo.sync()
+	go repo.start()
 
 	return repo
 }
@@ -132,46 +119,20 @@ func (r *repository) fetchAndReportError() {
 	}
 }
 
-func (r *repository) sync() {
-	// Single read lock to determine initial mode
-	r.RLock()
-	isStreaming := r.isStreaming
-	streamingClient := r.streamingClient
-	r.RUnlock()
-
-	// Start streaming mode if enabled
-	// The eventsource library handles all reconnections automatically with backoff and jitter
-	if isStreaming && streamingClient != nil {
-		if err := streamingClient.start(r.options.storage); err != nil {
-			r.err(fmt.Errorf("failed to start streaming client: %w", err))
-		}
-	}
-
-	// Use polling if not streaming
-	if !isStreaming {
-		r.fetchAndReportError()
-	}
-
+func (r *repository) start() {
+	// Initial fetch to populate state and signal readiness.
+	r.fetchAndReportError()
 	for {
 		select {
 		case <-r.close:
-			if r.streamingClient != nil {
-				r.streamingClient.stop()
-			}
 			close(r.closed)
 			return
 		case <-r.refreshTicker.C:
-			// Only poll if not in streaming mode
-			r.RLock()
-			shouldPoll := !r.isStreaming
-			r.RUnlock()
 
-			if shouldPoll {
-				if r.skips == 0 {
-					r.fetchAndReportError()
-				} else {
-					r.decrementSkips()
-				}
+			if r.skips == 0 {
+				r.fetchAndReportError()
+			} else {
+				r.decrementSkips()
 			}
 		}
 	}
@@ -248,11 +209,6 @@ func (r *repository) fetch() error {
 	return nil
 }
 
-// IsStreaming returns whether the repository is currently in streaming mode
-func (r *repository) IsStreaming() bool {
-	return r.isStreaming
-}
-
 func (r *repository) statusIsOK(resp *http.Response) error {
 	s := resp.StatusCode
 	if http.StatusOK <= s && s < http.StatusMultipleChoices {
@@ -268,23 +224,6 @@ func (r *repository) statusIsOK(resp *http.Response) error {
 	return fmt.Errorf("%s %s returned status code %d", resp.Request.Method, resp.Request.URL, s)
 }
 
-func (r *repository) list() []api.Feature {
-
-	snapshot := r.snapshot()
-	raw := snapshot.Features
-	features := make([]api.Feature, 0, len(raw))
-
-	// we're doing an explicit copy here, this function should not be on a hot path
-	// and we want to avoid exposing internal pointers or changing too much of the public API
-	for _, feature := range raw {
-		if feature == nil {
-			continue
-		}
-		features = append(features, *feature)
-	}
-	return features
-}
-
 func (r *repository) snapshot() *FeatureMemoryState {
 	v := r.featureState.Load()
 	if v == nil {
@@ -298,10 +237,9 @@ func (r *repository) snapshot() *FeatureMemoryState {
 	return v.(*FeatureMemoryState)
 }
 
-func (r *repository) Close() error {
+func (r *repository) stop() {
 	close(r.close)
 	r.cancel()
 	<-r.closed
 	r.refreshTicker.Stop()
-	return nil
 }
