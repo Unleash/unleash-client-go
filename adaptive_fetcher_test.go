@@ -37,7 +37,7 @@ func makeBaseChannels() fetcherChannels {
 
 func makeTestFactory(streamingFetcher *fakeFetcher, pollingFetcher *fakeFetcher) fetcherFactory {
 	return fetcherFactory{
-		newStreaming: func(options fetcherOptions, channels fetcherChannels) togglerFetcher {
+		newStreaming: func(options fetcherOptions, channels fetcherChannels, streamErrorChannel chan streamError) togglerFetcher {
 			return streamingFetcher
 		},
 		newPolling: func(options fetcherOptions, channels fetcherChannels) togglerFetcher {
