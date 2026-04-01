@@ -27,21 +27,20 @@ type streamError struct {
 
 type streamingFetcher struct {
 	fetcherChannels
-	url            string
-	appName        string
-	instanceId     string
-	httpClient     *http.Client
-	headers        http.Header
-	stream         *eventsource.Stream
-	storage        Storage
-	deltaProcessor *deltaProcessor
-	ctx            context.Context
-	cancel         context.CancelFunc
-	hydrated       atomic.Bool
-	internalErrors chan streamError
+	url                string
+	appName            string
+	instanceId         string
+	httpClient         *http.Client
+	headers            http.Header
+	storage            Storage
+	deltaProcessor     *deltaProcessor
+	ctx                context.Context
+	cancel             context.CancelFunc
+	hydrated           atomic.Bool
+	streamErrorChannel chan streamError
 }
 
-func newStreamingFetcher(options fetcherOptions, fetcherChannels fetcherChannels) *streamingFetcher {
+func newStreamingFetcher(options fetcherOptions, fetcherChannels fetcherChannels, streamErrorChannel chan streamError) *streamingFetcher {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	var apiResponse *api.FeatureResponse
@@ -58,17 +57,17 @@ func newStreamingFetcher(options fetcherOptions, fetcherChannels fetcherChannels
 	deltaProc := newDeltaProcessor(apiResponse)
 
 	streamingFetcher := &streamingFetcher{
-		url:             fmt.Sprintf("%sclient/streaming", options.url.String()),
-		appName:         options.appName,
-		instanceId:      options.instanceId,
-		httpClient:      options.httpClient,
-		headers:         options.headers,
-		deltaProcessor:  deltaProc,
-		ctx:             ctx,
-		cancel:          cancel,
-		fetcherChannels: fetcherChannels,
-		internalErrors:  make(chan streamError, 8),
-		storage:         options.storage,
+		url:                fmt.Sprintf("%sclient/streaming", options.url.String()),
+		appName:            options.appName,
+		instanceId:         options.instanceId,
+		httpClient:         options.httpClient,
+		headers:            options.headers,
+		deltaProcessor:     deltaProc,
+		ctx:                ctx,
+		cancel:             cancel,
+		fetcherChannels:    fetcherChannels,
+		streamErrorChannel: streamErrorChannel,
+		storage:            options.storage,
 	}
 
 	return streamingFetcher
@@ -77,7 +76,7 @@ func newStreamingFetcher(options fetcherOptions, fetcherChannels fetcherChannels
 func (sc *streamingFetcher) start() {
 	req, err := http.NewRequestWithContext(sc.ctx, "GET", sc.url, nil)
 	if err != nil {
-		sc.internalErrors <- streamError{kind: fatal, err: fmt.Errorf("failed to create request: %w", err)}
+		sc.signalStreamingError(streamError{kind: fatal, err: fmt.Errorf("failed to create request: %w", err)})
 		return
 	}
 
@@ -93,7 +92,6 @@ func (sc *streamingFetcher) start() {
 	req.Header.Add("User-Agent", sc.appName)
 
 	go sc.runStream(req)
-	go sc.superviseStream()
 }
 
 func (sc *streamingFetcher) runStream(req *http.Request) {
@@ -102,17 +100,15 @@ func (sc *streamingFetcher) runStream(req *http.Request) {
 		eventsource.StreamOptionUseBackoff(5*time.Minute),
 		eventsource.StreamOptionUseJitter(0.5),
 		eventsource.StreamOptionErrorHandler(func(err error) eventsource.StreamErrorHandlerResult {
-			sc.internalErrors <- streamError{kind: transient, err: fmt.Errorf("SSE error: %w", err)}
+			sc.signalStreamingError(streamError{kind: transient, err: fmt.Errorf("SSE error: %w", err)})
 			return eventsource.StreamErrorHandlerResult{CloseNow: false}
 		}),
 	)
 
 	if err != nil {
-		sc.internalErrors <- streamError{kind: fatal, err: fmt.Errorf("failed to subscribe to SSE stream: %w", err)}
+		sc.signalStreamingError(streamError{kind: fatal, err: fmt.Errorf("failed to subscribe to SSE stream: %w", err)})
 		return
 	}
-
-	sc.stream = stream
 
 	for {
 		select {
@@ -123,27 +119,11 @@ func (sc *streamingFetcher) runStream(req *http.Request) {
 			switch event.Event() {
 			case "unleash-connected", "unleash-updated":
 				if err := sc.handleDomainEvent(event); err != nil {
-					sc.internalErrors <- streamError{kind: corrupted, err: fmt.Errorf("failed to handle event: %w", err)}
+					sc.signalStreamingError(streamError{kind: corrupted, err: fmt.Errorf("failed to handle event: %w", err)})
 				}
 			}
 		case <-sc.ctx.Done():
 			stream.Close()
-			return
-		}
-	}
-}
-
-func (sc *streamingFetcher) superviseStream() {
-	// this intentionally just black holes errors. This is incomplete
-	// in this PR and will be fleshed out in the next steps
-	for {
-		select {
-		case _, ok := <-sc.internalErrors:
-			if !ok {
-				return
-			}
-
-		case <-sc.ctx.Done():
 			return
 		}
 	}
@@ -192,4 +172,10 @@ func (sc *streamingFetcher) snapshot() *FeatureMemoryState {
 
 func (sc *streamingFetcher) stop() {
 	sc.cancel()
+}
+
+func (sc *streamingFetcher) signalStreamingError(sig streamError) {
+	if sc.streamErrorChannel != nil {
+		sc.streamErrorChannel <- sig
+	}
 }

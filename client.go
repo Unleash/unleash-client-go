@@ -224,6 +224,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 		uc.fetcher = newStreamingFetcher(
 			fetcherOptions,
 			fetcherChannels,
+			nil,
 		)
 	} else {
 		uc.fetcher = newPollingFetcher(

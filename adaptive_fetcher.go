@@ -14,14 +14,14 @@ type fetchContainer struct {
 }
 
 type fetcherFactory struct {
-	newStreaming func(fetcherOptions, fetcherChannels) togglerFetcher
+	newStreaming func(fetcherOptions, fetcherChannels, chan streamError) togglerFetcher
 	newPolling   func(fetcherOptions, fetcherChannels) togglerFetcher
 }
 
 func defaultFetcherFactory() fetcherFactory {
 	return fetcherFactory{
-		newStreaming: func(options fetcherOptions, channels fetcherChannels) togglerFetcher {
-			return newStreamingFetcher(options, channels)
+		newStreaming: func(options fetcherOptions, channels fetcherChannels, streamErrorChannel chan streamError) togglerFetcher {
+			return newStreamingFetcher(options, channels, streamErrorChannel)
 		},
 		newPolling: func(options fetcherOptions, channels fetcherChannels) togglerFetcher {
 			return newPollingFetcher(options, channels)
@@ -30,18 +30,19 @@ func defaultFetcherFactory() fetcherFactory {
 }
 
 type adaptiveFetcher struct {
-	currentFetcher atomic.Pointer[fetchContainer]
-	baseOptions    fetcherOptions
-	baseChannels   fetcherChannels
-	internalReady  chan bool
-	internalUpdate chan bool
-	ready          atomic.Bool
-	started        bool
-	stopped        bool
-	ctx            context.Context
-	cancel         context.CancelFunc
-	mu             sync.Mutex
-	factory        fetcherFactory
+	currentFetcher        atomic.Pointer[fetchContainer]
+	baseOptions           fetcherOptions
+	baseChannels          fetcherChannels
+	internalReady         chan bool
+	internalUpdate        chan bool
+	failoverSignalChannel chan streamError
+	ready                 atomic.Bool
+	started               bool
+	stopped               bool
+	ctx                   context.Context
+	cancel                context.CancelFunc
+	mu                    sync.Mutex
+	factory               fetcherFactory
 }
 
 func newAdaptiveFetcher(options fetcherOptions, channels fetcherChannels) *adaptiveFetcher {
@@ -59,24 +60,26 @@ func newAdaptiveFetcherWithFactory(
 ) *adaptiveFetcher {
 	ir := make(chan bool, 1)
 	iu := make(chan bool, 1)
+	se := make(chan streamError, 1)
 
 	ctx, cancel := context.WithCancel(context.Background())
 
 	af := &adaptiveFetcher{
-		baseOptions:    options,
-		baseChannels:   channels,
-		internalReady:  ir,
-		internalUpdate: iu,
-		ctx:            ctx,
-		cancel:         cancel,
-		factory:        factory,
+		baseOptions:           options,
+		baseChannels:          channels,
+		internalReady:         ir,
+		internalUpdate:        iu,
+		ctx:                   ctx,
+		cancel:                cancel,
+		factory:               factory,
+		failoverSignalChannel: se,
 	}
 
 	initial := af.factory.newStreaming(options, fetcherChannels{
 		ready:         ir,
 		update:        iu,
 		errorChannels: channels.errorChannels,
-	})
+	}, af.failoverSignalChannel)
 
 	af.currentFetcher.Store(&fetchContainer{f: initial})
 
@@ -92,6 +95,8 @@ func (af *adaptiveFetcher) superviseFetchers() {
 			}
 		case <-af.internalUpdate:
 			af.baseChannels.update <- true
+		case <-af.failoverSignalChannel:
+			// do nothing for now but this is where cutover will get triggered from
 		case <-af.ctx.Done():
 			return
 		}
