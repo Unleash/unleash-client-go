@@ -105,7 +105,7 @@ func (s *FeatureMemoryState) evaluateFeature(
 			continue
 		}
 
-		if stCfg.Variants != nil && len(stCfg.Variants) > 0 {
+		if len(stCfg.Variants) > 0 {
 			groupIdValue := stCfg.Parameters[strategy.ParamGroupId]
 			groupId, ok := groupIdValue.(string)
 			if !ok {
