@@ -2,6 +2,7 @@ package unleash
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"sync/atomic"
 )
@@ -14,14 +15,14 @@ type fetchContainer struct {
 }
 
 type fetcherFactory struct {
-	newStreaming func(fetcherOptions, fetcherChannels, chan streamError) togglerFetcher
+	newStreaming func(fetcherOptions, fetcherChannels, chan failEvent) togglerFetcher
 	newPolling   func(fetcherOptions, fetcherChannels) togglerFetcher
 }
 
 func defaultFetcherFactory() fetcherFactory {
 	return fetcherFactory{
-		newStreaming: func(options fetcherOptions, channels fetcherChannels, streamErrorChannel chan streamError) togglerFetcher {
-			return newStreamingFetcher(options, channels, streamErrorChannel)
+		newStreaming: func(options fetcherOptions, channels fetcherChannels, failoverChannel chan failEvent) togglerFetcher {
+			return newStreamingFetcher(options, channels, failoverChannel)
 		},
 		newPolling: func(options fetcherOptions, channels fetcherChannels) togglerFetcher {
 			return newPollingFetcher(options, channels)
@@ -35,7 +36,7 @@ type adaptiveFetcher struct {
 	baseChannels          fetcherChannels
 	internalReady         chan bool
 	internalUpdate        chan bool
-	failoverSignalChannel chan streamError
+	failoverSignalChannel chan failEvent
 	ready                 atomic.Bool
 	started               bool
 	stopped               bool
@@ -60,7 +61,7 @@ func newAdaptiveFetcherWithFactory(
 ) *adaptiveFetcher {
 	ir := make(chan bool, 1)
 	iu := make(chan bool, 1)
-	se := make(chan streamError, 1)
+	fc := make(chan failEvent, 1)
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -72,7 +73,7 @@ func newAdaptiveFetcherWithFactory(
 		ctx:                   ctx,
 		cancel:                cancel,
 		factory:               factory,
-		failoverSignalChannel: se,
+		failoverSignalChannel: fc,
 	}
 
 	initial := af.factory.newStreaming(options, fetcherChannels{
@@ -95,8 +96,9 @@ func (af *adaptiveFetcher) superviseFetchers() {
 			}
 		case <-af.internalUpdate:
 			af.baseChannels.update <- true
-		case <-af.failoverSignalChannel:
-			// do nothing for now but this is where cutover will get triggered from
+		case errorEvent := <-af.failoverSignalChannel:
+			af.baseChannels.warnings <- fmt.Errorf("Adaptive fetcher failover triggered: %s", errorEvent.Message())
+			af.cutover()
 		case <-af.ctx.Done():
 			return
 		}

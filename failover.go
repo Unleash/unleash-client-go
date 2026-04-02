@@ -27,9 +27,8 @@ type httpStatusErrorEvent struct {
 	statusCode int
 }
 
-type serverEvent struct {
+type failoverRequest struct {
 	baseFailEvent
-	event string
 }
 
 type failoverStrategy struct {
@@ -61,8 +60,8 @@ func (f *failoverStrategy) shouldFailover(event failEvent, now time.Time) bool {
 		default:
 			return false
 		}
-	case *serverEvent:
-		return e.event == "polling"
+	case *failoverRequest:
+		return true
 	default:
 		return false
 	}

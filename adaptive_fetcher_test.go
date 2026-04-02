@@ -2,6 +2,7 @@ package unleash
 
 import (
 	"testing"
+	"time"
 
 	"github.com/Unleash/unleash-go-sdk/v6/api"
 )
@@ -37,12 +38,30 @@ func makeBaseChannels() fetcherChannels {
 
 func makeTestFactory(streamingFetcher *fakeFetcher, pollingFetcher *fakeFetcher) fetcherFactory {
 	return fetcherFactory{
-		newStreaming: func(options fetcherOptions, channels fetcherChannels, streamErrorChannel chan streamError) togglerFetcher {
+		newStreaming: func(options fetcherOptions, channels fetcherChannels, failoverSignal chan failEvent) togglerFetcher {
 			return streamingFetcher
 		},
 		newPolling: func(options fetcherOptions, channels fetcherChannels) togglerFetcher {
 			return pollingFetcher
 		},
+	}
+}
+
+func waitFor(t *testing.T, timeout time.Duration, cond func() bool, onTimeout string) {
+	t.Helper()
+	deadline := time.After(timeout)
+	ticker := time.NewTicker(5 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		if cond() {
+			return
+		}
+		select {
+		case <-deadline:
+			t.Fatalf(onTimeout)
+		case <-ticker.C:
+		}
 	}
 }
 
@@ -181,5 +200,53 @@ func TestAdaptiveFetcher_SnapshotAfterCutover(t *testing.T) {
 	got := af.snapshot()
 	if _, ok := got.Features["polling"]; !ok {
 		t.Fatalf("expected snapshot from polling fetcher after cutover")
+	}
+}
+
+func TestAdaptiveFetcher_FailoverSignalCutsOverAndWarns(t *testing.T) {
+	streaming := &fakeFetcher{
+		state: &FeatureMemoryState{
+			Features: map[string]*api.Feature{"streaming": {}},
+			Segments: map[int][]api.Constraint{},
+		},
+	}
+
+	polling := &fakeFetcher{
+		state: &FeatureMemoryState{
+			Features: map[string]*api.Feature{"polling": {}},
+			Segments: map[int][]api.Constraint{},
+		},
+	}
+
+	factory := makeTestFactory(streaming, polling)
+	channels := makeBaseChannels()
+
+	af := newAdaptiveFetcherWithFactory(fetcherOptions{}, channels, factory)
+	af.start()
+
+	failEvent := &failoverRequest{
+		baseFailEvent: baseFailEvent{
+			occurredAt: time.Now(),
+			message:    "streaming borked",
+		},
+	}
+
+	select {
+	case af.failoverSignalChannel <- failEvent:
+	case <-time.After(100 * time.Millisecond):
+		t.Fatalf("timeout sending failover signal")
+	}
+
+	waitFor(t, 500*time.Millisecond, func() bool {
+		return polling.startCalls == 1 && streaming.stopCalls == 1
+	}, "expected cutover to polling after failover signal")
+
+	select {
+	case err := <-channels.warnings:
+		if err == nil || err.Error() == "" {
+			t.Fatalf("expected warning error on failover")
+		}
+	case <-time.After(200 * time.Millisecond):
+		t.Fatalf("expected warning to be emitted on failover")
 	}
 }
