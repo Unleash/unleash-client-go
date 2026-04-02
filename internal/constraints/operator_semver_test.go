@@ -101,62 +101,62 @@ func TestOperatorSemverErrors(t *testing.T) {
 		{
 			ctx:         &context.Context{Properties: map[string]string{"x": "v1.2.3"}},
 			constraints: []api.Constraint{{ContextName: "x", Operator: "SEMVER_EQ", Value: "1.2.3"}},
-			error:       "Invalid characters in version",
+			error:       "invalid characters in version",
 		},
 		{
 			ctx:         &context.Context{Properties: map[string]string{"x": "1.2.3"}},
 			constraints: []api.Constraint{{ContextName: "x", Operator: "SEMVER_EQ", Value: "v1.2.3"}},
-			error:       "Invalid characters in version",
+			error:       "invalid characters in version",
 		},
 		{
 			ctx:         &context.Context{Properties: map[string]string{"x": "v1.2.3"}},
 			constraints: []api.Constraint{{ContextName: "x", Operator: "SEMVER_LT", Value: "3.2.1"}},
-			error:       "Invalid characters in version",
+			error:       "invalid characters in version",
 		},
 		{
 			ctx:         &context.Context{Properties: map[string]string{"x": "1.2.3"}},
 			constraints: []api.Constraint{{ContextName: "x", Operator: "SEMVER_LT", Value: "v3.2.1"}},
-			error:       "Invalid characters in version",
+			error:       "invalid characters in version",
 		},
 		{
 			ctx:         &context.Context{Properties: map[string]string{"x": "v3.2.1"}},
 			constraints: []api.Constraint{{ContextName: "x", Operator: "SEMVER_GT", Value: "1.2.3"}},
-			error:       "Invalid characters in version",
+			error:       "invalid characters in version",
 		},
 		{
 			ctx:         &context.Context{Properties: map[string]string{"x": "3.2.1"}},
 			constraints: []api.Constraint{{ContextName: "x", Operator: "SEMVER_GT", Value: "v1.2.3"}},
-			error:       "Invalid characters in version",
+			error:       "invalid characters in version",
 		},
 		{
 			ctx:         &context.Context{Properties: map[string]string{"x": "v3.2.1"}},
 			constraints: []api.Constraint{{ContextName: "x", Operator: "SEMVER_LTE", Value: "1.2.3"}},
-			error:       "Invalid characters in version",
+			error:       "invalid characters in version",
 		},
 		{
 			ctx:         &context.Context{Properties: map[string]string{"x": "3.2.1"}},
 			constraints: []api.Constraint{{ContextName: "x", Operator: "SEMVER_LTE", Value: "v1.2.3"}},
-			error:       "Invalid characters in version",
+			error:       "invalid characters in version",
 		},
 		{
 			ctx:         &context.Context{Properties: map[string]string{"x": "v3.2.1"}},
 			constraints: []api.Constraint{{ContextName: "x", Operator: "SEMVER_GTE", Value: "1.2.3"}},
-			error:       "Invalid characters in version",
+			error:       "invalid characters in version",
 		},
 		{
 			ctx:         &context.Context{Properties: map[string]string{"x": "3.2.1"}},
 			constraints: []api.Constraint{{ContextName: "x", Operator: "SEMVER_GTE", Value: "v1.2.3"}},
-			error:       "Invalid characters in version",
+			error:       "invalid characters in version",
 		},
 		{
 			ctx:         &context.Context{Properties: map[string]string{"x": "1.0"}},
 			constraints: []api.Constraint{{ContextName: "x", Operator: "SEMVER_EQ", Value: "1.0.0"}},
-			error:       "Invalid Semantic Version",
+			error:       "invalid semantic version",
 		},
 		{
 			ctx:         &context.Context{Properties: map[string]string{"x": "1.0.0"}},
 			constraints: []api.Constraint{{ContextName: "x", Operator: "SEMVER_EQ", Value: "1.0"}},
-			error:       "Invalid Semantic Version",
+			error:       "invalid semantic version",
 		},
 	}
 
