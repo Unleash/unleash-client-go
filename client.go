@@ -221,11 +221,7 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 	}
 
 	if uc.options.IsStreamingMode() {
-		uc.fetcher = newStreamingFetcher(
-			fetcherOptions,
-			fetcherChannels,
-			nil,
-		)
+		uc.fetcher = newAdaptiveFetcher(fetcherOptions, fetcherChannels)
 	} else {
 		uc.fetcher = newPollingFetcher(
 			fetcherOptions,
