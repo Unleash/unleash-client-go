@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/Unleash/unleash-go-sdk/v6/api"
 	"github.com/Unleash/unleash-go-sdk/v6/context"
@@ -229,13 +230,23 @@ func (td TestDefinition) Run(t *testing.T) {
 	runTest := func(test Runner) {
 		listener := &MockedListener{}
 		listener.On("OnReady").Return()
-		listener.On("OnRegistered", mock.AnythingOfType("ClientData")).Return()
+		registered := make(chan struct{}, 1)
+		listener.On("OnRegistered", mock.AnythingOfType("ClientData")).Return().Run(func(mock.Arguments) {
+			registered <- struct{}{}
+		})
 		listener.On("OnCount", mock.AnythingOfType("string"), mock.AnythingOfType("bool")).Return()
 		listener.On("OnError", mock.Anything).Return()
 
 		client, err := td.Mock(listener)
 		assert.NoError(t, err)
 		t.Run(test.GetDescription(), test.RunWithClient(client))
+
+		select {
+		case <-registered:
+		case <-time.After(500 * time.Millisecond):
+			t.Fatalf("timeout waiting for OnRegistered callback")
+		}
+
 		client.Close()
 
 		listener.AssertCalled(t, "OnReady")
