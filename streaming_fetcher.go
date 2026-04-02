@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -11,36 +12,37 @@ import (
 	"github.com/launchdarkly/eventsource"
 )
 
-type streamErrorKind int
-
-const (
-	transient streamErrorKind = iota
-	warning
-	fatal
-	corrupted
-)
-
-type streamError struct {
-	kind streamErrorKind
-	err  error
-}
-
 type streamingFetcher struct {
 	fetcherChannels
-	url                string
-	appName            string
-	instanceId         string
-	httpClient         *http.Client
-	headers            http.Header
-	storage            Storage
-	deltaProcessor     *deltaProcessor
-	ctx                context.Context
-	cancel             context.CancelFunc
-	hydrated           atomic.Bool
-	streamErrorChannel chan streamError
+	url             string
+	appName         string
+	instanceId      string
+	httpClient      *http.Client
+	headers         http.Header
+	storage         Storage
+	deltaProcessor  *deltaProcessor
+	ctx             context.Context
+	cancel          context.CancelFunc
+	hydrated        atomic.Bool
+	recordFailEvent func(failEvent)
 }
 
-func newStreamingFetcher(options fetcherOptions, fetcherChannels fetcherChannels, streamErrorChannel chan streamError) *streamingFetcher {
+func buildFailoverRecorder(ch chan failEvent, failoverStrategy *failoverStrategy) func(failEvent) {
+	if ch == nil {
+		return func(failEvent) {}
+	}
+
+	var once sync.Once
+	return func(reason failEvent) {
+		if failoverStrategy.shouldFailover(reason, time.Now()) {
+			once.Do(func() {
+				ch <- reason
+			})
+		}
+	}
+}
+
+func newStreamingFetcher(options fetcherOptions, fetcherChannels fetcherChannels, failoverChannel chan failEvent) *streamingFetcher {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	var apiResponse *api.FeatureResponse
@@ -57,17 +59,17 @@ func newStreamingFetcher(options fetcherOptions, fetcherChannels fetcherChannels
 	deltaProc := newDeltaProcessor(apiResponse)
 
 	streamingFetcher := &streamingFetcher{
-		url:                fmt.Sprintf("%sclient/streaming", options.url.String()),
-		appName:            options.appName,
-		instanceId:         options.instanceId,
-		httpClient:         options.httpClient,
-		headers:            options.headers,
-		deltaProcessor:     deltaProc,
-		ctx:                ctx,
-		cancel:             cancel,
-		fetcherChannels:    fetcherChannels,
-		streamErrorChannel: streamErrorChannel,
-		storage:            options.storage,
+		url:             fmt.Sprintf("%sclient/streaming", options.url.String()),
+		appName:         options.appName,
+		instanceId:      options.instanceId,
+		httpClient:      options.httpClient,
+		headers:         options.headers,
+		deltaProcessor:  deltaProc,
+		ctx:             ctx,
+		cancel:          cancel,
+		fetcherChannels: fetcherChannels,
+		recordFailEvent: buildFailoverRecorder(failoverChannel, newFailoverStrategy(5, 60*time.Second)),
+		storage:         options.storage,
 	}
 
 	return streamingFetcher
@@ -76,7 +78,7 @@ func newStreamingFetcher(options fetcherOptions, fetcherChannels fetcherChannels
 func (sc *streamingFetcher) start() {
 	req, err := http.NewRequestWithContext(sc.ctx, "GET", sc.url, nil)
 	if err != nil {
-		sc.signalStreamingError(streamError{kind: fatal, err: fmt.Errorf("failed to create request: %w", err)})
+		sc.recordFailEvent(&failoverRequest{baseFailEvent: baseFailEvent{occurredAt: time.Now(), message: fmt.Sprintf("unable to setup base http request for streaming fetcher: %v", err)}})
 		return
 	}
 
@@ -100,13 +102,37 @@ func (sc *streamingFetcher) runStream(req *http.Request) {
 		eventsource.StreamOptionUseBackoff(5*time.Minute),
 		eventsource.StreamOptionUseJitter(0.5),
 		eventsource.StreamOptionErrorHandler(func(err error) eventsource.StreamErrorHandlerResult {
-			sc.signalStreamingError(streamError{kind: transient, err: fmt.Errorf("SSE error: %w", err)})
+
+			var event failEvent = nil
+
+			if se, ok := err.(eventsource.SubscriptionError); ok {
+				status := se.Code
+				event = &httpStatusErrorEvent{
+					baseFailEvent: baseFailEvent{
+						occurredAt: time.Now(),
+						message:    fmt.Sprintf("streaming connection error with HTTP status code %d: %v", status, err),
+					},
+					statusCode: status,
+				}
+			} else {
+				event = &networkErrorEvent{
+					baseFailEvent: baseFailEvent{
+						occurredAt: time.Now(),
+						message:    fmt.Sprintf("streaming connection network error: %v", err),
+					},
+					err: err,
+				}
+			}
+			sc.recordFailEvent(event)
+
+			// Don't need to close, this is the job of of the wrapping adaptiveFetcher to decide when
+			// or if to cutover. We just let it know and if it wants to close it'll invoke stop
 			return eventsource.StreamErrorHandlerResult{CloseNow: false}
 		}),
 	)
 
 	if err != nil {
-		sc.signalStreamingError(streamError{kind: fatal, err: fmt.Errorf("failed to subscribe to SSE stream: %w", err)})
+		sc.recordFailEvent(&failoverRequest{baseFailEvent: baseFailEvent{occurredAt: time.Now(), message: fmt.Sprintf("failed to establish streaming connection: %v", err)}})
 		return
 	}
 
@@ -119,7 +145,8 @@ func (sc *streamingFetcher) runStream(req *http.Request) {
 			switch event.Event() {
 			case "unleash-connected", "unleash-updated":
 				if err := sc.handleDomainEvent(event); err != nil {
-					sc.signalStreamingError(streamError{kind: corrupted, err: fmt.Errorf("failed to handle event: %w", err)})
+					// This isn't a case for failover, it's a case for disconnect and request a
+					// fresh hydration. Coming in next chunk of work
 				}
 			}
 		case <-sc.ctx.Done():
@@ -172,10 +199,4 @@ func (sc *streamingFetcher) snapshot() *FeatureMemoryState {
 
 func (sc *streamingFetcher) stop() {
 	sc.cancel()
-}
-
-func (sc *streamingFetcher) signalStreamingError(sig streamError) {
-	if sc.streamErrorChannel != nil {
-		sc.streamErrorChannel <- sig
-	}
 }

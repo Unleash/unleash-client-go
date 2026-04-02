@@ -10,33 +10,15 @@ func TestFailoverStrategy_ServerHintPollingFailsOver(t *testing.T) {
 	strategy := newFailoverStrategy(3, 10*time.Second)
 	now := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	event := &serverEvent{
+	event := &failoverRequest{
 		baseFailEvent: baseFailEvent{
 			occurredAt: now,
 			message:    "Unleash has requested failover to polling",
 		},
-		event: "polling",
 	}
 
 	if got := strategy.shouldFailover(event, now); !got {
 		t.Fatalf("expected failover on server polling hint")
-	}
-}
-
-func TestFailoverStrategy_ArbitraryServerEventDoesNotFailover(t *testing.T) {
-	strategy := newFailoverStrategy(3, 10*time.Second)
-	now := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
-
-	event := &serverEvent{
-		baseFailEvent: baseFailEvent{
-			occurredAt: now,
-			message:    "Service should frob the wranglebinder now",
-		},
-		event: "a-new-and-exciting-unsupported-event",
-	}
-
-	if got := strategy.shouldFailover(event, now); got {
-		t.Fatalf("expected no failover on arbitrary server event")
 	}
 }
 
