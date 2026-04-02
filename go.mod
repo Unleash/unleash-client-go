@@ -10,6 +10,7 @@ require (
 	github.com/nbio/st v0.0.0-20140626010706-e9e8d9816f32
 	github.com/stretchr/testify v1.11.1
 	github.com/twmb/murmur3 v1.1.8
+	github.com/hashicorp/golang-lru/v2 v2.0.7
 )
 
 require (
