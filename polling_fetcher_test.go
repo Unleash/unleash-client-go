@@ -66,6 +66,7 @@ func TestPollingFetcher_GetFeaturesFail(t *testing.T) {
 	mockListener := &MockedListener{}
 	mockListener.On("OnReady").Run(func(args mock.Arguments) { close(ready) }).Return()
 	mockListener.On("OnRegistered", mock.AnythingOfType("ClientData"))
+	mockListener.On("OnUpdate").Return().Maybe()
 	mockListener.On("OnError", mock.MatchedBy(func(e error) bool {
 		return strings.HasSuffix(e.Error(), "/client/features returned status code 400")
 	})).Return()
