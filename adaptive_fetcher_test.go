@@ -1,6 +1,7 @@
 package unleash
 
 import (
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -8,17 +9,17 @@ import (
 )
 
 type fakeFetcher struct {
-	startCalls int
-	stopCalls  int
+	startCalls atomic.Int32
+	stopCalls  atomic.Int32
 	state      *FeatureMemoryState
 }
 
 func (f *fakeFetcher) start() {
-	f.startCalls++
+	f.startCalls.Add(1)
 }
 
 func (f *fakeFetcher) stop() {
-	f.stopCalls++
+	f.stopCalls.Add(1)
 }
 
 func (f *fakeFetcher) snapshot() *FeatureMemoryState {
@@ -86,18 +87,18 @@ func TestAdaptiveFetcher_CutoverSwapsToPolling(t *testing.T) {
 	af := newAdaptiveFetcherWithFactory(fetcherOptions{}, channels, factory)
 
 	af.start()
-	if streaming.startCalls != 1 {
-		t.Fatalf("expected streaming fetcher to start once, got %d", streaming.startCalls)
+	if streaming.startCalls.Load() != 1 {
+		t.Fatalf("expected streaming fetcher to start once, got %d", streaming.startCalls.Load())
 	}
 
 	af.cutover()
 
-	if streaming.stopCalls != 1 {
-		t.Fatalf("expected streaming fetcher to stop once, got %d", streaming.stopCalls)
+	if streaming.stopCalls.Load() != 1 {
+		t.Fatalf("expected streaming fetcher to stop once, got %d", streaming.stopCalls.Load())
 	}
 
-	if polling.startCalls != 1 {
-		t.Fatalf("expected polling fetcher to start once, got %d", polling.startCalls)
+	if polling.startCalls.Load() != 1 {
+		t.Fatalf("expected polling fetcher to start once, got %d", polling.startCalls.Load())
 	}
 
 	got := af.snapshot()
@@ -120,13 +121,13 @@ func TestAdaptiveFetcher_StartIsIdempotent(t *testing.T) {
 	af := newAdaptiveFetcherWithFactory(fetcherOptions{}, channels, factory)
 
 	af.start()
-	if streaming.startCalls != 1 {
-		t.Fatalf("expected streaming fetcher to start once, got %d", streaming.startCalls)
+	if streaming.startCalls.Load() != 1 {
+		t.Fatalf("expected streaming fetcher to start once, got %d", streaming.startCalls.Load())
 	}
 
 	af.start()
-	if streaming.startCalls != 1 {
-		t.Fatalf("expected streaming fetcher to not start again, got %d", streaming.startCalls)
+	if streaming.startCalls.Load() != 1 {
+		t.Fatalf("expected streaming fetcher to not start again, got %d", streaming.startCalls.Load())
 	}
 }
 
@@ -145,13 +146,13 @@ func TestAdaptiveFetcher_StopIsIdempotent(t *testing.T) {
 
 	af.start()
 	af.stop()
-	if streaming.stopCalls != 1 {
-		t.Fatalf("expected streaming fetcher to stop once, got %d", streaming.stopCalls)
+	if streaming.stopCalls.Load() != 1 {
+		t.Fatalf("expected streaming fetcher to stop once, got %d", streaming.stopCalls.Load())
 	}
 
 	af.stop()
-	if streaming.stopCalls != 1 {
-		t.Fatalf("expected streaming fetcher to not stop again, got %d", streaming.stopCalls)
+	if streaming.stopCalls.Load() != 1 {
+		t.Fatalf("expected streaming fetcher to not stop again, got %d", streaming.stopCalls.Load())
 	}
 }
 
@@ -238,7 +239,7 @@ func TestAdaptiveFetcher_FailoverSignalCutsOverAndWarns(t *testing.T) {
 	}
 
 	waitFor(t, 500*time.Millisecond, func() bool {
-		return polling.startCalls == 1 && streaming.stopCalls == 1
+		return polling.startCalls.Load() == 1 && streaming.stopCalls.Load() == 1
 	}, "expected cutover to polling after failover signal")
 
 	select {
