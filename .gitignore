@@ -44,3 +44,6 @@ testdata/
 
 #vs code
 .vscode
+
+## AI generated files
+.codex
