@@ -14,17 +14,24 @@ import (
 
 type streamingFetcher struct {
 	fetcherChannels
-	url             string
-	appName         string
-	instanceId      string
-	httpClient      *http.Client
-	headers         http.Header
-	storage         Storage
-	deltaProcessor  *deltaProcessor
-	ctx             context.Context
-	cancel          context.CancelFunc
+	url            string
+	appName        string
+	instanceId     string
+	httpClient     *http.Client
+	headers        http.Header
+	storage        Storage
+	deltaProcessor *deltaProcessor
+
+	ctx    context.Context
+	cancel context.CancelFunc
+
+	streamMu     sync.Mutex
+	streamCancel context.CancelFunc
+
 	hydrated        atomic.Bool
 	recordFailEvent func(failEvent)
+	subscribe       func(*http.Request, ...eventsource.StreamOption) (*eventsource.Stream, error)
+	restartStreamFn func()
 }
 
 func buildFailoverRecorder(ch chan failEvent, failoverStrategy *failoverStrategy) func(failEvent) {
@@ -71,14 +78,39 @@ func newStreamingFetcher(options fetcherOptions, fetcherChannels fetcherChannels
 		recordFailEvent: buildFailoverRecorder(failoverChannel, newFailoverStrategy(5, 60*time.Second)),
 		storage:         options.storage,
 	}
+	streamingFetcher.subscribe = eventsource.SubscribeWithRequestAndOptions
+	streamingFetcher.restartStreamFn = streamingFetcher.restartStream
 
 	return streamingFetcher
 }
 
 func (sc *streamingFetcher) start() {
-	req, err := http.NewRequestWithContext(sc.ctx, "GET", sc.url, nil)
+	sc.restartStream()
+}
+
+func (sc *streamingFetcher) restartStream() {
+	sc.streamMu.Lock()
+	defer sc.streamMu.Unlock()
+
+	if sc.ctx.Err() != nil {
+		return
+	}
+
+	if sc.streamCancel != nil {
+		sc.streamCancel()
+	}
+
+	streamCtx, streamCancel := context.WithCancel(sc.ctx)
+	sc.streamCancel = streamCancel
+
+	req, err := http.NewRequestWithContext(streamCtx, "GET", sc.url, nil)
 	if err != nil {
-		sc.recordFailEvent(&failoverRequest{baseFailEvent: baseFailEvent{occurredAt: time.Now(), message: fmt.Sprintf("unable to setup base http request for streaming fetcher: %v", err)}})
+		sc.recordFailEvent(&failoverRequest{
+			baseFailEvent: baseFailEvent{
+				occurredAt: time.Now(),
+				message:    fmt.Sprintf("unable to setup base http request for streaming fetcher: %v", err),
+			},
+		})
 		return
 	}
 
@@ -93,17 +125,17 @@ func (sc *streamingFetcher) start() {
 	req.Header.Add("Unleash-Client-Spec", SEGMENT_CLIENT_SPEC_VERSION)
 	req.Header.Add("User-Agent", sc.appName)
 
-	go sc.runStream(req)
+	go sc.runStream(streamCtx, req)
 }
 
-func (sc *streamingFetcher) runStream(req *http.Request) {
-	stream, err := eventsource.SubscribeWithRequestAndOptions(req,
+func (sc *streamingFetcher) runStream(streamCtx context.Context, req *http.Request) {
+	stream, err := sc.subscribe(req,
 		eventsource.StreamOptionCanRetryFirstConnection(-time.Second*3),
 		eventsource.StreamOptionUseBackoff(5*time.Minute),
 		eventsource.StreamOptionUseJitter(0.5),
 		eventsource.StreamOptionErrorHandler(func(err error) eventsource.StreamErrorHandlerResult {
 
-			var event failEvent = nil
+			var event failEvent
 
 			if se, ok := err.(eventsource.SubscriptionError); ok {
 				status := se.Code
@@ -145,11 +177,10 @@ func (sc *streamingFetcher) runStream(req *http.Request) {
 			switch event.Event() {
 			case "unleash-connected", "unleash-updated":
 				if err := sc.handleDomainEvent(event); err != nil {
-					// This isn't a case for failover, it's a case for disconnect and request a
-					// fresh hydration. Coming in next chunk of work
+					go sc.restartStreamFn()
 				}
 			}
-		case <-sc.ctx.Done():
+		case <-streamCtx.Done():
 			stream.Close()
 			return
 		}
@@ -199,4 +230,11 @@ func (sc *streamingFetcher) snapshot() *FeatureMemoryState {
 
 func (sc *streamingFetcher) stop() {
 	sc.cancel()
+
+	sc.streamMu.Lock()
+	defer sc.streamMu.Unlock()
+	
+	if sc.streamCancel != nil {
+		sc.streamCancel()
+	}
 }
