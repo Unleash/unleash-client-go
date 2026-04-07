@@ -66,6 +66,15 @@ func waitFor(t *testing.T, timeout time.Duration, cond func() bool, onTimeout st
 	}
 }
 
+func waitForReady(t *testing.T, ch chan bool, label string) {
+	t.Helper()
+	select {
+	case ch <- true:
+	case <-time.After(100 * time.Millisecond):
+		t.Fatalf("timeout sending %s signal", label)
+	}
+}
+
 func TestAdaptiveFetcher_CutoverSwapsToPolling(t *testing.T) {
 	streaming := &fakeFetcher{
 		state: &FeatureMemoryState{
@@ -91,11 +100,7 @@ func TestAdaptiveFetcher_CutoverSwapsToPolling(t *testing.T) {
 		t.Fatalf("expected streaming fetcher to start once, got %d", streaming.startCalls.Load())
 	}
 
-	select {
-	case af.internalReady <- true:
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout sending initial ready signal")
-	}
+	waitForReady(t, af.internalReady, "initial ready")
 
 	af.cutover()
 
@@ -107,11 +112,7 @@ func TestAdaptiveFetcher_CutoverSwapsToPolling(t *testing.T) {
 		t.Fatalf("expected streaming fetcher to keep running until polling is ready, got %d", streaming.stopCalls.Load())
 	}
 
-	select {
-	case af.internalReady <- true:
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout sending polling ready signal")
-	}
+	waitForReady(t, af.internalReady, "polling ready")
 
 	waitFor(t, 500*time.Millisecond, func() bool {
 		return streaming.stopCalls.Load() == 1
@@ -212,11 +213,7 @@ func TestAdaptiveFetcher_SnapshotAfterCutover(t *testing.T) {
 	af := newAdaptiveFetcherWithFactory(fetcherOptions{}, channels, factory)
 
 	af.start()
-	select {
-	case af.internalReady <- true:
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout sending initial ready signal")
-	}
+	waitForReady(t, af.internalReady, "initial ready")
 	af.cutover()
 
 	got := af.snapshot()
@@ -224,11 +221,7 @@ func TestAdaptiveFetcher_SnapshotAfterCutover(t *testing.T) {
 		t.Fatalf("expected snapshot from streaming fetcher before polling ready")
 	}
 
-	select {
-	case af.internalReady <- true:
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout sending polling ready signal")
-	}
+	waitForReady(t, af.internalReady, "polling ready")
 
 	waitFor(t, 500*time.Millisecond, func() bool {
 		return polling.startCalls.Load() == 1 && streaming.stopCalls.Load() == 1
@@ -261,11 +254,7 @@ func TestAdaptiveFetcher_FailoverSignalCutsOverAndWarns(t *testing.T) {
 	af := newAdaptiveFetcherWithFactory(fetcherOptions{}, channels, factory)
 	af.start()
 
-	select {
-	case af.internalReady <- true:
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout sending initial ready signal")
-	}
+	waitForReady(t, af.internalReady, "initial ready")
 
 	failEvent := &failoverRequest{
 		baseFailEvent: baseFailEvent{
@@ -288,11 +277,7 @@ func TestAdaptiveFetcher_FailoverSignalCutsOverAndWarns(t *testing.T) {
 		t.Fatalf("expected streaming fetcher to keep running until polling is ready, got %d", streaming.stopCalls.Load())
 	}
 
-	select {
-	case af.internalReady <- true:
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout sending polling ready signal")
-	}
+	waitForReady(t, af.internalReady, "polling ready")
 
 	waitFor(t, 500*time.Millisecond, func() bool {
 		return streaming.stopCalls.Load() == 1
@@ -329,11 +314,7 @@ func TestAdaptiveFetcher_CutoverWaitsForPollingReady(t *testing.T) {
 	af := newAdaptiveFetcherWithFactory(fetcherOptions{}, channels, factory)
 	af.start()
 
-	select {
-	case af.internalReady <- true:
-	case <-time.After(100 * time.Millisecond):
-		t.Fatalf("timeout sending initial ready signal")
-	}
+	waitForReady(t, af.internalReady, "initial ready")
 
 	af.cutover()
 
