@@ -233,7 +233,7 @@ func (sc *streamingFetcher) stop() {
 
 	sc.streamMu.Lock()
 	defer sc.streamMu.Unlock()
-	
+
 	if sc.streamCancel != nil {
 		sc.streamCancel()
 	}
