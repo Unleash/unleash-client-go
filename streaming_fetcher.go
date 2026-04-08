@@ -2,6 +2,7 @@ package unleash
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"sync"
@@ -197,12 +198,13 @@ func (sc *streamingFetcher) notifyUpdate() {
 
 func (sc *streamingFetcher) handleDomainEvent(event eventsource.Event) error {
 	eventData := []byte(event.Data())
-	delta, err := api.ParseDelta(eventData)
-	if err != nil {
-		return fmt.Errorf("failed to parse event: %w", err)
+
+	var delta api.ClientFeaturesDelta
+	if err := json.Unmarshal(eventData, &delta); err != nil {
+		return fmt.Errorf("failed to parse delta: %w", err)
 	}
 
-	backupState, err := sc.deltaProcessor.process(delta)
+	backupState, err := sc.deltaProcessor.process(&delta)
 
 	if err != nil {
 		return fmt.Errorf("failed to process delta: %w", err)

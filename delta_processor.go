@@ -59,41 +59,18 @@ func (dp *deltaProcessor) process(delta *api.ClientFeaturesDelta) (*api.FeatureR
 		segMap[id] = constraints
 	}
 
+	deltaState := &api.DeltaState{
+		Features: featMap,
+		Segments: segMap,
+	}
+
 	for _, event := range delta.Events {
-		switch e := event.(type) {
-
-		case *api.FeatureUpdatedEvent:
-			featMap[e.Feature.Name] = &e.Feature
-
-		case *api.FeatureRemovedEvent:
-			delete(featMap, e.FeatureName)
-
-		case *api.SegmentUpdatedEvent:
-			segMap[e.Segment.Id] = e.Segment.Constraints
-
-		case *api.SegmentRemovedEvent:
-			delete(segMap, e.SegmentId)
-
-		case *api.HydrationEvent:
-			featMap = make(map[string]*api.Feature, len(e.Features))
-			for _, f := range e.Features {
-				featMap[f.Name] = &f
-			}
-
-			segMap = make(map[int][]api.Constraint, len(e.Segments))
-			for _, seg := range e.Segments {
-				segMap[seg.Id] = seg.Constraints
-			}
-
-		default:
-			// Unknown event type - log but don't fail
-			// This allows forward compatibility with new event types
-		}
+		event.Apply(deltaState)
 	}
 
 	newState := &FeatureMemoryState{
-		Features: featMap,
-		Segments: segMap,
+		Features: deltaState.Features,
+		Segments: deltaState.Segments,
 	}
 
 	dp.featureState.Store(newState)
