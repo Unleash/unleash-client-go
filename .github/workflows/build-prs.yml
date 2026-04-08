@@ -28,6 +28,7 @@ jobs:
       - name: Go vet
         run: go vet ./...
       - name: Check gofmt
+        if: matrix.version == '1.26'
         run: |
           set -euo pipefail
           files="$(gofmt -l .)"
