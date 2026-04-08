@@ -32,7 +32,7 @@ func defaultFetcherFactory() fetcherFactory {
 
 type adaptiveFetcher struct {
 	currentFetcher        atomic.Pointer[fetchContainer]
-	pendingFetcher        togglerFetcher
+	cutoverFetcher        togglerFetcher
 	baseOptions           fetcherOptions
 	baseChannels          fetcherChannels
 	internalReady         chan bool
@@ -118,10 +118,10 @@ func (af *adaptiveFetcher) handleReadyEvent() {
 		return
 	}
 
-	if af.pendingFetcher != nil {
+	if af.cutoverFetcher != nil {
 		af.currentFetcher.Load().f.stop()
-		af.currentFetcher.Store(&fetchContainer{f: af.pendingFetcher})
-		af.pendingFetcher = nil
+		af.currentFetcher.Store(&fetchContainer{f: af.cutoverFetcher})
+		af.cutoverFetcher = nil
 	}
 }
 
@@ -138,7 +138,7 @@ func (af *adaptiveFetcher) cutover() {
 		return
 	}
 
-	if af.pendingFetcher != nil {
+	if af.cutoverFetcher != nil {
 		return
 	}
 
@@ -148,7 +148,7 @@ func (af *adaptiveFetcher) cutover() {
 		errorChannels: af.baseChannels.errorChannels,
 	})
 
-	af.pendingFetcher = next
+	af.cutoverFetcher = next
 
 	next.start()
 }
@@ -179,9 +179,9 @@ func (af *adaptiveFetcher) stop() {
 	af.stopped = true
 	af.cancel()
 
-	if af.pendingFetcher != nil {
-		af.pendingFetcher.stop()
-		af.pendingFetcher = nil
+	if af.cutoverFetcher != nil {
+		af.cutoverFetcher.stop()
+		af.cutoverFetcher = nil
 	}
 
 	af.currentFetcher.Load().f.stop()
