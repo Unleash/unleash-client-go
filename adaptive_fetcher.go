@@ -32,6 +32,7 @@ func defaultFetcherFactory() fetcherFactory {
 
 type adaptiveFetcher struct {
 	currentFetcher        atomic.Pointer[fetchContainer]
+	cutoverFetcher        togglerFetcher
 	baseOptions           fetcherOptions
 	baseChannels          fetcherChannels
 	internalReady         chan bool
@@ -91,9 +92,7 @@ func (af *adaptiveFetcher) superviseFetchers() {
 	for {
 		select {
 		case <-af.internalReady:
-			if af.ready.CompareAndSwap(false, true) {
-				af.baseChannels.ready <- true
-			}
+			af.handleReadyEvent()
 		case <-af.internalUpdate:
 			af.baseChannels.update <- true
 		case errorEvent := <-af.failoverSignalChannel:
@@ -102,6 +101,27 @@ func (af *adaptiveFetcher) superviseFetchers() {
 		case <-af.ctx.Done():
 			return
 		}
+	}
+}
+
+func (af *adaptiveFetcher) handleReadyEvent() {
+	af.mu.Lock()
+	defer af.mu.Unlock()
+
+	// catch the first ready event - this necessarily must be the startup fetcher
+	// telling us that it's hydrated. From a user perspective this *is* the ready event
+	// after this point we're only ever waiting for a cutover fetcher to signal that
+	// it's ready to take over, which the user doesn't need to know about
+	if !af.ready.Load() {
+		af.ready.Store(true)
+		af.baseChannels.ready <- true
+		return
+	}
+
+	if af.cutoverFetcher != nil {
+		af.currentFetcher.Load().f.stop()
+		af.currentFetcher.Store(&fetchContainer{f: af.cutoverFetcher})
+		af.cutoverFetcher = nil
 	}
 }
 
@@ -118,16 +138,19 @@ func (af *adaptiveFetcher) cutover() {
 		return
 	}
 
+	if af.cutoverFetcher != nil {
+		return
+	}
+
 	next := af.factory.newPolling(af.baseOptions, fetcherChannels{
 		ready:         af.internalReady,
 		update:        af.internalUpdate,
 		errorChannels: af.baseChannels.errorChannels,
 	})
 
-	af.currentFetcher.Store(&fetchContainer{f: next})
+	af.cutoverFetcher = next
 
 	next.start()
-	current.stop()
 }
 
 func (af *adaptiveFetcher) start() {
@@ -149,10 +172,17 @@ func (af *adaptiveFetcher) snapshot() *FeatureMemoryState {
 func (af *adaptiveFetcher) stop() {
 	af.mu.Lock()
 	defer af.mu.Unlock()
+
 	if af.stopped {
 		return
 	}
 	af.stopped = true
 	af.cancel()
+
+	if af.cutoverFetcher != nil {
+		af.cutoverFetcher.stop()
+		af.cutoverFetcher = nil
+	}
+
 	af.currentFetcher.Load().f.stop()
 }

@@ -66,6 +66,15 @@ func waitFor(t *testing.T, timeout time.Duration, cond func() bool, onTimeout st
 	}
 }
 
+func waitForReady(t *testing.T, ch chan bool, label string) {
+	t.Helper()
+	select {
+	case ch <- true:
+	case <-time.After(100 * time.Millisecond):
+		t.Fatalf("timeout sending %s signal", label)
+	}
+}
+
 func TestAdaptiveFetcher_CutoverSwapsToPolling(t *testing.T) {
 	streaming := &fakeFetcher{
 		state: &FeatureMemoryState{
@@ -91,15 +100,23 @@ func TestAdaptiveFetcher_CutoverSwapsToPolling(t *testing.T) {
 		t.Fatalf("expected streaming fetcher to start once, got %d", streaming.startCalls.Load())
 	}
 
-	af.cutover()
+	waitForReady(t, af.internalReady, "initial ready")
 
-	if streaming.stopCalls.Load() != 1 {
-		t.Fatalf("expected streaming fetcher to stop once, got %d", streaming.stopCalls.Load())
-	}
+	af.cutover()
 
 	if polling.startCalls.Load() != 1 {
 		t.Fatalf("expected polling fetcher to start once, got %d", polling.startCalls.Load())
 	}
+
+	if streaming.stopCalls.Load() != 0 {
+		t.Fatalf("expected streaming fetcher to keep running until polling is ready, got %d", streaming.stopCalls.Load())
+	}
+
+	waitForReady(t, af.internalReady, "polling ready")
+
+	waitFor(t, 500*time.Millisecond, func() bool {
+		return streaming.stopCalls.Load() == 1
+	}, "expected streaming fetcher to stop after polling ready")
 
 	got := af.snapshot()
 	if _, ok := got.Features["polling"]; !ok {
@@ -196,9 +213,21 @@ func TestAdaptiveFetcher_SnapshotAfterCutover(t *testing.T) {
 	af := newAdaptiveFetcherWithFactory(fetcherOptions{}, channels, factory)
 
 	af.start()
+	waitForReady(t, af.internalReady, "initial ready")
 	af.cutover()
 
 	got := af.snapshot()
+	if _, ok := got.Features["streaming"]; !ok {
+		t.Fatalf("expected snapshot from streaming fetcher before polling ready")
+	}
+
+	waitForReady(t, af.internalReady, "polling ready")
+
+	waitFor(t, 500*time.Millisecond, func() bool {
+		return polling.startCalls.Load() == 1 && streaming.stopCalls.Load() == 1
+	}, "expected cutover to polling after polling ready")
+
+	got = af.snapshot()
 	if _, ok := got.Features["polling"]; !ok {
 		t.Fatalf("expected snapshot from polling fetcher after cutover")
 	}
@@ -225,6 +254,8 @@ func TestAdaptiveFetcher_FailoverSignalCutsOverAndWarns(t *testing.T) {
 	af := newAdaptiveFetcherWithFactory(fetcherOptions{}, channels, factory)
 	af.start()
 
+	waitForReady(t, af.internalReady, "initial ready")
+
 	failEvent := &failoverRequest{
 		baseFailEvent: baseFailEvent{
 			occurredAt: time.Now(),
@@ -239,8 +270,18 @@ func TestAdaptiveFetcher_FailoverSignalCutsOverAndWarns(t *testing.T) {
 	}
 
 	waitFor(t, 500*time.Millisecond, func() bool {
-		return polling.startCalls.Load() == 1 && streaming.stopCalls.Load() == 1
-	}, "expected cutover to polling after failover signal")
+		return polling.startCalls.Load() == 1
+	}, "expected polling fetcher to start after failover signal")
+
+	if streaming.stopCalls.Load() != 0 {
+		t.Fatalf("expected streaming fetcher to keep running until polling is ready, got %d", streaming.stopCalls.Load())
+	}
+
+	waitForReady(t, af.internalReady, "polling ready")
+
+	waitFor(t, 500*time.Millisecond, func() bool {
+		return streaming.stopCalls.Load() == 1
+	}, "expected streaming fetcher to stop after polling ready")
 
 	select {
 	case err := <-channels.warnings:
@@ -249,5 +290,40 @@ func TestAdaptiveFetcher_FailoverSignalCutsOverAndWarns(t *testing.T) {
 		}
 	case <-time.After(200 * time.Millisecond):
 		t.Fatalf("expected warning to be emitted on failover")
+	}
+}
+
+func TestAdaptiveFetcher_CutoverWaitsForPollingReady(t *testing.T) {
+	streaming := &fakeFetcher{
+		state: &FeatureMemoryState{
+			Features: map[string]*api.Feature{"streaming": {}},
+			Segments: map[int][]api.Constraint{},
+		},
+	}
+
+	polling := &fakeFetcher{
+		state: &FeatureMemoryState{
+			Features: map[string]*api.Feature{"polling": {}},
+			Segments: map[int][]api.Constraint{},
+		},
+	}
+
+	factory := makeTestFactory(streaming, polling)
+	channels := makeBaseChannels()
+
+	af := newAdaptiveFetcherWithFactory(fetcherOptions{}, channels, factory)
+	af.start()
+
+	waitForReady(t, af.internalReady, "initial ready")
+
+	af.cutover()
+
+	if streaming.stopCalls.Load() != 0 {
+		t.Fatalf("expected streaming fetcher to continue until polling ready, got %d", streaming.stopCalls.Load())
+	}
+
+	got := af.snapshot()
+	if _, ok := got.Features["streaming"]; !ok {
+		t.Fatalf("expected snapshot from streaming fetcher before polling ready")
 	}
 }
