@@ -35,11 +35,33 @@ func newDeltaProcessor(baseState *api.FeatureResponse) *deltaProcessor {
 	return deltaProcessor
 }
 
+func (dp *deltaProcessor) updateFromApiResponse(api *api.ApiResponse) (*api.FeatureResponse, error) {
+	if api.IsFullResponse() {
+		return dp.updateFromFullResponse(api.Full)
+	}
+
+	if api.IsDeltaResponse() {
+		return dp.updateFromDelta(api.Delta)
+	}
+
+	return nil, fmt.Errorf("unknown API response type")
+}
+
+func (dp *deltaProcessor) updateFromFullResponse(full *api.FeatureResponse) (*api.FeatureResponse, error) {
+	newState := &FeatureMemoryState{
+		Features: full.FeatureMap(),
+		Segments: full.SegmentsMap(),
+	}
+
+	dp.featureState.Store(newState)
+	return full, nil
+}
+
 // It's hard to make this both concurrency safe and atomic for both readers and writes. To build our new state we need
 // to hold a lock over the entire process to prevent internal races setting the final state out of order.
 // However, once we have built the new state we can atomically swap it. This gives us mutex locked writes but
 // lock free reads via snapshot()
-func (dp *deltaProcessor) process(delta *api.ClientFeaturesDelta) (*api.FeatureResponse, error) {
+func (dp *deltaProcessor) updateFromDelta(delta *api.ClientFeaturesDelta) (*api.FeatureResponse, error) {
 	if delta == nil {
 		return nil, fmt.Errorf("delta is nil")
 	}

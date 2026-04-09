@@ -204,7 +204,7 @@ func (sc *streamingFetcher) handleDomainEvent(event eventsource.Event) error {
 		return fmt.Errorf("failed to parse delta: %w", err)
 	}
 
-	backupState, err := sc.deltaProcessor.process(&delta)
+	backupState, err := sc.deltaProcessor.updateFromDelta(&delta)
 
 	if err != nil {
 		return fmt.Errorf("failed to process delta: %w", err)

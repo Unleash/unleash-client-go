@@ -25,13 +25,6 @@ const specFolder = "./testdata/client-specification/specifications"
 var specIndex = filepath.Join(specFolder, "index.json")
 var specNotImplemented = []string{""}
 
-type TestState struct {
-	Version  int               `json:"version"`
-	Features []api.Feature     `json:"features"`
-	Segments []api.Segment     `json:"segments"`
-	Events   []json.RawMessage `json:"events"`
-}
-
 type TestCase struct {
 	Description    string          `json:"description"`
 	Context        context.Context `json:"context"`
@@ -106,120 +99,27 @@ func (vtc VariantTestCase) RunWithClient(client *Client) func(*testing.T) {
 
 type TestDefinition struct {
 	Name         string            `json:"name"`
-	State        TestState         `json:"state"`
+	State        json.RawMessage   `json:"state"`
 	Tests        []TestCase        `json:"tests"`
 	VariantTests []VariantTestCase `json:"variantTests"`
 }
 
 func (td TestDefinition) Mock(listener interface{}) (*Client, error) {
-	// Process events if present (for delta API tests)
-	features := td.State.Features
-	segments := td.State.Segments
-
-	if len(td.State.Events) > 0 {
-		// Process delta events to build features and segments
-		features, segments = td.processDeltaEvents()
-	}
-
 	gock.New(mockHost).
 		Post("/client/register").
 		Reply(200)
+
 	gock.New(mockHost).
 		Get("/client/features").
 		Reply(200).
-		JSON(api.FeatureResponse{
-			Response: api.Response{
-				Version: td.State.Version,
-			},
-			Features: features,
-			Segments: segments,
-		})
+		SetHeader("Content-Type", "application/json").
+		BodyString(string(td.State))
 
 	return NewClient(
 		WithUrl(mockHost),
 		WithAppName("clientSpecificationTest"),
 		WithListener(listener),
 	)
-}
-
-func (td TestDefinition) processDeltaEvents() ([]api.Feature, []api.Segment) {
-	features := make(map[string]api.Feature)
-	segments := make(map[int]api.Segment)
-
-	// Process each event
-	for _, eventRaw := range td.State.Events {
-		var eventType struct {
-			Type string `json:"type"`
-		}
-		if err := json.Unmarshal(eventRaw, &eventType); err != nil {
-			continue
-		}
-
-		switch eventType.Type {
-		case "hydration":
-			var hydration struct {
-				Features []api.Feature `json:"features"`
-				Segments []api.Segment `json:"segments"`
-			}
-			if err := json.Unmarshal(eventRaw, &hydration); err == nil {
-				// Reset state for hydration
-				features = make(map[string]api.Feature)
-				segments = make(map[int]api.Segment)
-
-				for _, f := range hydration.Features {
-					features[f.Name] = f
-				}
-				for _, s := range hydration.Segments {
-					segments[s.Id] = s
-				}
-			}
-
-		case "feature-updated":
-			var update struct {
-				Feature api.Feature `json:"feature"`
-			}
-			if err := json.Unmarshal(eventRaw, &update); err == nil {
-				features[update.Feature.Name] = update.Feature
-			}
-
-		case "feature-removed":
-			var removal struct {
-				FeatureName string `json:"featureName"`
-			}
-			if err := json.Unmarshal(eventRaw, &removal); err == nil {
-				delete(features, removal.FeatureName)
-			}
-
-		case "segment-updated":
-			var update struct {
-				Segment api.Segment `json:"segment"`
-			}
-			if err := json.Unmarshal(eventRaw, &update); err == nil {
-				segments[update.Segment.Id] = update.Segment
-			}
-
-		case "segment-removed":
-			var removal struct {
-				SegmentId int `json:"segmentId"`
-			}
-			if err := json.Unmarshal(eventRaw, &removal); err == nil {
-				delete(segments, removal.SegmentId)
-			}
-		}
-	}
-
-	// Convert maps to slices
-	var featureList []api.Feature
-	for _, f := range features {
-		featureList = append(featureList, f)
-	}
-
-	var segmentList []api.Segment
-	for _, s := range segments {
-		segmentList = append(segmentList, s)
-	}
-
-	return featureList, segmentList
 }
 
 func (td TestDefinition) Unmock() {
