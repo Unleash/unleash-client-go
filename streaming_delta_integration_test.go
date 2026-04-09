@@ -34,7 +34,7 @@ func TestStreamingDeltaIntegration(t *testing.T) {
 			t.Fatalf("Failed to unmarshal hydration: %v", err)
 		}
 
-		_, err = processor.process(&delta)
+		_, err = processor.updateFromDelta(&delta)
 		snapshot := processor.snapshot()
 		if err != nil {
 			t.Fatalf("Failed to process hydration: %v", err)
@@ -97,7 +97,7 @@ func TestStreamingDeltaIntegration(t *testing.T) {
 			t.Fatalf("Failed to unmarshal update: %v", err)
 		}
 
-		_, err = processor.process(&delta)
+		_, err = processor.updateFromDelta(&delta)
 		if err != nil {
 			t.Fatalf("Failed to process update: %v", err)
 		}
@@ -157,7 +157,7 @@ func TestStreamingDelta_MultipleDeltaEvents(t *testing.T) {
 	err := json.Unmarshal([]byte(hydrationJSON), &hydrationDelta)
 	assert.NoError(t, err)
 
-	_, err = processor.process(&hydrationDelta)
+	_, err = processor.updateFromDelta(&hydrationDelta)
 	assert.NoError(t, err)
 	snapshot := processor.snapshot()
 
@@ -202,7 +202,7 @@ func TestStreamingDelta_MultipleDeltaEvents(t *testing.T) {
 	err = json.Unmarshal([]byte(updatesJSON), &updatesDelta)
 	assert.NoError(t, err)
 
-	_, err = processor.process(&updatesDelta)
+	_, err = processor.updateFromDelta(&updatesDelta)
 	assert.NoError(t, err)
 	snapshot = processor.snapshot()
 
@@ -263,7 +263,7 @@ func TestStreamingDelta_SegmentUpdates(t *testing.T) {
 	err := json.Unmarshal([]byte(hydrationJSON), &hydrationDelta)
 	assert.NoError(t, err)
 
-	_, err = processor.process(&hydrationDelta)
+	_, err = processor.updateFromDelta(&hydrationDelta)
 	assert.NoError(t, err)
 
 	snapshot := processor.snapshot()
@@ -295,7 +295,7 @@ func TestStreamingDelta_SegmentUpdates(t *testing.T) {
 	err = json.Unmarshal([]byte(segmentUpdateJSON), &segmentUpdateDelta)
 	assert.NoError(t, err)
 
-	_, err = processor.process(&segmentUpdateDelta)
+	_, err = processor.updateFromDelta(&segmentUpdateDelta)
 	assert.NoError(t, err)
 
 	snapshot = processor.snapshot()
@@ -343,7 +343,7 @@ func TestStreamingDelta_SegmentUpdates(t *testing.T) {
 	err = json.Unmarshal([]byte(multiSegmentUpdateJSON), &multiSegmentDelta)
 	assert.NoError(t, err)
 
-	_, err = processor.process(&multiSegmentDelta)
+	_, err = processor.updateFromDelta(&multiSegmentDelta)
 	assert.NoError(t, err)
 
 	snapshot = processor.snapshot()
@@ -389,7 +389,7 @@ func TestStreamingDelta_ErrorHandling(t *testing.T) {
 	err := json.Unmarshal([]byte(validHydrationJSON), &validDelta)
 	assert.NoError(t, err)
 
-	_, err = processor.process(&validDelta)
+	_, err = processor.updateFromDelta(&validDelta)
 	assert.NoError(t, err)
 
 	snapshot := processor.snapshot()
@@ -400,7 +400,7 @@ func TestStreamingDelta_ErrorHandling(t *testing.T) {
 	}
 
 	// Try to process nil delta (should handle gracefully)
-	_, err = processor.process(nil)
+	_, err = processor.updateFromDelta(nil)
 	if err == nil {
 		t.Error("Processing nil delta should return an error")
 	}
@@ -417,7 +417,7 @@ func TestStreamingDelta_ErrorHandling(t *testing.T) {
 	err = json.Unmarshal([]byte(unknownEventJSON), &unknownDelta)
 	assert.NoError(t, err)
 
-	_, err = processor.process(&unknownDelta)
+	_, err = processor.updateFromDelta(&unknownDelta)
 	// Should not error, just ignore unknown event
 	assert.NoError(t, err)
 
@@ -436,7 +436,7 @@ func TestStreamingDelta_ErrorHandling(t *testing.T) {
 	err = json.Unmarshal([]byte(validUpdateJSON), &validUpdateDelta)
 	assert.NoError(t, err)
 
-	_, err = processor.process(&validUpdateDelta)
+	_, err = processor.updateFromDelta(&validUpdateDelta)
 	assert.NoError(t, err)
 
 	snapshot = processor.snapshot()
@@ -493,7 +493,7 @@ func TestStreamingDelta_ConstraintEvaluation(t *testing.T) {
 	err := json.Unmarshal([]byte(hydrationJSON), &hydrationDelta)
 	assert.NoError(t, err)
 
-	_, err = processor.process(&hydrationDelta)
+	_, err = processor.updateFromDelta(&hydrationDelta)
 	assert.NoError(t, err)
 
 	snapshot := processor.snapshot()

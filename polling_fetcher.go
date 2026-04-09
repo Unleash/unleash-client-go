@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/Unleash/unleash-go-sdk/v6/api"
@@ -30,18 +29,18 @@ type togglerFetcher interface {
 type pollingFetcher struct {
 	fetcherChannels
 	sync.RWMutex
-	options       fetcherOptions
-	etag          string
-	close         chan struct{}
-	closed        chan struct{}
-	ctx           context.Context
-	cancel        func()
-	isReady       bool
-	refreshTicker *time.Ticker
-	errors        float64
-	maxSkips      float64
-	skips         float64
-	featureState  atomic.Value // this should always hold an instance of *FeatureMemoryState
+	options        fetcherOptions
+	etag           string
+	close          chan struct{}
+	closed         chan struct{}
+	ctx            context.Context
+	cancel         func()
+	isReady        bool
+	refreshTicker  *time.Ticker
+	errors         float64
+	maxSkips       float64
+	skips          float64
+	deltaProcessor *deltaProcessor
 }
 
 func newPollingFetcher(options fetcherOptions, channels fetcherChannels) *pollingFetcher {
@@ -63,29 +62,23 @@ func newPollingFetcher(options fetcherOptions, channels fetcherChannels) *pollin
 		f.options.httpClient = http.DefaultClient
 	}
 
-	if loadedState, err := f.options.storage.Load(); err == nil && loadedState != nil {
-		f.updateState(loadedState)
+	var apiResponse *api.FeatureResponse
+
+	if loadedState, err := options.storage.Load(); err == nil && loadedState != nil {
+		apiResponse = loadedState
 	} else {
-		f.featureState.Store(&FeatureMemoryState{
-			Features: make(map[string]*api.Feature),
-			Segments: make(map[int][]api.Constraint),
-		})
+		apiResponse = &api.FeatureResponse{
+			Features: []api.Feature{},
+			Segments: []api.Segment{},
+		}
 	}
+
+	f.deltaProcessor = newDeltaProcessor(apiResponse)
 
 	return f
 }
 
-func (r *pollingFetcher) updateState(features *api.FeatureResponse) {
-	state := &FeatureMemoryState{
-		Features: features.FeatureMap(),
-		Segments: features.SegmentsMap(),
-	}
-
-	r.featureState.Store(state)
-}
-
 func (r *pollingFetcher) saveState(features *api.FeatureResponse) error {
-	r.updateState(features)
 	return r.options.storage.Persist(features)
 }
 
@@ -184,7 +177,7 @@ func (r *pollingFetcher) fetch() (bool, error) {
 		return false, err
 	}
 
-	var featureResp api.FeatureResponse
+	var featureResp api.ApiResponse
 	dec := json.NewDecoder(resp.Body)
 	if err := dec.Decode(&featureResp); err != nil {
 		return false, err
@@ -192,7 +185,14 @@ func (r *pollingFetcher) fetch() (bool, error) {
 
 	r.Lock()
 	r.etag = resp.Header.Get("Etag")
-	r.saveState(&featureResp)
+
+	apiResponse, err := r.deltaProcessor.updateFromApiResponse(&featureResp)
+	if err != nil {
+		r.Unlock()
+		return false, err
+	}
+	r.saveState(apiResponse)
+
 	r.successfulFetch()
 	r.Unlock()
 	return true, nil
@@ -214,16 +214,7 @@ func (r *pollingFetcher) statusIsOK(resp *http.Response) error {
 }
 
 func (r *pollingFetcher) snapshot() *FeatureMemoryState {
-	v := r.featureState.Load()
-	if v == nil {
-		empty := &FeatureMemoryState{
-			Features: make(map[string]*api.Feature),
-			Segments: make(map[int][]api.Constraint),
-		}
-		r.featureState.Store(empty)
-		return empty
-	}
-	return v.(*FeatureMemoryState)
+	return r.deltaProcessor.snapshot()
 }
 
 func (r *pollingFetcher) stop() {
