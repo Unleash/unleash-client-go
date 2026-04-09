@@ -29,18 +29,18 @@ type togglerFetcher interface {
 type pollingFetcher struct {
 	fetcherChannels
 	sync.RWMutex
-	options        fetcherOptions
-	etag           string
-	close          chan struct{}
-	closed         chan struct{}
-	ctx            context.Context
-	cancel         func()
-	isReady        bool
-	refreshTicker  *time.Ticker
-	errors         float64
-	maxSkips       float64
-	skips          float64
-	featureCache *featureCache
+	options       fetcherOptions
+	etag          string
+	close         chan struct{}
+	closed        chan struct{}
+	ctx           context.Context
+	cancel        func()
+	isReady       bool
+	refreshTicker *time.Ticker
+	errors        float64
+	maxSkips      float64
+	skips         float64
+	featureCache  *featureCache
 }
 
 func newPollingFetcher(options fetcherOptions, channels fetcherChannels) *pollingFetcher {
