@@ -15,13 +15,13 @@ import (
 
 type streamingFetcher struct {
 	fetcherChannels
-	url            string
-	appName        string
-	instanceId     string
-	httpClient     *http.Client
-	headers        http.Header
-	storage        Storage
-	deltaProcessor *deltaProcessor
+	url          string
+	appName      string
+	instanceId   string
+	httpClient   *http.Client
+	headers      http.Header
+	storage      Storage
+	featureCache *featureCache
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -64,7 +64,7 @@ func newStreamingFetcher(options fetcherOptions, fetcherChannels fetcherChannels
 		}
 	}
 
-	deltaProc := newDeltaProcessor(apiResponse)
+	featureCache := newFeatureCache(apiResponse)
 
 	streamingFetcher := &streamingFetcher{
 		url:             fmt.Sprintf("%sclient/streaming", options.url.String()),
@@ -72,7 +72,7 @@ func newStreamingFetcher(options fetcherOptions, fetcherChannels fetcherChannels
 		instanceId:      options.instanceId,
 		httpClient:      options.httpClient,
 		headers:         options.headers,
-		deltaProcessor:  deltaProc,
+		featureCache:    featureCache,
 		ctx:             ctx,
 		cancel:          cancel,
 		fetcherChannels: fetcherChannels,
@@ -204,7 +204,7 @@ func (sc *streamingFetcher) handleDomainEvent(event eventsource.Event) error {
 		return fmt.Errorf("failed to parse delta: %w", err)
 	}
 
-	backupState, err := sc.deltaProcessor.updateFromDelta(&delta)
+	backupState, err := sc.featureCache.updateFromDelta(&delta)
 
 	if err != nil {
 		return fmt.Errorf("failed to process delta: %w", err)
@@ -227,7 +227,7 @@ func (sc *streamingFetcher) handleDomainEvent(event eventsource.Event) error {
 }
 
 func (sc *streamingFetcher) snapshot() *FeatureMemoryState {
-	return sc.deltaProcessor.snapshot()
+	return sc.featureCache.snapshot()
 }
 
 func (sc *streamingFetcher) stop() {

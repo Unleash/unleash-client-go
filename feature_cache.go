@@ -8,12 +8,12 @@ import (
 	"github.com/Unleash/unleash-go-sdk/v6/api"
 )
 
-type deltaProcessor struct {
+type featureCache struct {
 	featureState atomic.Value
 	mu           sync.Mutex
 }
 
-func newDeltaProcessor(baseState *api.FeatureResponse) *deltaProcessor {
+func newFeatureCache(baseState *api.FeatureResponse) *featureCache {
 
 	if baseState == nil {
 		baseState = &api.FeatureResponse{
@@ -27,15 +27,15 @@ func newDeltaProcessor(baseState *api.FeatureResponse) *deltaProcessor {
 		Segments: baseState.SegmentsMap(),
 	}
 
-	deltaProcessor := &deltaProcessor{
+	featureCache := &featureCache{
 		featureState: atomic.Value{},
 	}
 
-	deltaProcessor.featureState.Store(featureState)
-	return deltaProcessor
+	featureCache.featureState.Store(featureState)
+	return featureCache
 }
 
-func (dp *deltaProcessor) updateFromApiResponse(api *api.ApiResponse) (*api.FeatureResponse, error) {
+func (dp *featureCache) updateFromApiResponse(api *api.ApiResponse) (*api.FeatureResponse, error) {
 	if api.IsFullResponse() {
 		return dp.updateFromFullResponse(api.Full)
 	}
@@ -47,7 +47,7 @@ func (dp *deltaProcessor) updateFromApiResponse(api *api.ApiResponse) (*api.Feat
 	return nil, fmt.Errorf("unknown API response type")
 }
 
-func (dp *deltaProcessor) updateFromFullResponse(full *api.FeatureResponse) (*api.FeatureResponse, error) {
+func (dp *featureCache) updateFromFullResponse(full *api.FeatureResponse) (*api.FeatureResponse, error) {
 	newState := &FeatureMemoryState{
 		Features: full.FeatureMap(),
 		Segments: full.SegmentsMap(),
@@ -61,7 +61,7 @@ func (dp *deltaProcessor) updateFromFullResponse(full *api.FeatureResponse) (*ap
 // to hold a lock over the entire process to prevent internal races setting the final state out of order.
 // However, once we have built the new state we can atomically swap it. This gives us mutex locked writes but
 // lock free reads via snapshot()
-func (dp *deltaProcessor) updateFromDelta(delta *api.ClientFeaturesDelta) (*api.FeatureResponse, error) {
+func (dp *featureCache) updateFromDelta(delta *api.ClientFeaturesDelta) (*api.FeatureResponse, error) {
 	if delta == nil {
 		return nil, fmt.Errorf("delta is nil")
 	}
@@ -100,7 +100,7 @@ func (dp *deltaProcessor) updateFromDelta(delta *api.ClientFeaturesDelta) (*api.
 	return newState.asApiResponse(), nil
 }
 
-func (dp *deltaProcessor) snapshot() *FeatureMemoryState {
+func (dp *featureCache) snapshot() *FeatureMemoryState {
 	v := dp.featureState.Load()
 	return v.(*FeatureMemoryState)
 }
