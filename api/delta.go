@@ -9,60 +9,83 @@ type ClientFeaturesDelta struct {
 	Events []DeltaEvent `json:"events"`
 }
 
-type DeltaEvent interface {
-	GetType() string
-	GetEventId() int
+type DeltaState struct {
+	Features map[string]*Feature
+	Segments map[int][]Constraint
 }
+
+type DeltaEvent interface {
+	Apply(state *DeltaState)
+}
+
+type BaseDeltaEvent struct {
+	Type    string `json:"type"`
+	EventId int    `json:"eventId"`
+}
+
 type FeatureUpdatedEvent struct {
-	Type    string  `json:"type"`
-	EventId int     `json:"eventId"`
+	BaseDeltaEvent
 	Feature Feature `json:"feature"`
 }
 
-func (e *FeatureUpdatedEvent) GetType() string { return e.Type }
-func (e *FeatureUpdatedEvent) GetEventId() int { return e.EventId }
-
 type FeatureRemovedEvent struct {
-	Type        string `json:"type"`
-	EventId     int    `json:"eventId"`
+	BaseDeltaEvent
 	FeatureName string `json:"featureName"`
 	Project     string `json:"project"`
 }
-
-func (e *FeatureRemovedEvent) GetType() string { return e.Type }
-func (e *FeatureRemovedEvent) GetEventId() int { return e.EventId }
-
 type SegmentUpdatedEvent struct {
-	Type    string  `json:"type"`
-	EventId int     `json:"eventId"`
+	BaseDeltaEvent
 	Segment Segment `json:"segment"`
 }
 
-func (e *SegmentUpdatedEvent) GetType() string { return e.Type }
-func (e *SegmentUpdatedEvent) GetEventId() int { return e.EventId }
-
 type SegmentRemovedEvent struct {
-	Type      string `json:"type"`
-	EventId   int    `json:"eventId"`
-	SegmentId int    `json:"segmentId"`
+	BaseDeltaEvent
+	SegmentId int `json:"segmentId"`
 }
 
-func (e *SegmentRemovedEvent) GetType() string { return e.Type }
-func (e *SegmentRemovedEvent) GetEventId() int { return e.EventId }
-
 type HydrationEvent struct {
-	Type     string    `json:"type"`
-	EventId  int       `json:"eventId"`
+	BaseDeltaEvent
 	Features []Feature `json:"features"`
 	Segments []Segment `json:"segments"`
 }
 
-func (e *HydrationEvent) GetType() string { return e.Type }
-func (e *HydrationEvent) GetEventId() int { return e.EventId }
+func (e *FeatureUpdatedEvent) Apply(state *DeltaState) {
+	state.Features[e.Feature.Name] = &e.Feature
+}
 
-// UnmarshalJSON implements custom unmarshaling for ClientFeaturesDelta
+func (e *FeatureRemovedEvent) Apply(state *DeltaState) {
+	delete(state.Features, e.FeatureName)
+}
+
+func (e *SegmentUpdatedEvent) Apply(state *DeltaState) {
+	state.Segments[e.Segment.Id] = e.Segment.Constraints
+}
+
+func (e *SegmentRemovedEvent) Apply(state *DeltaState) {
+	delete(state.Segments, e.SegmentId)
+}
+
+func (e *HydrationEvent) Apply(state *DeltaState) {
+	state.Features = make(map[string]*Feature, len(e.Features))
+	for _, f := range e.Features {
+		state.Features[f.Name] = &f
+	}
+
+	state.Segments = make(map[int][]Constraint, len(e.Segments))
+	for _, seg := range e.Segments {
+		state.Segments[seg.Id] = seg.Constraints
+	}
+}
+
+func unmarshalEvent[T DeltaEvent](raw json.RawMessage) (DeltaEvent, error) {
+	var event T
+	if err := json.Unmarshal(raw, &event); err != nil {
+		return nil, err
+	}
+	return event, nil
+}
+
 func (c *ClientFeaturesDelta) UnmarshalJSON(data []byte) error {
-	// First unmarshal to get the raw events
 	var raw struct {
 		Events []json.RawMessage `json:"events"`
 	}
@@ -71,69 +94,44 @@ func (c *ClientFeaturesDelta) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	// Process each event
 	c.Events = make([]DeltaEvent, 0, len(raw.Events))
 
 	for _, rawEvent := range raw.Events {
-		// Determine the event type
 		var eventType struct {
 			Type string `json:"type"`
 		}
 
 		if err := json.Unmarshal(rawEvent, &eventType); err != nil {
-			continue // Skip malformed events
+			return fmt.Errorf("failed to unmarshal event type: %w", err)
 		}
 
-		var event DeltaEvent
+		var (
+			event DeltaEvent
+			err   error
+		)
 
 		switch eventType.Type {
 		case "feature-updated":
-			var e FeatureUpdatedEvent
-			if err := json.Unmarshal(rawEvent, &e); err == nil {
-				event = &e
-			}
-
+			event, err = unmarshalEvent[*FeatureUpdatedEvent](rawEvent)
 		case "feature-removed":
-			var e FeatureRemovedEvent
-			if err := json.Unmarshal(rawEvent, &e); err == nil {
-				event = &e
-			}
-
+			event, err = unmarshalEvent[*FeatureRemovedEvent](rawEvent)
 		case "segment-updated":
-			var e SegmentUpdatedEvent
-			if err := json.Unmarshal(rawEvent, &e); err == nil {
-				event = &e
-			}
-
+			event, err = unmarshalEvent[*SegmentUpdatedEvent](rawEvent)
 		case "segment-removed":
-			var e SegmentRemovedEvent
-			if err := json.Unmarshal(rawEvent, &e); err == nil {
-				event = &e
-			}
-
+			event, err = unmarshalEvent[*SegmentRemovedEvent](rawEvent)
 		case "hydration":
-			var e HydrationEvent
-			if err := json.Unmarshal(rawEvent, &e); err == nil {
-				event = &e
-			}
-
+			event, err = unmarshalEvent[*HydrationEvent](rawEvent)
 		default:
-			// Unknown event type - skip
+			// Unknown event type, this gives us a safety net for forward compatibility with new event types
 			continue
 		}
 
-		if event != nil {
-			c.Events = append(c.Events, event)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal %s event: %w", eventType.Type, err)
 		}
+
+		c.Events = append(c.Events, event)
 	}
 
 	return nil
-}
-
-func ParseDelta(data []byte) (*ClientFeaturesDelta, error) {
-	var delta ClientFeaturesDelta
-	if err := json.Unmarshal(data, &delta); err != nil {
-		return nil, fmt.Errorf("failed to parse delta: %w", err)
-	}
-	return &delta, nil
 }
