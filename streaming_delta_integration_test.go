@@ -10,7 +10,7 @@ import (
 
 // TestStreamingDeltaIntegration tests the full delta processing flow
 func TestStreamingDeltaIntegration(t *testing.T) {
-	processor := newDeltaProcessor(nil)
+	processor := newFeatureCache(nil)
 
 	t.Run("process initial hydration", func(t *testing.T) {
 		hydrationJSON := `{
@@ -138,7 +138,7 @@ func TestStreamingDeltaIntegration(t *testing.T) {
 
 // TestStreamingDelta_MultipleDeltaEvents tests processing multiple delta events in sequence
 func TestStreamingDelta_MultipleDeltaEvents(t *testing.T) {
-	processor := newDeltaProcessor(nil)
+	processor := newFeatureCache(nil)
 
 	// Initial hydration with two features
 	hydrationJSON := `{
@@ -229,7 +229,7 @@ func TestStreamingDelta_MultipleDeltaEvents(t *testing.T) {
 
 // TestStreamingDelta_SegmentUpdates tests segment updates via delta events
 func TestStreamingDelta_SegmentUpdates(t *testing.T) {
-	processor := newDeltaProcessor(nil)
+	processor := newFeatureCache(nil)
 
 	// Hydration with feature using segments
 	hydrationJSON := `{
@@ -371,7 +371,7 @@ func TestStreamingDelta_SegmentUpdates(t *testing.T) {
 
 // TestStreamingDelta_ErrorHandling tests error handling in delta processing
 func TestStreamingDelta_ErrorHandling(t *testing.T) {
-	processor := newDeltaProcessor(nil)
+	processor := newFeatureCache(nil)
 
 	// Send valid hydration first
 	validHydrationJSON := `{
@@ -452,7 +452,7 @@ func TestStreamingDelta_ErrorHandling(t *testing.T) {
 
 // TestStreamingDelta_ConstraintEvaluation tests constraint evaluation for segments
 func TestStreamingDelta_ConstraintEvaluation(t *testing.T) {
-	processor := newDeltaProcessor(nil)
+	processor := newFeatureCache(nil)
 
 	// Setup feature with complex segment constraints
 	hydrationJSON := `{

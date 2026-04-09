@@ -40,7 +40,7 @@ type pollingFetcher struct {
 	errors         float64
 	maxSkips       float64
 	skips          float64
-	deltaProcessor *deltaProcessor
+	featureCache *featureCache
 }
 
 func newPollingFetcher(options fetcherOptions, channels fetcherChannels) *pollingFetcher {
@@ -73,7 +73,7 @@ func newPollingFetcher(options fetcherOptions, channels fetcherChannels) *pollin
 		}
 	}
 
-	f.deltaProcessor = newDeltaProcessor(apiResponse)
+	f.featureCache = newFeatureCache(apiResponse)
 
 	return f
 }
@@ -186,7 +186,7 @@ func (r *pollingFetcher) fetch() (bool, error) {
 	r.Lock()
 	r.etag = resp.Header.Get("Etag")
 
-	apiResponse, err := r.deltaProcessor.updateFromApiResponse(&featureResp)
+	apiResponse, err := r.featureCache.updateFromApiResponse(&featureResp)
 	if err != nil {
 		r.Unlock()
 		return false, err
@@ -214,7 +214,7 @@ func (r *pollingFetcher) statusIsOK(resp *http.Response) error {
 }
 
 func (r *pollingFetcher) snapshot() *FeatureMemoryState {
-	return r.deltaProcessor.snapshot()
+	return r.featureCache.snapshot()
 }
 
 func (r *pollingFetcher) stop() {
