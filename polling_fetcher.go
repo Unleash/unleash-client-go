@@ -94,17 +94,25 @@ func (r *pollingFetcher) fetchAndReportError() {
 		if urlErr, ok := err.(*url.Error); !(ok && urlErr.Err == context.Canceled) {
 			r.err(err)
 		}
-	} else if !r.isReady {
-		r.isReady = true
-		r.ready <- true
-	} else if changed {
-		r.update <- true
+	} else {
+		r.Lock()
+		wasReady := r.isReady
+		if !wasReady {
+			r.isReady = true
+		}
+		r.Unlock()
+		if !wasReady {
+			r.ready <- true
+		} else if changed {
+			r.update <- true
+		}
 	}
 }
 
 func (r *pollingFetcher) runPollingLoop() {
-	// Initial fetch is skipped here when synchronousFetch already did it in start().
-	if !r.synchronousFetch {
+	// Skip the leading fetch only when synchronousFetch already succeeded in start().
+	// If the synchronous fetch failed, retry immediately rather than waiting a full interval.
+	if !r.synchronousFetch || !r.hasHydrated() {
 		r.fetchAndReportError()
 	}
 	for {
@@ -130,8 +138,13 @@ func (r *pollingFetcher) start() {
 	if r.disablePolling {
 		r.refreshTicker.Stop() // no polling loop will ever read this ticker
 		// Signal ready with backup state when the synchronous fetch didn't succeed.
-		if !r.isReady {
+		r.Lock()
+		wasReady := r.isReady
+		if !wasReady {
 			r.isReady = true
+		}
+		r.Unlock()
+		if !wasReady {
 			r.ready <- true
 		}
 		close(r.closed)
