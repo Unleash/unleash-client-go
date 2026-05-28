@@ -19,6 +19,8 @@ type configOption struct {
 	projectName      string
 	refreshInterval  time.Duration
 	metricsInterval  time.Duration
+	disablePolling   bool
+	synchronousFetch bool
 	disableMetrics   bool
 	backupPath       string
 	strategies       []strategy.Strategy
@@ -76,6 +78,22 @@ func WithUrl(url string) ConfigOption {
 func WithRefreshInterval(refreshInterval time.Duration) ConfigOption {
 	return func(o *configOption) {
 		o.refreshInterval = refreshInterval
+	}
+}
+
+// WithDisablePolling specifies whether the client should stop polling the
+// unleash server for feature toggles.
+func WithDisablePolling(disablePolling bool) ConfigOption {
+	return func(o *configOption) {
+		o.disablePolling = disablePolling
+	}
+}
+
+// WithSynchronousFetchOnInitialisation specifies whether the client should
+// synchronously fetch feature toggles from the unleash server on initialisation.
+func WithSynchronousFetchOnInitialisation(synchronousFetch bool) ConfigOption {
+	return func(o *configOption) {
+		o.synchronousFetch = synchronousFetch
 	}
 }
 
@@ -260,16 +278,18 @@ func WithVariantFallbackFunc(variantFallbackFunc VariantFallbackFunc) VariantOpt
 }
 
 type repositoryOptions struct {
-	appName         string
-	instanceId      string
-	projectName     string
-	url             url.URL
-	backupPath      string
-	refreshInterval time.Duration
-	storage         Storage
-	httpClient     	*http.Client
-	headers         http.Header
-	isStreaming     bool
+	appName          string
+	instanceId       string
+	projectName      string
+	url              url.URL
+	backupPath       string
+	refreshInterval  time.Duration
+	disablePolling   bool
+	synchronousFetch bool
+	storage          Storage
+	httpClient       *http.Client
+	headers          http.Header
+	isStreaming      bool
 }
 
 type metricsOptions struct {

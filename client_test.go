@@ -1,17 +1,19 @@
 package unleash
 
 import (
+	"bytes"
+	"net/http"
+	"net/http/httptest"
+	"sync/atomic"
+	"testing"
 	"time"
 
 	"github.com/Unleash/unleash-go-sdk/v5/api"
 	"github.com/Unleash/unleash-go-sdk/v5/context"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
-
-	"testing"
-
 	"github.com/h2non/gock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestClientWithoutListener(t *testing.T) {
@@ -1495,4 +1497,219 @@ func TestConnectionAndIntervalHeadersAndBody(t *testing.T) {
 	err = client.Close()
 
 	assert.True(gock.IsDone(), "there should be no more mocks")
+}
+
+func TestClient_DisablePollingDoesNotFetchFeatures(t *testing.T) {
+	assert := assert.New(t)
+	var featuresCalls int32
+
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		switch req.Method + " " + req.URL.Path {
+		case "GET /client/features":
+			atomic.AddInt32(&featuresCalls, 1)
+			rw.WriteHeader(http.StatusOK)
+			writeJSON(rw, api.FeatureResponse{})
+		default:
+			t.Fatalf("Unexpected request: %+v", req)
+		}
+	}))
+	defer srv.Close()
+
+	client, err := NewClient(
+		WithUrl(srv.URL),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithDisableMetrics(true),
+		WithDisablePolling(true),
+		WithRefreshInterval(time.Millisecond),
+	)
+	assert.Nil(err, "client should not return an error")
+
+	time.Sleep(25 * time.Millisecond)
+	assert.Equal(int32(0), atomic.LoadInt32(&featuresCalls))
+	assert.Nil(client.Close())
+}
+
+func TestClient_DisablePollingUsesBootstrappedFeatures(t *testing.T) {
+	assert := assert.New(t)
+	var featuresCalls int32
+
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		if req.Method == "GET" && req.URL.Path == "/client/features" {
+			atomic.AddInt32(&featuresCalls, 1)
+		}
+		t.Fatalf("Unexpected request: %+v", req)
+	}))
+	defer srv.Close()
+
+	bootstrap := bytes.NewBufferString(`{
+		"version": 2,
+		"features": [
+			{
+				"name": "bootstrapped-feature",
+				"enabled": true,
+				"strategies": [
+					{
+						"name": "default"
+					}
+				],
+				"variants": []
+			}
+		]
+	}`)
+
+	client, err := NewClient(
+		WithUrl(srv.URL),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithDisableMetrics(true),
+		WithDisablePolling(true),
+		WithStorage(&BootstrapStorage{Reader: bootstrap}),
+		WithRefreshInterval(time.Millisecond),
+	)
+	assert.Nil(err, "client should not return an error")
+
+	assert.True(client.IsEnabled("bootstrapped-feature"))
+	time.Sleep(25 * time.Millisecond)
+	assert.Equal(int32(0), atomic.LoadInt32(&featuresCalls))
+	assert.Nil(client.Close())
+}
+
+func TestClient_DisablePollingAllowsSynchronousInitialFetch(t *testing.T) {
+	assert := assert.New(t)
+	var featuresCalls int32
+
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		switch req.Method + " " + req.URL.Path {
+		case "GET /client/features":
+			atomic.AddInt32(&featuresCalls, 1)
+			rw.WriteHeader(http.StatusOK)
+			writeJSON(rw, api.FeatureResponse{
+				Features: []api.Feature{
+					{
+						Name:    "synchronously-fetched-feature",
+						Enabled: true,
+						Strategies: []api.Strategy{
+							{
+								Name: "default",
+							},
+						},
+					},
+				},
+			})
+		default:
+			t.Fatalf("Unexpected request: %+v", req)
+		}
+	}))
+	defer srv.Close()
+
+	client, err := NewClient(
+		WithUrl(srv.URL),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithDisableMetrics(true),
+		WithDisablePolling(true),
+		WithSynchronousFetchOnInitialisation(true),
+		WithRefreshInterval(time.Millisecond),
+	)
+	assert.Nil(err, "client should not return an error")
+
+	assert.True(client.IsEnabled("synchronously-fetched-feature"))
+	time.Sleep(25 * time.Millisecond)
+	assert.Equal(int32(1), atomic.LoadInt32(&featuresCalls))
+	assert.Nil(client.Close())
+}
+
+func TestClient_DisablePollingReadyFiresImmediately(t *testing.T) {
+	assert := assert.New(t)
+
+	client, err := NewClient(
+		WithUrl("http://localhost:1"),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithDisableMetrics(true),
+		WithDisablePolling(true),
+	)
+	assert.Nil(err, "client should not return an error")
+
+	done := make(chan struct{})
+	go func() {
+		client.WaitForReady()
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.NewTimer(500 * time.Millisecond).C:
+		t.Fatal("WaitForReady() did not return immediately in static mode")
+	}
+	assert.Nil(client.Close())
+}
+
+func TestClient_DisablePollingCloseDoesNotDeadlock(t *testing.T) {
+	assert := assert.New(t)
+
+	client, err := NewClient(
+		WithUrl("http://localhost:1"),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithDisableMetrics(true),
+		WithDisablePolling(true),
+	)
+	assert.Nil(err, "client should not return an error")
+
+	done := make(chan struct{})
+	go func() {
+		client.Close()
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.NewTimer(2 * time.Second).C:
+		t.Fatal("Close() deadlocked in static mode")
+	}
+}
+
+func TestClient_SynchronousFetchWithPollingContinues(t *testing.T) {
+	assert := assert.New(t)
+	var featuresCalls int32
+
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		switch req.Method + " " + req.URL.Path {
+		case "GET /client/features":
+			atomic.AddInt32(&featuresCalls, 1)
+			rw.WriteHeader(http.StatusOK)
+			writeJSON(rw, api.FeatureResponse{
+				Features: []api.Feature{
+					{
+						Name:    "sync-polled-feature",
+						Enabled: true,
+						Strategies: []api.Strategy{
+							{Name: "default"},
+						},
+					},
+				},
+			})
+		default:
+			t.Fatalf("Unexpected request: %+v", req)
+		}
+	}))
+	defer srv.Close()
+
+	client, err := NewClient(
+		WithUrl(srv.URL),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithDisableMetrics(true),
+		WithSynchronousFetchOnInitialisation(true),
+		WithRefreshInterval(10*time.Millisecond),
+	)
+	assert.Nil(err, "client should not return an error")
+
+	assert.True(client.IsEnabled("sync-polled-feature"))
+	assert.GreaterOrEqual(atomic.LoadInt32(&featuresCalls), int32(1), "expected at least one fetch on init")
+
+	time.Sleep(50 * time.Millisecond)
+	assert.Greater(atomic.LoadInt32(&featuresCalls), int32(1), "expected continued polling after sync fetch")
+
+	assert.Nil(client.Close())
 }

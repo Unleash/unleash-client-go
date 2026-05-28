@@ -199,16 +199,18 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 
 	uc.repository = newRepository(
 		repositoryOptions{
-			backupPath:      uc.options.backupPath,
-			url:             *parsedUrl,
-			appName:         uc.options.appName,
-			projectName:     uc.options.projectName,
-			instanceId:      uc.options.instanceId,
-			refreshInterval: uc.options.refreshInterval,
-			storage:         uc.options.storage,
-			httpClient:      uc.options.httpClient,
-			headers:         headers,
-			isStreaming:     uc.options.IsStreamingMode(),
+			backupPath:       uc.options.backupPath,
+			url:              *parsedUrl,
+			appName:          uc.options.appName,
+			projectName:      uc.options.projectName,
+			instanceId:       uc.options.instanceId,
+			refreshInterval:  uc.options.refreshInterval,
+			disablePolling:   uc.options.disablePolling,
+			synchronousFetch: uc.options.synchronousFetch,
+			storage:          uc.options.storage,
+			httpClient:       uc.options.httpClient,
+			headers:          headers,
+			isStreaming:      uc.options.IsStreamingMode(),
 		},
 		repositoryChannels{
 			errorChannels: errChannels,

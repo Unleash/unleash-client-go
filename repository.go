@@ -44,9 +44,6 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 	repo := &repository{
 		options:            options,
 		repositoryChannels: channels,
-		close:              make(chan struct{}),
-		closed:             make(chan struct{}),
-		refreshTicker:      time.NewTicker(options.refreshInterval),
 		segments:           map[int][]api.Constraint{},
 		errors:             0,
 		maxSkips:           10,
@@ -68,7 +65,7 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 	repo.options.storage.Init(options.backupPath, options.appName)
 	// In the future, remove the dependency of the repository and just pass in the storage
 	repo.deltaProcessor = newDeltaProcessor(repo.options.storage, repo, channels)
-	
+
 	if repo.isStreaming {
 		repo.streamingClient = newStreamingClient(
 			options,
@@ -77,7 +74,24 @@ func newRepository(options repositoryOptions, channels repositoryChannels) *repo
 		)
 	}
 
-	go repo.sync()
+	if !repo.isStreaming && repo.options.synchronousFetch {
+		repo.fetchAndReportError()
+	}
+
+	// Static mode: both polling and streaming are disabled. Signal ready with
+	// whatever backup state was loaded during Init() and skip the sync goroutine
+	// entirely — there is no async work to manage.
+	if repo.options.disablePolling && !repo.isStreaming {
+		if !repo.isReady {
+			repo.isReady = true
+			channels.ready <- true
+		}
+	} else {
+		repo.refreshTicker = time.NewTicker(options.refreshInterval)
+		repo.close = make(chan struct{})
+		repo.closed = make(chan struct{})
+		go repo.sync()
+	}
 
 	return repo
 }
@@ -126,7 +140,7 @@ func (r *repository) sync() {
 	}
 
 	// Use polling if not streaming
-	if !isStreaming {
+	if !isStreaming && !r.options.synchronousFetch {
 		r.fetchAndReportError()
 	}
 
@@ -307,9 +321,15 @@ func (r *repository) list() []api.Feature {
 }
 
 func (r *repository) Close() error {
-	close(r.close)
-	r.cancel()
-	<-r.closed
-	r.refreshTicker.Stop()
+	if !r.options.disablePolling || r.isStreaming {
+		close(r.close)
+		r.cancel()
+		<-r.closed
+	} else {
+		r.cancel()
+	}
+	if r.refreshTicker != nil {
+		r.refreshTicker.Stop()
+	}
 	return nil
 }
