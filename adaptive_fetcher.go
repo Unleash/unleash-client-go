@@ -114,6 +114,15 @@ func (af *adaptiveFetcher) handleReadyEvent() {
 	// it's ready to take over, which the user doesn't need to know about
 	if !af.ready.Load() {
 		af.ready.Store(true)
+		// Guard with hasHydrated(): streaming's ready and a failover signal can land
+		// simultaneously; if failover is processed first cutoverFetcher is set but polling
+		// hasn't hydrated — the signal came from streaming, so switching to polling's empty
+		// cache would be wrong. Only switch when polling is confirmed to have hydrated.
+		if af.cutoverFetcher != nil && af.cutoverFetcher.hasHydrated() {
+			af.currentFetcher.Load().f.stop()
+			af.currentFetcher.Store(&fetchContainer{f: af.cutoverFetcher})
+			af.cutoverFetcher = nil
+		}
 		af.baseChannels.ready <- true
 		return
 	}
@@ -178,6 +187,10 @@ func (af *adaptiveFetcher) start() {
 
 	go af.superviseFetchers()
 	af.currentFetcher.Load().f.start()
+}
+
+func (af *adaptiveFetcher) hasHydrated() bool {
+	return af.currentFetcher.Load().f.hasHydrated()
 }
 
 func (af *adaptiveFetcher) snapshot() *FeatureMemoryState {

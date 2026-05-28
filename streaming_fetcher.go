@@ -235,6 +235,10 @@ func (sc *streamingFetcher) handleDomainEvent(event eventsource.Event) error {
 	return nil
 }
 
+func (sc *streamingFetcher) hasHydrated() bool {
+	return sc.hydrated.Load()
+}
+
 func (sc *streamingFetcher) snapshot() *FeatureMemoryState {
 	return sc.featureCache.snapshot()
 }

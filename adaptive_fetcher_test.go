@@ -11,6 +11,7 @@ import (
 type fakeFetcher struct {
 	startCalls atomic.Int32
 	stopCalls  atomic.Int32
+	hydrated   atomic.Bool
 	state      *FeatureMemoryState
 }
 
@@ -20,6 +21,10 @@ func (f *fakeFetcher) start() {
 
 func (f *fakeFetcher) stop() {
 	f.stopCalls.Add(1)
+}
+
+func (f *fakeFetcher) hasHydrated() bool {
+	return f.hydrated.Load()
 }
 
 func (f *fakeFetcher) snapshot() *FeatureMemoryState {
@@ -325,5 +330,77 @@ func TestAdaptiveFetcher_CutoverWaitsForPollingReady(t *testing.T) {
 	got := af.snapshot()
 	if _, ok := got.Features["streaming"]; !ok {
 		t.Fatalf("expected snapshot from streaming fetcher before polling ready")
+	}
+}
+
+// TestAdaptiveFetcher_FailoverBeforeHydrationSwitchesToPollingOnReady tests scenario B:
+// streaming fails before ever sending a ready event; the cutover polling fetcher
+// hydrates and its ready event must fire user-facing ready with the polling snapshot.
+func TestAdaptiveFetcher_FailoverBeforeHydrationSwitchesToPollingOnReady(t *testing.T) {
+	streaming := &fakeFetcher{
+		state: &FeatureMemoryState{
+			Features: map[string]*api.Feature{},
+			Segments: map[int][]api.Constraint{},
+		},
+	}
+
+	polling := &fakeFetcher{
+		state: &FeatureMemoryState{
+			Features: map[string]*api.Feature{"polling": {}},
+			Segments: map[int][]api.Constraint{},
+		},
+	}
+
+	factory := makeTestFactory(streaming, polling)
+	channels := makeBaseChannels()
+
+	af := newAdaptiveFetcherWithFactory(fetcherOptions{}, channels, factory)
+	af.start()
+
+	// Send failover BEFORE streaming fires any ready signal.
+	failoverEvent := &failoverRequest{
+		baseFailEvent: baseFailEvent{
+			occurredAt: time.Now(),
+			message:    "streaming failed before hydration",
+		},
+	}
+	select {
+	case af.failoverSignalChannel <- failoverEvent:
+	case <-time.After(100 * time.Millisecond):
+		t.Fatalf("timeout sending failover signal")
+	}
+
+	// Polling should start.
+	waitFor(t, 500*time.Millisecond, func() bool {
+		return polling.startCalls.Load() == 1
+	}, "expected polling fetcher to start after failover signal")
+
+	// User-facing ready must not have fired yet (polling hasn't hydrated).
+	select {
+	case <-channels.ready:
+		t.Fatalf("ready should not fire until polling hydrates")
+	default:
+	}
+
+	// Simulate polling hydrating and firing its first ready signal.
+	polling.hydrated.Store(true)
+	waitForReady(t, af.internalReady, "polling first ready")
+
+	// User-facing ready must now fire.
+	select {
+	case <-channels.ready:
+	case <-time.After(500 * time.Millisecond):
+		t.Fatalf("expected user-facing ready after polling hydration")
+	}
+
+	// Streaming must have been stopped (it was replaced by polling).
+	waitFor(t, 500*time.Millisecond, func() bool {
+		return streaming.stopCalls.Load() == 1
+	}, "expected streaming fetcher to stop after polling took over")
+
+	// Snapshot must reflect polling data.
+	got := af.snapshot()
+	if _, ok := got.Features["polling"]; !ok {
+		t.Fatalf("expected polling snapshot after failover-before-hydration cutover, got %v", got.Features)
 	}
 }

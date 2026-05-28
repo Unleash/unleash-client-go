@@ -24,6 +24,7 @@ type togglerFetcher interface {
 	start()
 	snapshot() *FeatureMemoryState
 	stop()
+	hasHydrated() bool
 }
 
 type pollingFetcher struct {
@@ -230,6 +231,13 @@ func (r *pollingFetcher) statusIsOK(resp *http.Response) error {
 	}
 
 	return fmt.Errorf("%s %s returned status code %d", resp.Request.Method, resp.Request.URL, s)
+}
+
+func (r *pollingFetcher) hasHydrated() bool {
+	r.RLock()
+	v := r.isReady
+	r.RUnlock()
+	return v
 }
 
 func (r *pollingFetcher) snapshot() *FeatureMemoryState {
