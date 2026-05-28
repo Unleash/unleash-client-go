@@ -155,7 +155,10 @@ func (af *adaptiveFetcher) cutover() {
 	if af.baseOptions.disablePolling {
 		if !af.ready.Load() {
 			af.ready.Store(true)
-			af.baseChannels.ready <- true
+			select {
+			case af.baseChannels.ready <- true:
+			default:
+			}
 		}
 		return
 	}

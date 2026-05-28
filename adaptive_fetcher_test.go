@@ -404,3 +404,57 @@ func TestAdaptiveFetcher_FailoverBeforeHydrationSwitchesToPollingOnReady(t *test
 		t.Fatalf("expected polling snapshot after failover-before-hydration cutover, got %v", got.Features)
 	}
 }
+
+// TestAdaptiveFetcher_DisablePollingSupressesFailover verifies that when
+// disablePolling is set, a failover signal does not start a polling fetcher
+// and still fires the user-facing ready event.
+func TestAdaptiveFetcher_DisablePollingSupressesFailover(t *testing.T) {
+	streaming := &fakeFetcher{
+		state: &FeatureMemoryState{
+			Features: map[string]*api.Feature{"streaming": {}},
+			Segments: map[int][]api.Constraint{},
+		},
+	}
+
+	polling := &fakeFetcher{
+		state: &FeatureMemoryState{
+			Features: map[string]*api.Feature{"polling": {}},
+			Segments: map[int][]api.Constraint{},
+		},
+	}
+
+	factory := makeTestFactory(streaming, polling)
+	channels := makeBaseChannels()
+
+	af := newAdaptiveFetcherWithFactory(fetcherOptions{disablePolling: true}, channels, factory)
+	af.start()
+
+	failoverEvent := &failoverRequest{
+		baseFailEvent: baseFailEvent{
+			occurredAt: time.Now(),
+			message:    "streaming failed",
+		},
+	}
+
+	select {
+	case af.failoverSignalChannel <- failoverEvent:
+	case <-time.After(100 * time.Millisecond):
+		t.Fatalf("timeout sending failover signal")
+	}
+
+	// Polling must never be started when disablePolling is set.
+	waitFor(t, 200*time.Millisecond, func() bool {
+		return polling.startCalls.Load() == 0
+	}, "polling fetcher must not start when disablePolling is set")
+
+	// Ready must still fire so the client does not hang.
+	select {
+	case <-channels.ready:
+	case <-time.After(500 * time.Millisecond):
+		t.Fatalf("expected user-facing ready to fire even when disablePolling suppresses failover")
+	}
+
+	if polling.startCalls.Load() != 0 {
+		t.Fatalf("expected no polling fetcher to start, got %d start calls", polling.startCalls.Load())
+	}
+}
