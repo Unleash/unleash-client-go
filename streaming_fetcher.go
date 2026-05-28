@@ -66,11 +66,19 @@ func newStreamingFetcher(options fetcherOptions, fetcherChannels fetcherChannels
 
 	featureCache := newFeatureCache(apiResponse)
 
+	httpClient := options.httpClient
+	if httpClient == nil {
+		// Capture http.DefaultTransport into a dedicated client so that the streaming
+		// goroutine never reads the global http.DefaultTransport variable at runtime.
+		// This avoids a data race with test helpers (e.g. gock) that swap the global.
+		httpClient = &http.Client{Transport: http.DefaultTransport}
+	}
+
 	streamingFetcher := &streamingFetcher{
 		url:             fmt.Sprintf("%sclient/streaming", options.url.String()),
 		appName:         options.appName,
 		instanceId:      options.instanceId,
-		httpClient:      options.httpClient,
+		httpClient:      httpClient,
 		headers:         options.headers,
 		featureCache:    featureCache,
 		ctx:             ctx,
@@ -131,6 +139,7 @@ func (sc *streamingFetcher) restartStream() {
 
 func (sc *streamingFetcher) runStream(streamCtx context.Context, req *http.Request) {
 	stream, err := sc.subscribe(req,
+		eventsource.StreamOptionHTTPClient(sc.httpClient),
 		eventsource.StreamOptionCanRetryFirstConnection(-time.Second*3),
 		eventsource.StreamOptionUseBackoff(5*time.Minute),
 		eventsource.StreamOptionUseJitter(0.5),
