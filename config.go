@@ -99,7 +99,8 @@ func WithDisableMetrics(disableMetrics bool) ConfigOption {
 // WithDisablePolling stops the client from polling the Unleash server after the
 // initial fetch. The client will serve whatever state was loaded from storage or
 // fetched on startup. Use alongside WithSynchronousFetchOnInitialisation to
-// guarantee the state is populated before NewClient returns.
+// ensure NewClient blocks until the first fetch attempt completes, note that if
+// the fetch fails the client falls back to stored state rather than failing.
 func WithDisablePolling(disablePolling bool) ConfigOption {
 	return func(o *configOption) {
 		o.disablePolling = disablePolling
@@ -109,6 +110,9 @@ func WithDisablePolling(disablePolling bool) ConfigOption {
 // WithSynchronousFetchOnInitialisation makes the client perform the first fetch
 // from the Unleash server synchronously inside NewClient, blocking until the
 // request completes. Subsequent polling (if enabled) continues as normal.
+// This option has no effect in streaming mode (the first SSE event drives the
+// ready signal) or when streaming fails over to polling (the failover fetch is
+// always asynchronous to avoid a deadlock during failover).
 func WithSynchronousFetchOnInitialisation(synchronousFetch bool) ConfigOption {
 	return func(o *configOption) {
 		o.synchronousFetch = synchronousFetch
