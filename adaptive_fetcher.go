@@ -142,7 +142,22 @@ func (af *adaptiveFetcher) cutover() {
 		return
 	}
 
-	next := af.factory.newPolling(af.baseOptions, fetcherChannels{
+	// User explicitly disabled polling: honour that even during streaming failover.
+	if af.baseOptions.disablePolling {
+		if !af.ready.Load() {
+			af.ready.Store(true)
+			af.baseChannels.ready <- true
+		}
+		return
+	}
+
+	// Failover must never block: with synchronousFetch set, start() fetches inline then
+	// sends to af.internalReady. If that channel is already full (streaming's buffered
+	// ready hasn't been drained), start() blocks — superviseFetchers is the only reader
+	// but it's stuck inside cutover() holding af.mu, so Close() deadlocks too.
+	failoverOptions := af.baseOptions
+	failoverOptions.synchronousFetch = false
+	next := af.factory.newPolling(failoverOptions, fetcherChannels{
 		ready:         af.internalReady,
 		update:        af.internalUpdate,
 		errorChannels: af.baseChannels.errorChannels,

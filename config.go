@@ -20,6 +20,8 @@ type configOption struct {
 	refreshInterval  time.Duration
 	metricsInterval  time.Duration
 	disableMetrics   bool
+	disablePolling   bool
+	synchronousFetch bool
 	backupPath       string
 	strategies       []strategy.Strategy
 	listener         any
@@ -91,6 +93,25 @@ func WithMetricsInterval(metricsInterval time.Duration) ConfigOption {
 func WithDisableMetrics(disableMetrics bool) ConfigOption {
 	return func(o *configOption) {
 		o.disableMetrics = disableMetrics
+	}
+}
+
+// WithDisablePolling stops the client from polling the Unleash server after the
+// initial fetch. The client will serve whatever state was loaded from storage or
+// fetched on startup. Use alongside WithSynchronousFetchOnInitialisation to
+// guarantee the state is populated before NewClient returns.
+func WithDisablePolling(disablePolling bool) ConfigOption {
+	return func(o *configOption) {
+		o.disablePolling = disablePolling
+	}
+}
+
+// WithSynchronousFetchOnInitialisation makes the client perform the first fetch
+// from the Unleash server synchronously inside NewClient, blocking until the
+// request completes. Subsequent polling (if enabled) continues as normal.
+func WithSynchronousFetchOnInitialisation(synchronousFetch bool) ConfigOption {
+	return func(o *configOption) {
+		o.synchronousFetch = synchronousFetch
 	}
 }
 
@@ -228,15 +249,17 @@ type variantOption struct {
 }
 
 type fetcherOptions struct {
-	appName         string
-	instanceId      string
-	projectName     string
-	url             url.URL
-	backupPath      string
-	refreshInterval time.Duration
-	storage         Storage
-	httpClient      *http.Client
-	headers         http.Header
+	appName          string
+	instanceId       string
+	projectName      string
+	url              url.URL
+	backupPath       string
+	refreshInterval  time.Duration
+	disablePolling   bool
+	synchronousFetch bool
+	storage          Storage
+	httpClient       *http.Client
+	headers          http.Header
 }
 
 type metricsOptions struct {

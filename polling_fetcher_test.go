@@ -269,6 +269,201 @@ func TestPollingFetcher_backs_off_on_http_statuses(t *testing.T) {
 	}
 }
 
+func TestPollingFetcher_DisablePolling_SignalsReadyWithoutFetching(t *testing.T) {
+	a := assert.New(t)
+	requests := make(chan struct{}, 10)
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		if req.URL.Path == "/client/features" {
+			requests <- struct{}{}
+			rw.WriteHeader(200)
+			writeJSON(rw, api.FeatureResponse{})
+		}
+	}))
+	defer srv.Close()
+
+	serverURL, err := url.Parse(srv.URL)
+	a.Nil(err)
+	errChannels := errorChannels{errors: make(chan error, 3), warnings: make(chan error, 3)}
+	channels := fetcherChannels{errorChannels: errChannels, ready: make(chan bool, 1), update: make(chan bool, 1)}
+
+	fetcher := newPollingFetcher(
+		fetcherOptions{
+			url:             *serverURL,
+			appName:         mockAppName,
+			instanceId:      mockInstanceId,
+			refreshInterval: 50 * time.Millisecond,
+			storage:         &NoOpStorage{},
+			httpClient:      http.DefaultClient,
+			headers:         make(http.Header),
+			disablePolling:  true,
+		},
+		channels,
+	)
+
+	fetcher.start()
+
+	select {
+	case <-channels.ready:
+	case <-time.NewTimer(time.Second).C:
+		t.Fatal("ready not signalled")
+	}
+
+	// No fetch should have been made.
+	select {
+	case <-requests:
+		t.Fatal("fetcher made an HTTP request but disablePolling=true should prevent any fetching")
+	case <-time.NewTimer(100 * time.Millisecond).C:
+	}
+
+	fetcher.stop()
+}
+
+func TestPollingFetcher_DisablePolling_WithSynchronousFetch_FetchesOnceOnly(t *testing.T) {
+	a := assert.New(t)
+	var requestCount int32
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		if req.URL.Path == "/client/features" {
+			atomic.AddInt32(&requestCount, 1)
+			rw.WriteHeader(200)
+			writeJSON(rw, api.FeatureResponse{})
+		}
+	}))
+	defer srv.Close()
+
+	serverURL, err := url.Parse(srv.URL)
+	a.Nil(err)
+	errChannels := errorChannels{errors: make(chan error, 3), warnings: make(chan error, 3)}
+	channels := fetcherChannels{errorChannels: errChannels, ready: make(chan bool, 1), update: make(chan bool, 1)}
+
+	fetcher := newPollingFetcher(
+		fetcherOptions{
+			url:              *serverURL,
+			appName:          mockAppName,
+			instanceId:       mockInstanceId,
+			refreshInterval:  50 * time.Millisecond,
+			storage:          &NoOpStorage{},
+			httpClient:       http.DefaultClient,
+			headers:          make(http.Header),
+			disablePolling:   true,
+			synchronousFetch: true,
+		},
+		channels,
+	)
+
+	fetcher.start()
+
+	// Fetch was synchronous — ready must be buffered already.
+	select {
+	case <-channels.ready:
+	case <-time.NewTimer(time.Second).C:
+		t.Fatal("ready not signalled")
+	}
+
+	a.EqualValues(1, atomic.LoadInt32(&requestCount), "expected exactly one fetch on start")
+
+	// No further requests after some time.
+	time.Sleep(150 * time.Millisecond)
+	a.EqualValues(1, atomic.LoadInt32(&requestCount), "expected no additional fetches after disablePolling")
+
+	fetcher.stop()
+}
+
+func TestPollingFetcher_SynchronousFetch_ThenContinuesPolling(t *testing.T) {
+	a := assert.New(t)
+	var requestCount int32
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		if req.URL.Path == "/client/features" {
+			atomic.AddInt32(&requestCount, 1)
+			rw.WriteHeader(200)
+			writeJSON(rw, api.FeatureResponse{})
+		}
+	}))
+	defer srv.Close()
+
+	serverURL, err := url.Parse(srv.URL)
+	a.Nil(err)
+	errChannels := errorChannels{errors: make(chan error, 3), warnings: make(chan error, 3)}
+	channels := fetcherChannels{errorChannels: errChannels, ready: make(chan bool, 1), update: make(chan bool, 1)}
+
+	// Drain update so the polling goroutine never blocks on the channel send.
+	stopDrain := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <-channels.update:
+			case <-stopDrain:
+				return
+			}
+		}
+	}()
+	defer close(stopDrain)
+
+	fetcher := newPollingFetcher(
+		fetcherOptions{
+			url:              *serverURL,
+			appName:          mockAppName,
+			instanceId:       mockInstanceId,
+			refreshInterval:  20 * time.Millisecond,
+			storage:          &NoOpStorage{},
+			httpClient:       http.DefaultClient,
+			headers:          make(http.Header),
+			synchronousFetch: true,
+		},
+		channels,
+	)
+
+	fetcher.start()
+
+	select {
+	case <-channels.ready:
+	case <-time.NewTimer(time.Second).C:
+		t.Fatal("ready not signalled")
+	}
+
+	a.EqualValues(1, atomic.LoadInt32(&requestCount), "expected one synchronous fetch on start")
+
+	// Polling goroutine should issue more requests.
+	time.Sleep(100 * time.Millisecond)
+	a.Greater(int(atomic.LoadInt32(&requestCount)), 1, "expected polling to continue after synchronous fetch")
+
+	fetcher.stop()
+}
+
+func TestPollingFetcher_DisablePolling_StopDoesNotDeadlock(t *testing.T) {
+	serverURL, _ := url.Parse("http://localhost:0")
+	errChannels := errorChannels{errors: make(chan error, 3), warnings: make(chan error, 3)}
+	channels := fetcherChannels{errorChannels: errChannels, ready: make(chan bool, 1), update: make(chan bool, 1)}
+
+	fetcher := newPollingFetcher(
+		fetcherOptions{
+			url:             *serverURL,
+			appName:         mockAppName,
+			instanceId:      mockInstanceId,
+			refreshInterval: time.Second,
+			storage:         &NoOpStorage{},
+			httpClient:      http.DefaultClient,
+			headers:         make(http.Header),
+			disablePolling:  true,
+		},
+		channels,
+	)
+
+	fetcher.start()
+	<-channels.ready
+
+	done := make(chan struct{})
+	go func() {
+		fetcher.stop()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.NewTimer(time.Second).C:
+		t.Fatal("stop() deadlocked with disablePolling=true")
+	}
+}
+
 func TestPollingFetcher_back_offs_are_gradually_reduced_on_success(t *testing.T) {
 	a := assert.New(t)
 	defer gock.Off()

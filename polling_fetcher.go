@@ -29,30 +29,34 @@ type togglerFetcher interface {
 type pollingFetcher struct {
 	fetcherChannels
 	sync.RWMutex
-	options       fetcherOptions
-	etag          string
-	close         chan struct{}
-	closed        chan struct{}
-	ctx           context.Context
-	cancel        func()
-	isReady       bool
-	refreshTicker *time.Ticker
-	errors        float64
-	maxSkips      float64
-	skips         float64
-	featureCache  *featureCache
+	options          fetcherOptions
+	etag             string
+	close            chan struct{}
+	closed           chan struct{}
+	ctx              context.Context
+	cancel           func()
+	isReady          bool
+	refreshTicker    *time.Ticker
+	errors           float64
+	maxSkips         float64
+	skips            float64
+	featureCache     *featureCache
+	disablePolling   bool
+	synchronousFetch bool
 }
 
 func newPollingFetcher(options fetcherOptions, channels fetcherChannels) *pollingFetcher {
 	f := &pollingFetcher{
-		options:         options,
-		fetcherChannels: channels,
-		close:           make(chan struct{}),
-		closed:          make(chan struct{}),
-		refreshTicker:   time.NewTicker(options.refreshInterval),
-		errors:          0,
-		maxSkips:        10,
-		skips:           0,
+		options:          options,
+		fetcherChannels:  channels,
+		close:            make(chan struct{}),
+		closed:           make(chan struct{}),
+		refreshTicker:    time.NewTicker(options.refreshInterval),
+		errors:           0,
+		maxSkips:         10,
+		skips:            0,
+		disablePolling:   options.disablePolling,
+		synchronousFetch: options.synchronousFetch,
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	f.ctx = ctx
@@ -98,8 +102,10 @@ func (r *pollingFetcher) fetchAndReportError() {
 }
 
 func (r *pollingFetcher) runPollingLoop() {
-	// Initial fetch to populate state and signal readiness.
-	r.fetchAndReportError()
+	// Initial fetch is skipped here when synchronousFetch already did it in start().
+	if !r.synchronousFetch {
+		r.fetchAndReportError()
+	}
 	for {
 		select {
 		case <-r.close:
@@ -117,6 +123,19 @@ func (r *pollingFetcher) runPollingLoop() {
 }
 
 func (r *pollingFetcher) start() {
+	if r.synchronousFetch {
+		r.fetchAndReportError()
+	}
+	if r.disablePolling {
+		r.refreshTicker.Stop() // no polling loop will ever read this ticker
+		// Signal ready with backup state when the synchronous fetch didn't succeed.
+		if !r.isReady {
+			r.isReady = true
+			r.ready <- true
+		}
+		close(r.closed)
+		return
+	}
 	go r.runPollingLoop()
 }
 

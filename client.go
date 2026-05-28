@@ -204,15 +204,17 @@ func NewClient(options ...ConfigOption) (*Client, error) {
 	storage.Init(uc.options.backupPath, uc.options.appName)
 
 	fetcherOptions := fetcherOptions{
-		backupPath:      uc.options.backupPath,
-		url:             *parsedUrl,
-		appName:         uc.options.appName,
-		projectName:     uc.options.projectName,
-		instanceId:      uc.options.instanceId,
-		refreshInterval: uc.options.refreshInterval,
-		storage:         storage,
-		httpClient:      uc.options.httpClient,
-		headers:         headers,
+		backupPath:       uc.options.backupPath,
+		url:              *parsedUrl,
+		appName:          uc.options.appName,
+		projectName:      uc.options.projectName,
+		instanceId:       uc.options.instanceId,
+		refreshInterval:  uc.options.refreshInterval,
+		disablePolling:   uc.options.disablePolling,
+		synchronousFetch: uc.options.synchronousFetch,
+		storage:          storage,
+		httpClient:       uc.options.httpClient,
+		headers:          headers,
 	}
 	fetcherChannels := fetcherChannels{
 		errorChannels: errChannels,
