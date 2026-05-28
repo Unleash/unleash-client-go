@@ -1564,6 +1564,7 @@ func TestClient_DisablePollingUsesBootstrappedFeatures(t *testing.T) {
 		WithInstanceId(mockInstanceId),
 		WithDisableMetrics(true),
 		WithDisablePolling(true),
+		WithBackupPath(t.TempDir()),
 		WithStorage(&BootstrapStorage{Reader: bootstrap}),
 		WithRefreshInterval(time.Millisecond),
 	)
@@ -1711,5 +1712,59 @@ func TestClient_SynchronousFetchWithPollingContinues(t *testing.T) {
 	time.Sleep(50 * time.Millisecond)
 	assert.Greater(atomic.LoadInt32(&featuresCalls), int32(1), "expected continued polling after sync fetch")
 
+	assert.Nil(client.Close())
+}
+
+func TestClient_SynchronousFetchFailsPollingRecoversImmediately(t *testing.T) {
+	assert := assert.New(t)
+	var featuresCalls int32
+
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		switch req.Method + " " + req.URL.Path {
+		case "GET /client/features":
+			n := atomic.AddInt32(&featuresCalls, 1)
+			if n == 1 {
+				rw.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			rw.WriteHeader(http.StatusOK)
+			writeJSON(rw, api.FeatureResponse{
+				Features: []api.Feature{
+					{Name: "recovered-feature", Enabled: true, Strategies: []api.Strategy{{Name: "default"}}},
+				},
+			})
+		default:
+			t.Fatalf("Unexpected request: %+v", req)
+		}
+	}))
+	defer srv.Close()
+
+	client, err := NewClient(
+		WithUrl(srv.URL),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+		WithDisableMetrics(true),
+		WithSynchronousFetchOnInitialisation(true),
+		WithRefreshInterval(200*time.Millisecond),
+	)
+	assert.Nil(err, "client should not return an error")
+
+	assert.False(client.IsEnabled("recovered-feature"), "feature not available after failed sync fetch")
+
+	// The polling loop should retry immediately (not wait a full 200ms interval) because
+	// synchronousFetch failed. WaitForReady must unblock well before the interval expires.
+	done := make(chan struct{})
+	go func() {
+		client.WaitForReady()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(500 * time.Millisecond):
+		t.Fatal("WaitForReady blocked for more than 500ms — polling loop did not retry immediately after failed sync fetch")
+	}
+
+	assert.True(client.IsEnabled("recovered-feature"), "feature available after polling recovery")
 	assert.Nil(client.Close())
 }

@@ -139,8 +139,9 @@ func (r *repository) sync() {
 		}
 	}
 
-	// Use polling if not streaming
-	if !isStreaming && !r.options.synchronousFetch {
+	// Skip the leading fetch only when synchronousFetch already succeeded in newRepository().
+	// If the synchronous fetch failed, retry immediately rather than waiting a full interval.
+	if !isStreaming && (!r.options.synchronousFetch || !r.isReady) {
 		r.fetchAndReportError()
 	}
 
