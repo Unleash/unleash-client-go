@@ -84,6 +84,10 @@ type ClientData struct {
 	SpecVersion string `json:"specVersion"`
 }
 
+// metricsShutdownTimeout bounds the best-effort final flush performed by
+// Close so an unreachable server cannot hang shutdown indefinitely.
+const metricsShutdownTimeout = 5 * time.Second
+
 type metric struct {
 	// Name is the name of the feature toggle.
 	Name string
@@ -151,20 +155,6 @@ func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
 }
 
 func (m *metrics) Close() error {
-	if !m.options.disableMetrics {
-		m.ticker.Stop()
-		m.cancel()
-		close(m.close)
-		<-m.closed
-	}
-	return nil
-}
-
-// Shutdown performs the same teardown as Close but first makes a
-// best-effort attempt to flush any metrics buffered since the last tick.
-// The provided ctx bounds how long the flush is allowed to take; if it
-// expires, Shutdown returns ctx.Err().
-func (m *metrics) Shutdown(ctx context.Context) error {
 	if m.options.disableMetrics {
 		return nil
 	}
@@ -172,8 +162,12 @@ func (m *metrics) Shutdown(ctx context.Context) error {
 	m.cancel()
 	close(m.close)
 	<-m.closed
+	// Best-effort final flush of anything buffered since the last tick.
+	// Bounded so an unreachable server cannot hang Close indefinitely.
+	ctx, cancel := context.WithTimeout(context.Background(), metricsShutdownTimeout)
+	defer cancel()
 	m.flushOnShutdown(ctx)
-	return ctx.Err()
+	return nil
 }
 
 func (m *metrics) sync() {
@@ -287,10 +281,10 @@ func (m *metrics) buildBucketAndReset(lastCloseTime time.Time) (api.Bucket, bool
 }
 
 // flushOnShutdown makes a best-effort attempt to POST any buffered toggle
-// counts and impact metrics before Shutdown returns. It intentionally emits
+// counts and impact metrics before Close returns. It intentionally emits
 // no events: OnSent, OnError, and the backoff counter are all skipped
 // because the caller has committed to teardown and cannot react to them.
-// The caller-provided ctx bounds how long the POST is allowed to take.
+// The bounded ctx keeps an unreachable server from hanging shutdown.
 func (m *metrics) flushOnShutdown(ctx context.Context) {
 	bucket, ok := m.buildBucketAndReset(m.lastCloseTime)
 	collectedMetrics := impactmetrics.CollectedMetrics(m.metricRegistry.Collect())

@@ -1,7 +1,6 @@
 package unleash
 
 import (
-	stdcontext "context"
 	"fmt"
 
 	"net/http"
@@ -455,9 +454,10 @@ func (uc *Client) ImpactMetrics() *impactmetrics.MetricsAPI {
 	return uc.MetricsAPI
 }
 
-// Close stops the client from syncing data from the server. Any metrics
-// recorded since the last periodic flush are discarded. For a graceful
-// shutdown that attempts to flush buffered metrics, use Shutdown.
+// Close stops the client from syncing data from the server. It makes a
+// best-effort attempt to POST any metrics buffered since the last periodic
+// flush before returning; that final flush is bounded internally so an
+// unreachable metrics endpoint cannot hang shutdown indefinitely.
 func (uc *Client) Close() error {
 	uc.fetcher.stop()
 	uc.metrics.Close()
@@ -467,21 +467,6 @@ func (uc *Client) Close() error {
 		<-uc.closed
 	}
 	return nil
-}
-
-// Shutdown gracefully stops the client. It performs the same teardown as
-// Close but first makes a best-effort attempt to POST any metrics buffered
-// since the last periodic flush. The provided context bounds how long the
-// flush is allowed to take; if it expires, remaining metrics are dropped
-// and Shutdown returns ctx.Err().
-func (uc *Client) Shutdown(ctx stdcontext.Context) error {
-	uc.fetcher.stop()
-	err := uc.metrics.Shutdown(ctx)
-	if uc.options.listener != nil {
-		close(uc.close)
-		<-uc.closed
-	}
-	return err
 }
 
 // Errors returns the error channel for the client.

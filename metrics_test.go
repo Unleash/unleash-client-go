@@ -4,7 +4,6 @@
 package unleash
 
 import (
-	stdcontext "context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -659,10 +658,10 @@ func TestMetrics_NotCountingVariantsStillIncludesEmptyVariantBucket(t *testing.T
 	assert.Contains(t, string(raw), "\"variants\":{}")
 }
 
-// TestMetrics_ShutdownFlushesBufferedMetrics verifies that Shutdown POSTs any
-// toggle counts recorded between the last periodic tick and shutdown, rather
-// than dropping them.
-func TestMetrics_ShutdownFlushesBufferedMetrics(t *testing.T) {
+// TestMetrics_CloseFlushesBufferedMetrics verifies that Close POSTs any
+// toggle counts recorded between the last periodic tick and shutdown,
+// rather than dropping them.
+func TestMetrics_CloseFlushesBufferedMetrics(t *testing.T) {
 	assert := assert.New(t)
 	defer gock.OffAll()
 
@@ -702,57 +701,17 @@ func TestMetrics_ShutdownFlushesBufferedMetrics(t *testing.T) {
 	client.IsEnabled("foo", FeatureOptions{})
 	client.IsEnabled("foo", FeatureOptions{})
 
-	ctx, cancel := stdcontext.WithTimeout(stdcontext.Background(), 2*time.Second)
-	defer cancel()
-	assert.Nil(client.Shutdown(ctx), "Shutdown should not error")
+	assert.Nil(client.Close(), "Close should not error")
 
 	select {
 	case md := <-metricsPosted:
 		toggle, ok := md.Bucket.Toggles["foo"]
-		assert.True(ok, "Shutdown flush should include the 'foo' toggle counts")
-		assert.EqualValues(2, toggle.Yes, "should have flushed 2 'yes' counts recorded before Shutdown")
+		assert.True(ok, "Close flush should include the 'foo' toggle counts")
+		assert.EqualValues(2, toggle.Yes, "should have flushed 2 'yes' counts recorded before Close")
 		assert.EqualValues(0, toggle.No)
 	case <-time.After(2 * time.Second):
-		t.Fatal("expected a final /client/metrics POST on Shutdown, got none")
+		t.Fatal("expected a final /client/metrics POST on Close, got none")
 	}
 
 	assert.True(gock.IsDone(), "all expected requests should have been made")
-}
-
-// TestMetrics_CloseDoesNotFlush documents that Close is the fast path — it
-// does not attempt to flush metrics recorded since the last periodic tick.
-// Callers who want that behavior should use Shutdown instead.
-func TestMetrics_CloseDoesNotFlush(t *testing.T) {
-	assert := assert.New(t)
-	defer gock.OffAll()
-
-	gock.New(mockerServer).Post("/client/register").Reply(200)
-	gock.New(mockerServer).Get("/client/features").Reply(200).JSON(api.FeatureResponse{
-		Features: []api.Feature{{Name: "foo", Enabled: true}},
-	})
-
-	// Deliberately register no /client/metrics mock. If Close were to flush,
-	// gock would either fail the request (surfacing an unexpected call) or
-	// the assertion below would trip.
-
-	client, err := NewClient(
-		WithUrl(mockerServer),
-		WithMetricsInterval(1*time.Hour),
-		WithAppName(mockAppName),
-		WithInstanceId(mockInstanceId),
-	)
-	assert.Nil(err, "client should not return an error")
-
-	client.WaitForReady()
-	client.IsEnabled("foo", FeatureOptions{})
-
-	assert.Nil(client.Close(), "Close should not error")
-	// Counters were reset by the register call at startup, so a non-zero
-	// count here can only come from the toggle evaluation above; Close must
-	// have left it in place rather than flushed it.
-	c, ok := client.metrics.counters.Load("foo")
-	assert.True(ok, "toggle counter should still exist after Close")
-	assert.EqualValues(1, c.(*toggleCounters).yes, "Close should not reset the counter by flushing")
-
-	assert.True(gock.IsDone(), "no /client/metrics POST expected on Close")
 }
