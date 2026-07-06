@@ -133,7 +133,7 @@ func TestMetrics_DoPost(t *testing.T) {
 	m := client.metrics
 
 	serverUrl, _ := url.Parse(mockerServer)
-	res, err := m.doPost(serverUrl, &struct{}{})
+	res, err := m.doPost(m.ctx, serverUrl, &struct{}{})
 	client.Close()
 
 	assert.Nil(err, "doPost should not return an error")
@@ -656,4 +656,62 @@ func TestMetrics_NotCountingVariantsStillIncludesEmptyVariantBucket(t *testing.T
 		t.Fatalf("failed to marshal bucket: %v", err)
 	}
 	assert.Contains(t, string(raw), "\"variants\":{}")
+}
+
+// TestMetrics_CloseFlushesBufferedMetrics verifies that Close POSTs any
+// toggle counts recorded between the last periodic tick and shutdown,
+// rather than dropping them.
+func TestMetrics_CloseFlushesBufferedMetrics(t *testing.T) {
+	assert := assert.New(t)
+	defer gock.OffAll()
+
+	gock.New(mockerServer).Post("/client/register").Reply(200)
+	gock.New(mockerServer).Get("/client/features").Reply(200).JSON(api.FeatureResponse{
+		Features: []api.Feature{{Name: "foo", Enabled: true}},
+	})
+
+	metricsPosted := make(chan MetricsData, 1)
+	gock.New(mockerServer).
+		Post("/client/metrics").
+		AddMatcher(func(req *http.Request, _ *gock.Request) (bool, error) {
+			body, err := ioutil.ReadAll(req.Body)
+			if err != nil {
+				return false, err
+			}
+			var md MetricsData
+			if err := json.Unmarshal(body, &md); err != nil {
+				return false, err
+			}
+			metricsPosted <- md
+			return true, nil
+		}).
+		Reply(200)
+
+	// Long interval so no periodic tick fires during the test — the only
+	// /client/metrics POST that can happen is the shutdown flush.
+	client, err := NewClient(
+		WithUrl(mockerServer),
+		WithMetricsInterval(1*time.Hour),
+		WithAppName(mockAppName),
+		WithInstanceId(mockInstanceId),
+	)
+	assert.Nil(err, "client should not return an error")
+
+	client.WaitForReady()
+	client.IsEnabled("foo", FeatureOptions{})
+	client.IsEnabled("foo", FeatureOptions{})
+
+	assert.Nil(client.Close(), "Close should not error")
+
+	select {
+	case md := <-metricsPosted:
+		toggle, ok := md.Bucket.Toggles["foo"]
+		assert.True(ok, "Close flush should include the 'foo' toggle counts")
+		assert.EqualValues(2, toggle.Yes, "should have flushed 2 'yes' counts recorded before Close")
+		assert.EqualValues(0, toggle.No)
+	case <-time.After(2 * time.Second):
+		t.Fatal("expected a final /client/metrics POST on Close, got none")
+	}
+
+	assert.True(gock.IsDone(), "all expected requests should have been made")
 }

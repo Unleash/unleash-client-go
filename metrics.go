@@ -84,6 +84,10 @@ type ClientData struct {
 	SpecVersion string `json:"specVersion"`
 }
 
+// metricsShutdownTimeout bounds the best-effort final flush performed by
+// Close so an unreachable server cannot hang shutdown indefinitely.
+const metricsShutdownTimeout = 5 * time.Second
+
 type metric struct {
 	// Name is the name of the feature toggle.
 	Name string
@@ -151,12 +155,18 @@ func newMetrics(options metricsOptions, channels metricsChannels) *metrics {
 }
 
 func (m *metrics) Close() error {
-	if !m.options.disableMetrics {
-		m.ticker.Stop()
-		m.cancel()
-		close(m.close)
-		<-m.closed
+	if m.options.disableMetrics {
+		return nil
 	}
+	m.ticker.Stop()
+	m.cancel()
+	close(m.close)
+	<-m.closed
+	// Best-effort final flush of anything buffered since the last tick.
+	// Bounded so an unreachable server cannot hang Close indefinitely.
+	ctx, cancel := context.WithTimeout(context.Background(), metricsShutdownTimeout)
+	defer cancel()
+	m.flushOnShutdown(ctx)
 	return nil
 }
 
@@ -165,7 +175,7 @@ func (m *metrics) sync() {
 		select {
 		case <-m.ticker.C:
 			if m.skips == 0 {
-				m.sendMetrics()
+				m.sendMetrics(m.ctx)
 			} else {
 				m.decrementSkip()
 			}
@@ -179,7 +189,7 @@ func (m *metrics) sync() {
 func (m *metrics) registerInstance() {
 	u, _ := m.options.url.Parse("./client/register")
 	payload := m.getClientData()
-	resp, err := m.doPost(u, payload)
+	resp, err := m.doPost(m.ctx, u, payload)
 
 	if err != nil {
 		m.err(err)
@@ -270,7 +280,41 @@ func (m *metrics) buildBucketAndReset(lastCloseTime time.Time) (api.Bucket, bool
 	return bucket, true
 }
 
-func (m *metrics) sendMetrics() {
+// flushOnShutdown makes a best-effort attempt to POST any buffered toggle
+// counts and impact metrics before Close returns. It intentionally emits
+// no events: OnSent, OnError, and the backoff counter are all skipped
+// because the caller has committed to teardown and cannot react to them.
+// The bounded ctx keeps an unreachable server from hanging shutdown.
+func (m *metrics) flushOnShutdown(ctx context.Context) {
+	bucket, ok := m.buildBucketAndReset(m.lastCloseTime)
+	collectedMetrics := impactmetrics.CollectedMetrics(m.metricRegistry.Collect())
+
+	if !ok && collectedMetrics.IsEmpty() {
+		return
+	}
+	bucket.Stop = time.Now()
+	payload := MetricsData{
+		AppName:          m.options.appName,
+		InstanceID:       m.options.instanceId,
+		ConnectionId:     m.options.connectionId,
+		Bucket:           bucket,
+		SDKVersion:       fmt.Sprintf("%s:%s", clientName, clientVersion),
+		PlatformName:     "go",
+		PlatformVersion:  runtime.Version(),
+		YggdrasilVersion: nil,
+		SpecVersion:      specVersion,
+		ImpactMetrics:    collectedMetrics,
+	}
+
+	u, _ := m.options.url.Parse("./client/metrics")
+	resp, err := m.doPost(ctx, u, payload)
+	if err != nil {
+		return
+	}
+	_ = resp.Body.Close()
+}
+
+func (m *metrics) sendMetrics(ctx context.Context) {
 	bucket, ok := m.buildBucketAndReset(m.lastCloseTime)
 	collectedMetrics := impactmetrics.CollectedMetrics(m.metricRegistry.Collect())
 
@@ -293,7 +337,7 @@ func (m *metrics) sendMetrics() {
 	}
 
 	u, _ := m.options.url.Parse("./client/metrics")
-	resp, err := m.doPost(u, payload)
+	resp, err := m.doPost(ctx, u, payload)
 	if err != nil {
 		m.err(err)
 		return
@@ -325,7 +369,7 @@ func (m *metrics) sendMetrics() {
 	}
 }
 
-func (m *metrics) doPost(url *url.URL, payload interface{}) (*http.Response, error) {
+func (m *metrics) doPost(ctx context.Context, url *url.URL, payload interface{}) (*http.Response, error) {
 	var body bytes.Buffer
 	enc := json.NewEncoder(&body)
 	if err := enc.Encode(payload); err != nil {
@@ -336,7 +380,7 @@ func (m *metrics) doPost(url *url.URL, payload interface{}) (*http.Response, err
 	if err != nil {
 		return nil, err
 	}
-	req = req.WithContext(m.ctx)
+	req = req.WithContext(ctx)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Add("UNLEASH-APPNAME", m.options.appName)
 	req.Header.Add("UNLEASH-INSTANCEID", m.options.instanceId)

@@ -454,7 +454,10 @@ func (uc *Client) ImpactMetrics() *impactmetrics.MetricsAPI {
 	return uc.MetricsAPI
 }
 
-// Close stops the client from syncing data from the server.
+// Close stops the client from syncing data from the server. It makes a
+// best-effort attempt to POST any metrics buffered since the last periodic
+// flush before returning; that final flush is bounded internally so an
+// unreachable metrics endpoint cannot hang shutdown indefinitely.
 func (uc *Client) Close() error {
 	uc.fetcher.stop()
 	uc.metrics.Close()
